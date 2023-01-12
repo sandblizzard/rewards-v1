@@ -1,11 +1,10 @@
 pub use crate::state::user;
+pub use crate::utils::*;
 use anchor_lang::{
     prelude::*,
     solana_program::{instruction, sysvar::instructions},
 };
 use std::mem::size_of;
-
-const REWARD_SEED: &str = "SANDBLIZZARD_REWARD";
 
 #[derive(borsh::BorshDeserialize, borsh::BorshSerialize)]
 pub enum ProfileType {
