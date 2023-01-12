@@ -1,12 +1,12 @@
 [package]
-name = "rewards-v1"
+name = "rewards"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "rewards_v1"
+name = "rewards"
 test-bpf = []
 
 [features]

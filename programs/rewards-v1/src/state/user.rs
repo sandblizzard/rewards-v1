@@ -6,17 +6,21 @@ pub struct UserProfile {
     wallet_address: Pubkey,
     user_profile: String,
     social_media: String,
-    mint: Pubkey,
+    nft_mint: Pubkey,
 }
 
 impl UserProfile {
     pub fn initialize(
-        &self,
+        &mut self,
         wallet_address: &Pubkey,
         user_profile: &str,
         social_media: &str,
-        mint: &Pubkey,
-    ) {
-        return;
+        nft_mint: &Pubkey,
+    ) -> Result<()> {
+        self.wallet_address = *wallet_address;
+        self.user_profile = user_profile.to_string();
+        self.social_media = social_media.to_string();
+        self.nft_mint = *nft_mint;
+        Ok(())
     }
 }
