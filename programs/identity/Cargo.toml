@@ -1,0 +1,30 @@
+[package]
+name = "identity"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "identity"
+test-bpf = []
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+test-bpf = []
+
+[dependencies]
+anchor-lang = "0.24.2"
+anchor-spl = "0.24.2"
+
+[dev-dependencies]
+anchor-client = "0.24.2"
+solana-program-test = "1.9.15"
+solana-program = "1.9.15"
+spl-token = "3.2.0"
+spl-associated-token-account = "1.0.3"
+
