@@ -15,3 +15,16 @@ The general idea is that anyone can run the client and relay rewards.
 ### Potential responsibilites
 
 - Trigger transactions in a foreign context like github.com
+
+## Run
+
+```
+> RUST_LOG=info cargo run
+```
+
+# TODO
+
+[ ] Create dummy issues
+[ ] Separate Bounty, User etc into module
+[ ] Use structs from Bounty program
+[ ] Implement checking PRs

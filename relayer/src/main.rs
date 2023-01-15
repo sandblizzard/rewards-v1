@@ -1,5 +1,6 @@
 pub mod jobs;
 use std::ops::Mul;
+use std::{thread, time};
 
 use anchor_client::anchor_lang::Result;
 pub use jobs::verification;
@@ -56,6 +57,8 @@ impl Bounty {
     }
 }
 
+/// try_fetch_indexable_domains is supposed to get all the
+/// domains stored on chain and return it as a list
 pub fn try_fetch_indexable_domains() -> Result<Vec<Domain>> {
     let test_domain = Domain {
         name: "github".to_string(),
@@ -104,41 +107,47 @@ pub fn get_bounty(creator: &str, text: &str) -> Option<Bounty> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    env_logger::init();
     let gh = octocrab::instance();
-
-    let search_domains = try_fetch_indexable_domains().unwrap();
-    for domain in &search_domains {
-        log::info!("[relayer] try index: {}", domain.name);
-        if domain.get_type() == DomainType::Issues {
-            let mut issues = gh
-                .issues(&domain.name, &domain.sub_domain_name)
-                .list()
-                .state(params::State::Open)
-                .send()
-                .await
-                .unwrap();
-            loop {
-                for issue in &issues {
-                    log::info!("[relayer] found issue id={} ", issue.id);
-                    // index the bounty information
-                    let bounty =
-                        get_bounty(&issue.user.id.to_string(), issue.body.as_ref().unwrap())
-                            .unwrap();
-                    // try to create the bounty
-                    bounty.try_create_bounty().unwrap();
-                }
-
-                // move to next issue
-                issues = match gh
-                    .get_page::<models::issues::Issue>(&issues.next)
+    loop {
+        let search_domains = try_fetch_indexable_domains().unwrap();
+        for domain in &search_domains {
+            log::info!("[relayer] try index: {}", domain.name);
+            if domain.get_type() == DomainType::Issues {
+                log::info!("[relayer] Index github issues");
+                let mut issues = gh
+                    .issues(&domain.name, &domain.sub_domain_name)
+                    .list()
+                    .state(params::State::Open)
+                    .send()
                     .await
-                    .unwrap()
-                {
-                    Some(next_page) => next_page,
-                    None => break,
+                    .unwrap();
+                loop {
+                    for issue in &issues {
+                        log::info!("[relayer] found issue id={} ", issue.id);
+                        // index the bounty information
+                        let bounty =
+                            get_bounty(&issue.user.id.to_string(), issue.body.as_ref().unwrap())
+                                .unwrap();
+                        // try to create the bounty
+                        bounty.try_create_bounty().unwrap();
+                    }
+
+                    // move to next issue
+                    issues = match gh
+                        .get_page::<models::issues::Issue>(&issues.next)
+                        .await
+                        .unwrap()
+                    {
+                        Some(next_page) => next_page,
+                        None => break,
+                    }
                 }
             }
         }
+
+        // sleep for 5s after each loop
+        thread::sleep(time::Duration::from_secs(5));
     }
     Ok(())
 }
