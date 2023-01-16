@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
                     domain_type.name()
                 ),
                 Err(err) => log::warn!(
-                    "[relayer] Failed to handle domain ${} with error={}",
+                    "[relayer] failed to handle domain {} with error={}",
                     domain_type.name(),
                     err
                 ),

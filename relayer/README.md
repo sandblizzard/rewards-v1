@@ -22,9 +22,31 @@ The general idea is that anyone can run the client and relay rewards.
 > RUST_LOG=info cargo run
 ```
 
+# User flows
+
+## Github flow
+
+### Preliminary:
+
+- Install SandBlizzard github app
+- Register github username with wallet in repo
+
+### Bounty
+
+1. CREATOR creates an issue or PR
+2. Receives a signing url in the comment
+3. Signs `create_bounty` tx
+4. Closes issue or PR with names of SOLVERS who should receive reward
+5. Relayer pays to the SOLVERS from the escrow
+6. Relayer posts status to Issue or PR
+
+BOUNTY_CREATOR can always `cancel_bounty` to get the funds out.
+
 # TODO
 
-[ ] Create dummy issues
-[ ] Separate Bounty, User etc into module
-[ ] Use structs from Bounty program
-[ ] Implement checking PRs
+- [x] Create dummy issues
+- [x] Separate Bounty, User etc into module
+- [x] Use structs from Bounty program
+- [ ] Implement PR flow
+- [ ] Implement account verification
+- [ ] Write Bounty and Identity contracts
