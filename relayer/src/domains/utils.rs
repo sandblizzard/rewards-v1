@@ -38,4 +38,8 @@ pub enum SBError {
 
     #[error("bounty allready exists")]
     BountyExists,
+
+    /// PULLS
+    #[error("can't get pull requests. Reason {0}")]
+    FailedToFetchPulls(String),
 }

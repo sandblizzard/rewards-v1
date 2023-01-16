@@ -34,6 +34,7 @@ impl DomainHandler for Github {
     }
 }
 
+/// get_connection establish a connection with github
 pub async fn get_connection() -> Result<Octocrab, SBError> {
     let path = match env::current_dir().and_then(|a| Ok(a.as_path().join(".env"))) {
         Ok(res) => res,
@@ -180,7 +181,8 @@ impl Github {
                     self.create_signing_link(&gh, &issue.number, &issue.id.0)
                         .await?;
                 } else {
-                    /// Issue is closed -> try to complete the bounty
+                    // FIXME: Clean up code
+                    // Issue is closed -> try to complete the bounty
                     let issue_closed_at = issue.closed_at.unwrap();
 
                     // get comments on issue

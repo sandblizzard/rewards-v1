@@ -2586,6 +2586,8 @@ dependencies = [
  "log",
  "octocrab",
  "regex",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
 ]
