@@ -78,16 +78,19 @@ pub fn handler(
     let escrow = &ctx.accounts.escrow;
     let token_program = &ctx.accounts.token_program;
     // initialize the bounty
-    ctx.accounts.bounty.create_bounty(
-        ctx.bumps.get("bounty").unwrap(),
-        &creator.key(),
-        &escrow.key(),
-        &domain,
-        &sub_domain,
-        &area,
-        &id,
-        bounty_amount,
-    );
+    ctx.accounts
+        .bounty
+        .create_bounty(
+            ctx.bumps.get("bounty").unwrap(),
+            &creator.key(),
+            &escrow.key(),
+            &domain,
+            &sub_domain,
+            &area,
+            &id,
+            bounty_amount,
+        )
+        .unwrap();
 
     // transfer the bounty amount to the escrow
     transfer(

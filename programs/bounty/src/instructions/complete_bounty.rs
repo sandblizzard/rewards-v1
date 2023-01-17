@@ -1,12 +1,9 @@
-use anchor_lang::prelude::{borsh::de, *};
-use anchor_spl::{
-    token::{Token, TokenAccount},
-    *,
-};
+use anchor_lang::prelude::*;
+use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
     state::Bounty,
-    state::{relayer, Relayer},
+    state::Relayer,
     utils::{BlizzardError, BOUNTY_SEED},
 };
 
@@ -48,7 +45,7 @@ pub fn handler(ctx: Context<CompleteBounty>) -> Result<()> {
     let payer = &ctx.accounts.payer;
     let bounty = &mut ctx.accounts.bounty;
 
-    if (!(bounty.is_owner(&payer.key()) || relayer.is_owner(&payer.key()))) {
+    if !(bounty.is_owner(&payer.key()) || relayer.is_owner(&payer.key())) {
         return Err(BlizzardError::NotAuthToCompleteBounty.into());
     } else {
         // create receivers vec
@@ -69,7 +66,7 @@ pub fn handler(ctx: Context<CompleteBounty>) -> Result<()> {
             receivers.push(r4.as_ref().unwrap())
         }
         // complete bounty
-        let bounty_amount = bounty.complete_bounty()?;
+        let _bounty_amount = bounty.complete_bounty()?;
 
         // transfer funds
         Ok(())

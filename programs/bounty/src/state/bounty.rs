@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, Bump};
+use anchor_lang::prelude::*;
 
 use crate::utils::{BlizzardError, BOUNTY_SEED};
 
@@ -43,7 +43,7 @@ impl Bounty {
     ///
     /// checks if the signer is the owner of the bounty
     ///
-    pub fn can_complete(&self, signer: &Signer, relayer: &Relayer) {}
+    pub fn can_complete(&self, _signer: &Signer, _relayer: &Relayer) {}
 
     pub fn is_owner(&self, user: &Pubkey) -> bool {
         self.owner.eq(user)
@@ -60,7 +60,7 @@ impl Bounty {
         id: &str,
         bounty_amount: u64,
     ) -> Result<Bounty> {
-        if (self.state == "completed") {
+        if self.state == "completed" {
             return Err(BlizzardError::CanNotReinitBounty.into());
         }
 

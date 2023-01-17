@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use std::num::TryFromIntError;
 
 #[error_code]
 #[derive(PartialEq)]

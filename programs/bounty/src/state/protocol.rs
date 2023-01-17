@@ -10,7 +10,7 @@ pub struct Protocol {
 }
 
 impl Protocol {
-    pub fn initialize(&mut self, owner: &Pubkey, user_collection: &Pubkey) -> Result<()> {
+    pub fn initialize(&mut self, owner: &Pubkey, _user_collection: &Pubkey) -> Result<()> {
         self.owner = *owner;
         Ok(())
     }
