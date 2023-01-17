@@ -2,13 +2,19 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct Relayer {
-    owner: Pubkey,
+    pub bump: u8,
+    pub owner: Pubkey,
 }
 
 impl Relayer {
-    pub fn initialize(&mut self, owner: &Pubkey) -> Result<()> {
+    pub fn initialize(&mut self, owner: &Pubkey, bump: u8) -> Result<()> {
         self.owner = *owner;
+        self.bump = bump;
         Ok(())
+    }
+
+    pub fn is_owner(&self, user: &Pubkey) -> bool {
+        self.owner.eq(user)
     }
 }
 

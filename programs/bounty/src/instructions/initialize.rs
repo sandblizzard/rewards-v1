@@ -2,7 +2,6 @@ use crate::state::*;
 use crate::utils::BOUNTY_SEED;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use anchor_spl::*;
 use std::mem::size_of;
 
 #[derive(Accounts)]

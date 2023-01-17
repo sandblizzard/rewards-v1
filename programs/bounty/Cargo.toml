@@ -3,6 +3,7 @@ name = "bounty"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
+rust="1.59.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
@@ -16,5 +17,5 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.24.2"
-anchor-spl = "0.24.2"
+anchor-lang = "0.26.0"
+anchor-spl = "0.26.0"
