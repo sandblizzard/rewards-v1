@@ -1,6 +1,6 @@
 use std::env;
 use std::result::Result;
-use std::{fmt::Debug, ops::Mul};
+use std::{fmt::Debug};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq)]
@@ -75,6 +75,6 @@ pub fn get_key_from_env(key: &str) -> Result<String, SBError> {
 
     match env::var(key) {
         Ok(token) => return Ok(token.replace("\n", "")),
-        Err(err) => return Err(SBError::KeyNotFound(key.to_string())),
+        Err(_err) => return Err(SBError::KeyNotFound(key.to_string())),
     }
 }

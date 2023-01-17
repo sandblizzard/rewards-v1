@@ -15,14 +15,14 @@ pub mod identity {
     /// initialize
     ///
     /// Allows the first RELAYER to be initialize
-    pub fn initialize(ctx: Context<CreateUser>) -> Result<()> {
+    pub fn initialize(_ctx: Context<CreateUser>) -> Result<()> {
         Ok(())
     }
 
     /// relay_create_user
     ///
     /// only RELAYER can relay
-    pub fn relay_create_user(ctx: Context<CreateUser>) -> Result<()> {
+    pub fn relay_create_user(_ctx: Context<CreateUser>) -> Result<()> {
         Ok(())
     }
 }

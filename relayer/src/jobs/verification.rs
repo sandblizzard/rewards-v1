@@ -1,13 +1,12 @@
 use crate::domains::{github::get_connection, utils::SBError};
 use anchor_client::{
-    anchor_lang::{prelude::Signer, solana_program::example_mocks::solana_sdk::signature::Keypair},
     solana_sdk::{pubkey::Pubkey, signature::read_keypair_file},
 };
-use octocrab;
+
 use serde::{Deserialize, Serialize};
-use serde_json::*;
+
 use std::{
-    fs::{self, File},
+    fs::{File},
     result::Result,
 };
 pub struct UserLink {
@@ -15,14 +14,14 @@ pub struct UserLink {
     user_profile: String,
     wallet: Pubkey,
 }
-use reqwest;
+
 
 /// get_domains calls the rewards contract and get the
 /// potential domains
 ///
 /// FIXME
 pub fn get_domains() -> Result<(), SBError> {
-    let key = read_keypair_file("../../verification.so").expect("Read to file");
+    let _key = read_keypair_file("../../verification.so").expect("Read to file");
     Ok(())
 }
 
@@ -45,7 +44,7 @@ struct VerificationData {
 pub async fn get_verification() -> Result<(), SBError> {
     let gh = get_connection().await?;
 
-    let verification = gh
+    let _verification = gh
         .repos("sandblizzard", "verifcation")
         .get_content()
         .path("./data/")
@@ -60,7 +59,7 @@ pub async fn get_verification() -> Result<(), SBError> {
 
     // try generate the users using underdog
     let profiles = dd.profiles;
-    for profile in profiles {
+    for _profile in profiles {
         // create user
     }
     Ok(())

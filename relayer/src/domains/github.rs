@@ -1,11 +1,10 @@
 use std::{
-    future::{self, Future},
     result::Result,
 };
 
 use super::{
     utils::{get_key_from_env, SBError},
-    Domain, DomainHandler, DomainType,
+    Domain, DomainHandler,
 };
 use crate::domains::bounty::{get_bounty, get_solvers};
 use async_trait::async_trait;

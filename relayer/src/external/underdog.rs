@@ -1,7 +1,7 @@
-use std::{collections::HashMap, fmt::format};
+use std::{collections::HashMap};
 
 use anchor_client::solana_sdk::pubkey::Pubkey;
-use reqwest::header::{self, HeaderMap};
+use reqwest::header::{HeaderMap};
 
 use crate::domains::utils::{get_key_from_env, SBError};
 
@@ -77,7 +77,7 @@ pub fn get_sandblizzard_collection() -> Result<Pubkey, SBError> {
 }
 
 ///
-pub fn get_bounty_user(username: &str) -> Result<(), SBError> {
+pub fn get_bounty_user(_username: &str) -> Result<(), SBError> {
     Ok(())
 }
 

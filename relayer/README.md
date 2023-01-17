@@ -22,6 +22,13 @@ The general idea is that anyone can run the client and relay rewards.
 > RUST_LOG=info cargo run
 ```
 
+## Prebuild
+
+```
+> cargo fmt // formatting
+> cargo fix // try to fix warnings
+```
+
 # User flows
 
 ## Github flow

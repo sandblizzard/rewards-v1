@@ -1,14 +1,13 @@
 pub mod domains;
 pub mod external;
 pub mod jobs;
-use std::ops::Mul;
+
 use std::{thread, time};
 
 use anchor_client::anchor_lang::Result;
 use domains::*;
 pub use jobs::verification;
 use log;
-use octocrab::{self, models, params};
 
 use tokio;
 
@@ -51,5 +50,4 @@ async fn main() -> Result<()> {
         // sleep for 5s after each loop
         thread::sleep(time::Duration::from_secs(5));
     }
-    Ok(())
 }
