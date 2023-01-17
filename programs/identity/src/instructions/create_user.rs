@@ -2,7 +2,6 @@ pub use crate::state::user;
 pub use crate::utils::*;
 use anchor_lang::{
     prelude::*,
-    solana_program::{instruction, sysvar::instructions},
 };
 use std::mem::size_of;
 
@@ -42,11 +41,11 @@ pub struct CreateUser<'info> {
 /// * profile_type: is the type of social media profile such as github
 pub fn handler(
     ctx: Context<CreateUser>,
-    user_address: &Pubkey,
-    profile: String,
-    profile_type: String,
+    _user_address: &Pubkey,
+    _profile: String,
+    _profile_type: String,
 ) -> Result<()> {
-    let user_account = &ctx.accounts.user_account;
+    let _user_account = &ctx.accounts.user_account;
 
     // FIXME
     //user_account.initialize();

@@ -5,6 +5,6 @@ use solana_program_test::*;
 
 #[tokio::test]
 async fn test_manage_relayers() {
-    let program_manager = ProgramManager::init();
+    let _program_manager = ProgramManager::init();
     println!("Hello there")
 }

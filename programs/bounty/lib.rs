@@ -9,7 +9,7 @@ pub use state::*;
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
-pub mod rewards_v1 {
+pub mod bounty {
     use super::*;
 
     /// initialize
@@ -52,13 +52,6 @@ pub mod rewards_v1 {
     /// After an area is closed the bounty creators can redeeem their proposed
     /// bounties
     pub fn remove_listening_area(ctx: Context<CreateUser>) -> Result<()> {
-        Ok(())
-    }
-
-    /// relay_create_user
-    ///
-    /// only RELAYER can relay
-    pub fn relay_create_user(ctx: Context<CreateUser>) -> Result<()> {
         Ok(())
     }
 

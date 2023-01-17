@@ -15,3 +15,45 @@ The general idea is that anyone can run the client and relay rewards.
 ### Potential responsibilites
 
 - Trigger transactions in a foreign context like github.com
+
+## Run
+
+```
+> RUST_LOG=info cargo run
+```
+
+## Prebuild
+
+```
+> cargo fmt // formatting
+> cargo fix // try to fix warnings
+```
+
+# User flows
+
+## Github flow
+
+### Preliminary:
+
+- Install SandBlizzard github app
+- Register github username with wallet in repo
+
+### Bounty
+
+1. CREATOR creates an issue or PR
+2. Receives a signing url in the comment
+3. Signs `create_bounty` tx
+4. Closes issue or PR with names of SOLVERS who should receive reward
+5. Relayer pays to the SOLVERS from the escrow
+6. Relayer posts status to Issue or PR
+
+BOUNTY_CREATOR can always `cancel_bounty` to get the funds out.
+
+# TODO
+
+- [x] Create dummy issues
+- [x] Separate Bounty, User etc into module
+- [x] Use structs from Bounty program
+- [ ] Implement PR flow
+- [ ] Implement account verification
+- [ ] Write Bounty and Identity contracts

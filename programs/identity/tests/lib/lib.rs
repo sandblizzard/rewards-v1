@@ -9,5 +9,5 @@ impl ProgramManager {
 
     /// add_necessary_programs adds programs to the the test context that the
     /// sure program interacts with
-    pub fn add_necessary_programs(&self, ctx: &mut ProgramTest) {}
+    pub fn add_necessary_programs(&self, _ctx: &mut ProgramTest) {}
 }
