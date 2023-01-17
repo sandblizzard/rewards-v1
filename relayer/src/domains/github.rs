@@ -101,7 +101,7 @@ impl Github {
         );
 
         let gh = get_connection().await?;
-        let mut issues_cursor = gh.issues(&self.domain.owner, &self.domain.sub_domain_name);
+        let issues_cursor = gh.issues(&self.domain.owner, &self.domain.sub_domain_name);
         let mut issues = match issues_cursor.list().state(params::State::All).send().await {
             Ok(val) => val,
             Err(err) => return Err(SBError::FailedToGetIssue(err.to_string())),
