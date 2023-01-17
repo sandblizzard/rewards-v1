@@ -15,6 +15,7 @@ pub struct UserLink {
     user_profile: String,
     wallet: Pubkey,
 }
+use reqwest;
 
 /// get_domains calls the rewards contract and get the
 /// potential domains
@@ -43,18 +44,6 @@ struct VerificationData {
 /// mints NFTs if they don't exist already
 pub async fn get_verification() -> Result<(), SBError> {
     let gh = get_connection().await?;
-
-    let mut pulls = match gh
-        .pulls("sandblizzard", "verification")
-        .list()
-        .state(octocrab::params::State::All)
-        .per_page(100)
-        .send()
-        .await
-    {
-        Ok(pulls) => pulls,
-        Err(err) => return Err(SBError::FailedToFetchPulls(err.to_string())),
-    };
 
     let verification = gh
         .repos("sandblizzard", "verifcation")

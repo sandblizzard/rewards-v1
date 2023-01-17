@@ -1,11 +1,12 @@
-use dotenv;
 use std::{
-    env,
     future::{self, Future},
     result::Result,
 };
 
-use super::{utils::SBError, Domain, DomainHandler, DomainType};
+use super::{
+    utils::{get_key_from_env, SBError},
+    Domain, DomainHandler, DomainType,
+};
 use crate::domains::bounty::{get_bounty, get_solvers};
 use async_trait::async_trait;
 use octocrab::{
@@ -36,30 +37,8 @@ impl DomainHandler for Github {
 
 /// get_connection establish a connection with github
 pub async fn get_connection() -> Result<Octocrab, SBError> {
-    let path = match env::current_dir().and_then(|a| Ok(a.as_path().join(".env"))) {
-        Ok(res) => res,
-        Err(err) => return Err(SBError::CouldNotGetPath(err.to_string())),
-    };
-    match dotenv::from_path(&path) {
-        Ok(_) => (),
-        Err(err) => {
-            return Err(SBError::CouldNotGetPath(format!(
-                "path={:?}, cause: {}",
-                &path,
-                err.to_string()
-            )))
-        }
-    }
-
-    let github_key = match env::var("GITHUB_KEY") {
-        Ok(token) => token.replace("\n", ""),
-        Err(err) => return Err(SBError::GithubTokenNotSet),
-    };
-
-    let github_id = match env::var("GITHUB_ID") {
-        Ok(token) => token,
-        Err(err) => return Err(SBError::GithubTokenNotSet),
-    };
+    let github_key = get_key_from_env("GITHUB_KEY")?;
+    let github_id = get_key_from_env("GITHUB_ID")?;
 
     let app_id = github_id.parse::<u64>().unwrap().into();
     let key = jsonwebtoken::EncodingKey::from_rsa_pem(github_key.as_bytes()).unwrap();

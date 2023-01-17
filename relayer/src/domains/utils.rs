@@ -1,5 +1,4 @@
-use core::fmt;
-use regex::Regex;
+use std::env;
 use std::result::Result;
 use std::{fmt::Debug, ops::Mul};
 use thiserror::Error;
@@ -11,9 +10,6 @@ pub enum SBError {
 
     #[error("could not get path. Reason {0}")]
     CouldNotGetPath(String),
-
-    #[error("github token not set")]
-    GithubTokenNotSet,
 
     #[error("undefined bounty type. Reason {0}")]
     UndefinedBountyType(String),
@@ -39,7 +35,46 @@ pub enum SBError {
     #[error("bounty allready exists")]
     BountyExists,
 
+    #[error("key {0} not found in environment")]
+    KeyNotFound(String),
+
     /// PULLS
     #[error("can't get pull requests. Reason {0}")]
     FailedToFetchPulls(String),
+
+    /// underdog
+    #[error("failed to get {0}. Reason {1}")]
+    FailedToRequestUnderdog(String, String),
+
+    #[error("failed to deserialize data {0}. Reason {1}")]
+    FailedToDeserializeData(String, String),
+
+    #[error("underdog nft not minted. Source {0}")]
+    UnderdogNFTNotMinted(String),
+}
+
+/// get_key_from_env
+///
+/// tries to find `key` in the local .env file and returns it
+pub fn get_key_from_env(key: &str) -> Result<String, SBError> {
+    // assumes .env
+    let path = match env::current_dir().and_then(|a| Ok(a.as_path().join(".env"))) {
+        Ok(res) => res,
+        Err(err) => return Err(SBError::CouldNotGetPath(err.to_string())),
+    };
+    match dotenv::from_path(&path) {
+        Ok(_) => (),
+        Err(err) => {
+            return Err(SBError::CouldNotGetPath(format!(
+                "path={:?}, cause: {}",
+                &path,
+                err.to_string()
+            )))
+        }
+    }
+
+    match env::var(key) {
+        Ok(token) => return Ok(token.replace("\n", "")),
+        Err(err) => return Err(SBError::KeyNotFound(key.to_string())),
+    }
 }
