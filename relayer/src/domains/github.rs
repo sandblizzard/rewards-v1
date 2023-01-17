@@ -1,6 +1,4 @@
-use std::{
-    result::Result,
-};
+use std::result::Result;
 
 use super::{
     utils::{get_key_from_env, SBError},
@@ -161,7 +159,10 @@ impl Github {
                 } else {
                     // FIXME: Clean up code
                     // Issue is closed -> try to complete the bounty
-                    let issue_closed_at = issue.closed_at.unwrap();
+                    let issue_closed_at = match issue.closed_at {
+                        Some(timestamp) => timestamp,
+                        None => return Err(SBError::IssueNotClosed),
+                    };
 
                     // get comments on issue
                     let page_comments = issues_cursor
@@ -169,7 +170,9 @@ impl Github {
                         .per_page(150)
                         .send()
                         .await
-                        .unwrap()
+                        .map_err(|err| {
+                            SBError::CommentsNotFound("issues".to_string(), err.to_string())
+                        })?
                         .take_items();
 
                     // filter comments at closing
@@ -177,16 +180,33 @@ impl Github {
                         .iter()
                         .filter(|comment| comment.created_at.eq(&issue_closed_at))
                         .collect();
-                    // take first closed comment
-                    let first_close_issue_comment = comments.first().unwrap();
-                    let bounty = get_solvers(
-                        &issue.user.id.to_string(),
-                        &first_close_issue_comment.body.as_ref().unwrap(),
-                        &issue.id,
-                    )
-                    .unwrap();
 
-                    bounty.try_complete_bounty().unwrap()
+                    // take first closed comment
+                    let first_close_issue_comment = match comments.first() {
+                        Some(comment) => comment,
+                        None => {
+                            return Err(SBError::CommentNotFound(
+                                "issues".to_string(),
+                                "".to_string(),
+                            ))
+                        }
+                    };
+
+                    let comment_body = match first_close_issue_comment.body.as_ref() {
+                        Some(comment) => comment,
+                        None => {
+                            return Err(SBError::CommentNotFound(
+                                "issues".to_string(),
+                                "Comment body not found".to_string(),
+                            ))
+                        }
+                    };
+                    let bounty =
+                        get_solvers(&issue.user.id.to_string(), &comment_body, &issue.id).unwrap();
+
+                    bounty.try_complete_bounty().map_err(|err| {
+                        SBError::FailedToCompleteBounty("issues".to_string(), err.to_string())
+                    })?;
                 }
             }
 

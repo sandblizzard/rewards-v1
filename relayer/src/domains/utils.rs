@@ -1,10 +1,19 @@
 use std::env;
+use std::fmt::Debug;
 use std::result::Result;
-use std::{fmt::Debug};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq)]
 pub enum SBError {
+    #[error("Github issue is not closed")]
+    IssueNotClosed,
+
+    #[error("{0}  Github comments not found. Reason {1}")]
+    CommentsNotFound(String, String),
+
+    #[error("{0}  Github comments not found. Reason {1}")]
+    CommentNotFound(String, String),
+
     #[error("could not create signing link. Reson:{0}")]
     CouldNotGenerateSigningLink(String),
 
@@ -19,6 +28,9 @@ pub enum SBError {
 
     #[error("failed to get bounty from text. Reason {0}")]
     FailedToFindBounty(String),
+
+    #[error("{0} failed to get bounty from text. Reason {1}")]
+    FailedToCompleteBounty(String, String),
 
     #[error("could not get bounty capture. Reason {0}")]
     CouldNotGetBountyCapture(String),
@@ -51,6 +63,25 @@ pub enum SBError {
 
     #[error("underdog nft not minted. Source {0}")]
     UnderdogNFTNotMinted(String),
+
+    /// verification
+    #[error("{0} failed to get verification file. Reason: {1}")]
+    FailedToGetVerficationFile(String, String),
+
+    #[error("{0} could not open local verification file. Reason: {1}")]
+    FailedToOpenVerificationFile(String, String),
+
+    #[error("{0} could not parse file. Reason: {1}")]
+    FailedToParseFile(String, String),
+
+    #[error("{0} Expected {1} found {2}")]
+    UnexpectedNumberOfElements(String, u16, u16),
+
+    #[error("{0} Username {1}, address {2}")]
+    SandblizzardUserAlreadyExists(String, String, String),
+
+    #[error("{0} Could not find user {1} among minted NFTs")]
+    CouldNotFindUser(String, String),
 }
 
 /// get_key_from_env

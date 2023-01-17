@@ -1,20 +1,18 @@
-use crate::domains::{github::get_connection, utils::SBError};
-use anchor_client::{
-    solana_sdk::{pubkey::Pubkey, signature::read_keypair_file},
+use crate::{
+    domains::{github::get_connection, utils::SBError},
+    external::{get_sandblizzard_collection, UnderdogCollection},
 };
-
+use anchor_client::solana_sdk::{pubkey::Pubkey, signature::read_keypair_file};
+use base64::engine::general_purpose;
 use serde::{Deserialize, Serialize};
+use std::env;
 
-use std::{
-    fs::{File},
-    result::Result,
-};
+use std::{fs::File, result::Result};
 pub struct UserLink {
     domain: String,
     user_profile: String,
     wallet: Pubkey,
 }
-
 
 /// get_domains calls the rewards contract and get the
 /// potential domains
@@ -25,51 +23,60 @@ pub fn get_domains() -> Result<(), SBError> {
     Ok(())
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Profile {
     github: String,
-    solanaAddress: String,
+    #[serde(rename = "solanaAddress")]
+    solana_address: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct VerificationData {
     name: String,
     profiles: Vec<Profile>,
 }
 
-/// get_verification
+/// verify_users
 ///
 /// reads the PRs into the verification list and
 /// mints NFTs if they don't exist already
-pub async fn get_verification() -> Result<(), SBError> {
+pub async fn verify_users() -> Result<(), SBError> {
     let gh = get_connection().await?;
 
-    let _verification = gh
-        .repos("sandblizzard", "verifcation")
+    let mut verification = gh
+        .repos("sandblizzard", "verification")
         .get_content()
-        .path("./data/")
+        .path("profile.list.json")
         .r#ref("main")
         .send()
         .await
-        .unwrap();
+        .map_err(|err| {
+            SBError::FailedToGetVerficationFile("verify_users".to_string(), err.to_string())
+        })?;
 
-    // load the verification file
-    let verification_file = File::open("./data/profile.list.json").unwrap();
-    let dd: VerificationData = serde_json::from_reader(verification_file).unwrap();
+    let files = verification.take_items();
+    if files.len() != 1 {
+        return Err(SBError::UnexpectedNumberOfElements(
+            "verify_users".to_string(),
+            1,
+            files.len() as u16,
+        ));
+    }
 
+    let decoded_file = files[0].decoded_content().unwrap();
+
+    let parsed_file: VerificationData = serde_json::from_str(&decoded_file)
+        .map_err(|err| SBError::FailedToParseFile("verify_users".to_string(), err.to_string()))?;
+    log::debug!("[verify_users] parsed_file {:?}", parsed_file);
     // try generate the users using underdog
-    let profiles = dd.profiles;
-    for _profile in profiles {
+    let profiles = parsed_file.profiles;
+    let blizzard_collection = get_sandblizzard_collection()?;
+    let collection = UnderdogCollection::new(&blizzard_collection.to_string());
+    for profile in profiles {
         // create user
+        collection
+            .mint_nft(&profile.solana_address, &profile.github)
+            .await?;
     }
     Ok(())
-}
-
-/// search_verifications
-///
-/// Load verification list and only try to insert new entries
-pub fn search_verifications() -> Result<Vec<UserLink>, SBError> {
-    let new_users: Vec<UserLink> = Vec::new();
-
-    Ok(new_users)
 }

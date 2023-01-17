@@ -55,5 +55,6 @@ BOUNTY_CREATOR can always `cancel_bounty` to get the funds out.
 - [x] Separate Bounty, User etc into module
 - [x] Use structs from Bounty program
 - [ ] Implement PR flow
-- [ ] Implement account verification
-- [ ] Write Bounty and Identity contracts
+- [x] Implement account verification
+- [ ] Write Bounty
+- [ ] Implement JPEG module for creation of new NFT JPEGS

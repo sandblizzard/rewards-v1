@@ -7,6 +7,7 @@ use std::{thread, time};
 use anchor_client::anchor_lang::Result;
 use domains::*;
 pub use jobs::verification;
+use jobs::verification::verify_users;
 use log;
 
 use tokio;
@@ -30,6 +31,7 @@ async fn main() -> Result<()> {
     env_logger::init();
 
     loop {
+        // index domains for bounties
         let search_domains = try_fetch_indexable_domains().unwrap();
         for domain in &search_domains {
             log::info!("[relayer] try index: {}", domain.name);
@@ -46,6 +48,14 @@ async fn main() -> Result<()> {
                 ),
             }
         }
+
+        // Verify users based on verification file
+        match verify_users().await {
+            Ok(_) => (),
+            Err(err) => {
+                log::warn!("[relayer] failed to verify users with error={}", err)
+            }
+        };
 
         // sleep for 5s after each loop
         thread::sleep(time::Duration::from_secs(5));
