@@ -22,9 +22,9 @@ pub struct Initialize<'info> {
     )]
     pub protocol: Account<'info, protocol::Protocol>,
 
-    /// Token account to collect bounties
+    /// CHECK: Fee collector is an account that controls fees
     #[account()]
-    pub fee_collector: Account<'info, TokenAccount>,
+    pub fee_collector: AccountInfo<'info>,
 
     /// mint used for the collection
     pub collection: Account<'info, Mint>,

@@ -9,7 +9,7 @@ use std::mem::size_of;
 /// If comes from a users <-> nft then the creator needs to be the signer not the
 /// owner of the NFT
 #[derive(Accounts)]
-#[instruction(domain: String,sub_domain: String,area: String,id: String)]
+#[instruction(domain: String,sub_domain: String,id: String)]
 pub struct CreateBounty<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
@@ -21,7 +21,6 @@ pub struct CreateBounty<'info> {
             BOUNTY_SEED.as_bytes().as_ref(),
             domain.as_bytes(),
             sub_domain.as_bytes(),
-            area.as_bytes(),
             id.as_bytes(),
         ],
         bump,
@@ -62,14 +61,13 @@ pub struct CreateBounty<'info> {
 ///
 /// ## args
 /// *  domain: e.g. github,jira
-/// * sub_domain: e.g. Sandblizzard,Microsoft
 /// * area: e.g. backend
+/// * sub_domain: e.g. Sandblizzard,Microsoft
 /// * id: e.g. 453423
 pub fn handler(
     ctx: Context<CreateBounty>,
     domain: String,
     sub_domain: String,
-    area: String,
     id: String,
     bounty_amount: u64,
 ) -> Result<()> {
@@ -86,7 +84,6 @@ pub fn handler(
             &escrow.key(),
             &domain,
             &sub_domain,
-            &area,
             &id,
             bounty_amount,
         )

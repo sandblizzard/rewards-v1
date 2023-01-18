@@ -11,7 +11,6 @@ pub struct Bounty {
     bump_array: [u8; 1],
     domain: String,
     sub_domain: String,
-    area: String,
     id: String,
 
     /// Owner of bounty
@@ -28,12 +27,11 @@ pub struct Bounty {
 
 impl Bounty {
     /// bounty seeds used to sign transactions
-    pub fn seeds(&self) -> [&[u8]; 6] {
+    pub fn seeds(&self) -> [&[u8]; 5] {
         [
             BOUNTY_SEED.as_bytes().as_ref(),
             self.domain.as_bytes(),
             self.sub_domain.as_bytes(),
-            self.area.as_bytes(),
             self.id.as_bytes(),
             self.bump_array.as_ref(),
         ]
@@ -56,7 +54,6 @@ impl Bounty {
         escrow: &Pubkey,
         domain: &str,
         sub_domain: &str,
-        area: &str,
         id: &str,
         bounty_amount: u64,
     ) -> Result<Bounty> {
@@ -69,7 +66,6 @@ impl Bounty {
             bump_array: [*bump; 1],
             domain: domain.to_string(),
             sub_domain: sub_domain.to_string(),
-            area: area.to_string(),
             id: id.to_string(),
             owner: owner.clone(),
             state: "started".to_string(),
