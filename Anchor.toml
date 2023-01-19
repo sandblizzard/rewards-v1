@@ -17,7 +17,7 @@ bounty = "4F4GVSFk1AidP7mgtoFuJRxcVrD3jtmJmpaZwTjq1E2B"
 
 [provider]
 cluster = "devnet"
-wallet = "/Users/kristofferhovlandberg/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
