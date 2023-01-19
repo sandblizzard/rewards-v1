@@ -8,4 +8,7 @@ pub enum BlizzardError {
 
     #[msg("signer missing auth to complete bounty")]
     NotAuthToCompleteBounty,
+
+    #[msg("signer missing auth to release escrow")]
+    NotAuthToReleaseEscrow,
 }
