@@ -1,14 +1,22 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.localnet]
-bounty = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+
 
 [registry]
 url = "https://api.apr.dev"
 
+[programs.devnet]
+bounty = "4F4GVSFk1AidP7mgtoFuJRxcVrD3jtmJmpaZwTjq1E2B"
+
+[programs.mainnet]
+bounty = "4F4GVSFk1AidP7mgtoFuJRxcVrD3jtmJmpaZwTjq1E2B"
+
+[programs.localnet]
+bounty = "4F4GVSFk1AidP7mgtoFuJRxcVrD3jtmJmpaZwTjq1E2B"
+
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "/Users/kristofferhovlandberg/.config/solana/id.json"
 
 [scripts]

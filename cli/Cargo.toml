@@ -1,0 +1,14 @@
+[package]
+name = "scripts"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anchor-client = "0.26.0"
+env_logger = "^0.9.3"
+log = "^0.4.17"
+home = "0.5.4"
+clap = {version="~3.2.23",features=["derive"]}
+bounty = {path="./../programs/bounty"}
