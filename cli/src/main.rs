@@ -1,13 +1,12 @@
-use bounty::{accounts, instruction, utils, Initialize};
-use std::{rc::Rc, str::FromStr, sync::Arc};
+use bounty::{accounts, instruction, utils};
+use std::{rc::Rc, str::FromStr};
 
 use anchor_client::{
-    anchor_lang::{solana_program::pubkey, system_program, InstructionData, ToAccountMetas},
-    solana_client::blockhash_query,
+    anchor_lang::{system_program, InstructionData, ToAccountMetas},
     solana_sdk::{
         pubkey::Pubkey,
         signature::read_keypair_file,
-        signer::{self, Signer},
+        signer::{Signer},
     },
     *,
 };
@@ -24,7 +23,7 @@ struct Args {
 }
 
 fn main() {
-    let env = env_logger::init();
+    let _env = env_logger::init();
     let args = Args::parse();
 
     // get keypair from config.id
