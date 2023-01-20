@@ -5,7 +5,7 @@ pub mod utils;
 
 pub use instructions::*;
 
-declare_id!("4F4GVSFk1AidP7mgtoFuJRxcVrD3jtmJmpaZwTjq1E2B");
+declare_id!("EpAY3DwbV1cHiYJhKFosK2KxdQRWkQci2v8ze875rXim");
 
 #[program]
 pub mod bounty {
@@ -29,5 +29,16 @@ pub mod bounty {
         bounty_amount: u64,
     ) -> Result<()> {
         create_bounty::handler(ctx, domain, sub_domain, id, bounty_amount)
+    }
+
+    /// complete_bounty
+    ///
+    /// Try to complete bounty
+    pub fn complete_bounty(ctx: Context<CompleteBounty>) -> Result<()> {
+        complete_bounty::handler(ctx)
+    }
+
+    pub fn add_relayer(ctx: Context<AddRelayer>, relayer_address: Pubkey) -> Result<()> {
+        add_relayer::handler(ctx, relayer_address)
     }
 }

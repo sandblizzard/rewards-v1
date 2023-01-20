@@ -1,28 +1,38 @@
-use anchor_lang::prelude::*;
+use core::num;
+use std::{io::Read, ops::Div};
 
-use crate::utils::{BlizzardError, BOUNTY_SEED};
+use anchor_lang::prelude::*;
+use anchor_spl::token::TokenAccount;
+
+use crate::utils::{BlizzardError, BOUNTY_SEED, FEE_REC};
 
 use super::Relayer;
 
 #[account]
+#[derive(Debug)]
 pub struct Bounty {
-    bump: u8,
+    pub bump: u8,
     /// for the seeds
-    bump_array: [u8; 1],
-    domain: String,
-    sub_domain: String,
-    id: String,
+    pub bump_array: [u8; 1],
+
+    pub escrow_bump: u8,
+    pub domain: String,
+    pub sub_domain: String,
+    pub id: String,
 
     /// Owner of bounty
-    owner: Pubkey,
+    pub owner: Pubkey,
+    pub mint: Pubkey,
 
     /// State - created, closed
-    state: String,
+    pub state: String,
 
     /// escrow of the bounty
     pub escrow: Pubkey,
 
-    bounty_amount: u64,
+    pub bounty_amount: u64,
+
+    pub completed_by: Vec<Pubkey>,
 }
 
 impl Bounty {
@@ -48,7 +58,7 @@ impl Bounty {
     }
 
     pub fn create_bounty(
-        &self,
+        &mut self,
         bump: &u8,
         owner: &Pubkey,
         escrow: &Pubkey,
@@ -56,26 +66,45 @@ impl Bounty {
         sub_domain: &str,
         id: &str,
         bounty_amount: u64,
-    ) -> Result<Bounty> {
+        mint: &Pubkey,
+        escrow_bump: &u8,
+    ) -> Result<()> {
         if self.state == "completed" {
             return Err(BlizzardError::CanNotReinitBounty.into());
         }
 
-        Ok(Bounty {
-            bump: *bump,
-            bump_array: [*bump; 1],
-            domain: domain.to_string(),
-            sub_domain: sub_domain.to_string(),
-            id: id.to_string(),
-            owner: owner.clone(),
-            state: "started".to_string(),
-            escrow: escrow.clone(),
-            bounty_amount,
-        })
+        self.bump = *bump;
+        self.bump_array = [*bump; 1];
+        self.domain = domain.to_string();
+        self.sub_domain = sub_domain.to_string();
+        self.id = id.to_string();
+        self.owner = *owner;
+        self.state = "started".to_string();
+        self.escrow = *escrow;
+        self.mint = *mint;
+        self.escrow_bump = *escrow_bump;
+        self.bounty_amount = bounty_amount;
+        Ok(())
     }
 
-    pub fn complete_bounty(&mut self) -> Result<u64> {
+    pub fn complete_bounty<'info>(
+        &mut self,
+        solvers: Vec<&Account<'info, TokenAccount>>,
+        fee_collector: &Account<'info, TokenAccount>,
+    ) -> Result<Vec<(AccountInfo<'info>, u64)>> {
         self.state = "completed".to_string();
-        Ok(self.bounty_amount)
+        //self.completed_by = solvers.iter().map(|solver| solver.owner).collect();
+
+        let total_amount = self.bounty_amount;
+        let num_solvers = solvers.len();
+        let fee = total_amount.div(FEE_REC);
+        let amount_per_solver = (total_amount - fee).div(num_solvers as u64);
+        let mut bounty_payout = solvers
+            .iter()
+            .map(|solver| (solver.to_account_info(), amount_per_solver))
+            .collect::<Vec<(AccountInfo<'info>, u64)>>();
+        bounty_payout.push((fee_collector.to_account_info(), fee));
+
+        Ok(bounty_payout)
     }
 }

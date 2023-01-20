@@ -2,6 +2,12 @@
 
 This is the monorepo for the submission(s) to the [Sandstorm Solana Hackathon](https://www.sandstormhackathon.com/)
 
+## Run integrationt test
+
+```
+> anchor test --skip-deploy
+```
+
 ## Test locally
 
 ```

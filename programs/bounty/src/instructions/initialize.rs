@@ -41,7 +41,12 @@ pub fn handler(ctx: Context<Initialize>) -> Result<()> {
     let collection = &mut ctx.accounts.collection;
     // Initialize collection
     protocol
-        .initialize(&ctx.accounts.creator.key(), &collection.key())
+        .initialize(
+            ctx.bumps.get("protocol").unwrap(),
+            &ctx.accounts.fee_collector.key(),
+            &ctx.accounts.creator.key(),
+            &collection.key(),
+        )
         .unwrap();
 
     Ok(())

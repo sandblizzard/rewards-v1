@@ -35,7 +35,9 @@ pub struct CreateBounty<'info> {
     /// mint to use
     /// Only bonk
     #[account(
-        constraint = mint.key().to_string().eq(BONK_MINT)
+        //constraint = mint.key().to_string().eq(BONK_MINT),
+        constraint = creator_account.mint.eq(&mint.key()),
+        constraint = escrow.mint.eq(&mint.key())
     )]
     pub mint: Account<'info, Mint>,
 
@@ -86,6 +88,8 @@ pub fn handler(
             &sub_domain,
             &id,
             bounty_amount,
+            &ctx.accounts.mint.key(),
+            &ctx.bumps.get("escrow").unwrap(),
         )
         .unwrap();
 

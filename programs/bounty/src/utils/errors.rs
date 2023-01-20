@@ -11,4 +11,7 @@ pub enum BlizzardError {
 
     #[msg("signer missing auth to release escrow")]
     NotAuthToReleaseEscrow,
+
+    #[msg("at least one receiver needs to be specified")]
+    MissingReceiverTokenAccounts,
 }
