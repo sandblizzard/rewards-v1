@@ -26,6 +26,7 @@ pub struct CompleteBounty<'info> {
     pub protocol: Box<Account<'info, Protocol>>,
 
     #[account(
+        mut,
         constraint = protocol.fee_collector.eq(&fee_collector.owner.key()),
         constraint = fee_collector.mint.eq(&bounty.mint.key())
     )]
@@ -107,38 +108,35 @@ pub fn handler(ctx: Context<CompleteBounty>) -> Result<()> {
             bounty.escrow.to_string(),
             escrow.key().to_string()
         );
-        anchor_spl::token::transfer(
-            CpiContext::new_with_signer(
-                ctx.accounts.token_program.to_account_info(),
-                anchor_spl::token::Transfer {
-                    from: escrow.to_account_info(),
-                    to: one_bounty.clone().0,
-                    authority: bounty.to_account_info(),
-                },
-                &[&bounty.seeds()],
-            ),
-            one_bounty.clone().1,
-        )
-        .unwrap();
+        // anchor_spl::token::transfer(
+        //     CpiContext::new_with_signer(
+        //         ctx.accounts.token_program.to_account_info(),
+        //         anchor_spl::token::Transfer {
+        //             from: escrow.to_account_info(),
+        //             to: one_bounty.clone().0,
+        //             authority: bounty.to_account_info(),
+        //         },
+        //         &[&bounty.seeds()],
+        //     ),
+        //     one_bounty.clone().1,
+        // )
+        // .unwrap();
 
-        // bounty_payout.iter().for_each(|(solver, amount)| {
-        //     anchor_spl::token::transfer(
-        //         CpiContext::new_with_signer(
-        //             ctx.accounts.token_program.to_account_info(),
-        //             anchor_spl::token::Transfer {
-        //                 from: escrow.to_account_info(),
-        //                 to: solver.clone(),
-        //                 authority: escrow.to_account_info(),
-        //             },
-        //             &[&[
-        //                 bounty.key().to_bytes().as_ref(),
-        //                 bounty.escrow_bump_array.as_ref(),
-        //             ]],
-        //         ),
-        //         *amount,
-        //     )
-        //     .unwrap()
-        // });
+        bounty_payout.iter().for_each(|(solver, amount)| {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: escrow.to_account_info(),
+                        to: solver.clone(),
+                        authority: bounty.to_account_info(),
+                    },
+                    &[&bounty.seeds()],
+                ),
+                *amount,
+            )
+            .unwrap()
+        });
     }
     Ok(())
 }
