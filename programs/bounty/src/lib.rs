@@ -5,7 +5,7 @@ pub mod utils;
 
 pub use instructions::*;
 
-declare_id!("EpAY3DwbV1cHiYJhKFosK2KxdQRWkQci2v8ze875rXim");
+declare_id!("HELsfudvMchbrYGCFiBPwGp5eXt2kwoPLKDVByy4cLzd");
 
 #[program]
 pub mod bounty {

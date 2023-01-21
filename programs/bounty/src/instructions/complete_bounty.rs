@@ -1,7 +1,6 @@
 use anchor_lang::{
     prelude::*,
     solana_program::system_instruction::{transfer, transfer_many},
-    system_program::Transfer,
 };
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
@@ -27,8 +26,8 @@ pub struct CompleteBounty<'info> {
 
     #[account(
         mut,
-        constraint = protocol.fee_collector.eq(&fee_collector.owner.key()),
-        constraint = fee_collector.mint.eq(&bounty.mint.key())
+        constraint = protocol.fee_collector.eq(&fee_collector.owner.key()) @ BlizzardError::WrongProtocolFeeCollector,
+        constraint = fee_collector.mint.eq(&bounty.mint.key())  @ BlizzardError::WrongFeeCollectorMint
     )]
     pub fee_collector: Box<Account<'info, TokenAccount>>,
 
@@ -42,7 +41,9 @@ pub struct CompleteBounty<'info> {
 
     /// bounty to be completed
     /// FIXME
-    #[account(mut)]
+    #[account(mut,
+        constraint=bounty.state.eq("started"))
+    ]
     pub bounty: Box<Account<'info, Bounty>>,
 
     #[account(
@@ -102,25 +103,13 @@ pub fn handler(ctx: Context<CompleteBounty>) -> Result<()> {
         let bounty_payout = bounty.complete_bounty(solvers, &ctx.accounts.fee_collector)?;
         let escrow = &ctx.accounts.escrow;
 
-        let one_bounty = bounty_payout.get(0).unwrap();
         msg!(
-            "Transfer bounty: {:?}, escrow: {:?}",
+            "Transfer bounty: {:?}, escrow: {:?}, total amount {}, payouts {:?}",
             bounty.escrow.to_string(),
-            escrow.key().to_string()
+            escrow.key().to_string(),
+            bounty.bounty_amount,
+            bounty_payout.iter().map(|pay| pay.1).collect::<Vec<u64>>()
         );
-        // anchor_spl::token::transfer(
-        //     CpiContext::new_with_signer(
-        //         ctx.accounts.token_program.to_account_info(),
-        //         anchor_spl::token::Transfer {
-        //             from: escrow.to_account_info(),
-        //             to: one_bounty.clone().0,
-        //             authority: bounty.to_account_info(),
-        //         },
-        //         &[&bounty.seeds()],
-        //     ),
-        //     one_bounty.clone().1,
-        // )
-        // .unwrap();
 
         bounty_payout.iter().for_each(|(solver, amount)| {
             anchor_spl::token::transfer(

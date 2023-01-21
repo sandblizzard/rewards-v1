@@ -14,4 +14,10 @@ pub enum BlizzardError {
 
     #[msg("at least one receiver needs to be specified")]
     MissingReceiverTokenAccounts,
+
+    #[msg("wrong mint for fee collector")]
+    WrongFeeCollectorMint,
+
+    #[msg("fee collector does not match protocol fee collector")]
+    WrongProtocolFeeCollector,
 }

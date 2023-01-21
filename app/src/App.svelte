@@ -106,6 +106,7 @@
       );
       if (creatorAccount.instruction) ixs.push(creatorAccount.instruction);
 
+      console.log('>>> AMount: ', amount);
       const createBountyIx = await $workSpace.program.methods
         .createBounty(domain, subDomain, id, amount)
         .accounts({

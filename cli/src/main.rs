@@ -56,7 +56,6 @@ pub fn load_keypair() -> Result<Keypair, Error> {
 pub fn initialize_bounty_contract() {
     // get keypair from config.id
     let fee_collector = Pubkey::from_str("CNY467c6XURCPjiXiKRLCvxdRf3bpunagYTJpr685gPv").unwrap();
-
     let nft_collection = Pubkey::from_str("BXKro6nDX9y86rtGn6uh6K1rZUqENzsUHP6gAbdJj1NS").unwrap();
     let bounty_program_id = bounty::id();
     let payer = load_keypair().unwrap();

@@ -10,9 +10,11 @@ import {
   mintTo,
   getAssociatedTokenAddress,
 } from '@solana/spl-token';
+import * as web3 from '@solana/web3.js';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 import { assert, expect } from 'chai';
 import { getOrCreateAssociatedTokenAccountIx } from '../app/src/helper';
+import { publicKey } from '@project-serum/anchor/dist/cjs/utils';
 
 const program = anchor.workspace.Bounty as Program<Bounty>;
 let collection_mint: anchor.web3.PublicKey;
@@ -29,7 +31,9 @@ describe('bounty', () => {
     const subDomain = 'rewards_v1';
     const id = '123';
     const bountyAmount = new anchor.BN(1000000);
-    const feeCollector = anchor.web3.Keypair.generate();
+    const feeCollector = new web3.PublicKey(
+      'CNY467c6XURCPjiXiKRLCvxdRf3bpunagYTJpr685gPv'
+    );
     const bountyPDA = findProgramAddressSync(
       [
         anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD'),
@@ -67,6 +71,7 @@ describe('bounty', () => {
     } catch (err) {
       console.log('Failed to initialize test ', program.programId);
       console.log(err);
+      throw new Error(err);
     }
 
     try {
@@ -77,7 +82,7 @@ describe('bounty', () => {
         .initialize()
         .accounts({
           protocol: protocolPDA[0],
-          feeCollector: feeCollector.publicKey,
+          feeCollector: feeCollector,
           collection: collection_mint,
         })
         .rpc();
@@ -85,6 +90,7 @@ describe('bounty', () => {
     } catch (err) {
       console.log('Failed to initialize protocol ', program.programId);
       console.log(err);
+      throw new Error(err);
     }
 
     // CREATE_BOUNTY
@@ -132,6 +138,7 @@ describe('bounty', () => {
       console.log('TOKEN_PROGRAM_ID_ ', TOKEN_PROGRAM_ID);
       console.log('Failed to create bounty');
       console.log(err);
+      throw new Error(err);
     }
     // add relayer
 
@@ -151,6 +158,7 @@ describe('bounty', () => {
           relayer: relayer[0],
         })
         .rpc();
+      console.log('Successfully added relayer!');
     } catch (err) {
       console.log('Failed to add relayer ', err);
       throw new Error(err);
@@ -162,7 +170,7 @@ describe('bounty', () => {
       program.provider.connection,
       (wallet as NodeWallet).payer,
       bonk_mint,
-      feeCollector.publicKey
+      feeCollector
     );
     try {
       let creatorAccount = await getAssociatedTokenAddress(
@@ -183,9 +191,19 @@ describe('bounty', () => {
           solver4: creatorAccount,
         })
         .rpc();
+      console.log('Successfully completed bounty!');
     } catch (err) {
       console.log('Failed to complete bounty: ', err);
       throw new Error(err);
     }
+
+    console.log(
+      'LOG: feeCollector: ',
+      feeCollector.toString(),
+      ' ata: ',
+      feeCollectorAccount.toString(),
+      ' protocol: ',
+      protocolPDA[0].toString()
+    );
   });
 });
