@@ -34,6 +34,7 @@
     id: string;
     bountyAmount: number;
     token: string;
+    mint: string;
   };
 
   let wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter()];
@@ -57,6 +58,7 @@
       id: queryParams.get('id') ?? 'test',
       bountyAmount: parseInt(queryParams.get('bountyAmount') ?? '0'),
       token: queryParams.get('token') ?? 'test',
+      mint: queryParams.get('mint') ?? 'test',
     };
     properlyLoaded = Object.keys(createBountyInput).every(
       (input) => !!createBountyInput[input]
@@ -72,7 +74,7 @@
 
   const createBounty = async () => {
     errorMessage = '';
-    const mint = new PublicKey('9p2YAK7DXmVZvrXMX3K4pi7t3ZscZwnbXTogHoGFywMN');
+    const mint = new PublicKey(createBountyInput.mint);
     const domain = createBountyInput.domain;
     const subDomain = createBountyInput.subDomain;
     const id = createBountyInput.id;
