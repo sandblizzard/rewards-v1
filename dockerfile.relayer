@@ -1,0 +1,27 @@
+FROM rust:1.66.1 as build
+
+
+ADD programs programs
+# RUN USER=root cargo new --bin relayer
+WORKDIR /relayer
+
+# COPY ./relayer/Cargo.lock ./Cargo.lock
+# COPY ./relayer/Cargo.toml ./Cargo.toml
+
+# RUN cargo build --release
+# RUN rm src/*rs
+
+# COPY ./relayer/src ./src
+
+# RUN rm ./target/release/deps/relayer*
+COPY ./relayer/src  ./src
+COPY ./relayer/Cargo.lock ./Cargo.lock 
+COPY ./relayer/Cargo.toml ./Cargo.toml
+COPY ./relayer/relayer.json relayer.json
+RUN cargo build --release
+
+FROM rust:1.66.1-slim-buster
+COPY --from=build /relayer/target/release/relayer .
+COPY --from=build /relayer/relayer.json relayer.json
+
+CMD ["./relayer"]
