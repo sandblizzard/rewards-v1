@@ -5,6 +5,9 @@ jobs:
   preview:
     name: Preview
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: deployment
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
@@ -20,6 +23,9 @@ jobs:
       - uses: pulumi/actions@v3
         with:
           command: preview
-          stack-name: org-name/stack-name # When using an individual account, only use stack-name.
+          stack-name: dev2
+          work-dir: deployment
+          comment-on-pr: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
