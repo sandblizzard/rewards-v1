@@ -250,7 +250,7 @@ func main() {
 		ctx.Export("fullImageName", image.ImageName)
 
 		// Deploy relayer to the new cluster
-		deployment, err := appsv1.NewDeployment(ctx, "relayer", &appsv1.DeploymentArgs{
+		deployment, err := appsv1.NewDeployment(ctx, "relayer-deployment", &appsv1.DeploymentArgs{
 			Metadata: &metav1.ObjectMetaArgs{
 				Namespace: namespace.Metadata.Elem().Name(),
 			},
