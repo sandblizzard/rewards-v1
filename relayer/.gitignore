@@ -1,0 +1,5 @@
+.env
+target/
+*.so
+.DS_STORE
+.relayer.json

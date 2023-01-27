@@ -16,7 +16,7 @@
     PublicKey,
     TransactionInstruction,
   } from '@solana/web3.js';
-  import idl from '../../target/idl/bounty.json';
+  import idl from './assets/bounty.json';
   import {
     PhantomWalletAdapter,
     SolflareWalletAdapter,

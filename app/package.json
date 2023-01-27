@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "idl": "cp ../target/idl/bounty.json src/assets/",
+    "dev": " yarn idl && vite",
+    "build": "yarn idl && vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },

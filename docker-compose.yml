@@ -1,0 +1,25 @@
+version: '3.0'
+services:
+  relayer:
+    image: relayer
+    build: 
+      context: "."
+      dockerfile: dockerfile.relayer
+    environment:
+      - RUST_LOG=info
+      - GITHUB_KEY
+      - GITHUB_ID=282074
+      - UNDERDOG_KEY
+      - SANDBLIZZARD_COLLECTION_ADDRESS=2AHfNu6sWRMPWKKQJTffWMWjkYL8AnYY852Fd7ZrkrFw
+      - SANDBLIZZARD_URL=http://localhost:3000
+      - GITHUB_APP_LOGIN=sandblizzard-app[bot]
+      - CLUSTER=devnet
+    volumes: 
+      - ./programs:/programs
+  signing:
+    image: sandblizzard-signing
+    build: 
+      context: "."
+      dockerfile: dockerfile.dapp
+    ports: 
+      - 3000:80 
