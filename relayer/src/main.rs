@@ -9,6 +9,7 @@ use anchor_client::{
     solana_sdk::{
         commitment_config::CommitmentConfig,
         signature::{read_keypair, read_keypair_file, Keypair},
+        signer::Signer,
     },
     Cluster,
 };
@@ -18,8 +19,10 @@ use domains::{
     utils::{get_key_from_env, SBError},
     *,
 };
+use ed25519_dalek;
 pub use jobs::verification;
 use jobs::verification::verify_users;
+use spl_associated_token_account::solana_program::example_mocks::solana_sdk;
 use std::{path::PathBuf, rc::Rc, thread, time};
 use std::{result::Result, sync::Arc};
 use tokio::{self, sync::Mutex};
@@ -50,11 +53,16 @@ async fn serve_static() -> actix_web::Result<NamedFile> {
 }
 
 pub fn load_keypair() -> Result<Keypair, SBError> {
-    let payer = match read_keypair_file("./relayer.json") {
-        Ok(payer) => payer,
-        Err(err) => return Err(SBError::FailedToLoadKeypair(err.to_string())),
-    };
-    Ok(payer)
+    let key = get_key_from_env("KEY").unwrap();
+    let keypair_bytes = key
+        .split(",")
+        .into_iter()
+        .map(|val| {
+            return val.parse::<u8>().unwrap();
+        })
+        .collect::<Vec<u8>>();
+    let keypair = Keypair::from_bytes(&keypair_bytes).unwrap();
+    Ok(keypair)
 }
 
 #[tokio::main]
