@@ -22,7 +22,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 )
 
-func authenticate(ctx *pulumi.Context, repo *ecr.Repository) (docker.ImageRegistryOutput, error) {
+func authenticate(ctx *pulumi.Context, repo *ecr.Repository) docker.ImageRegistryOutput {
 	registryInfo := repo.RegistryId.ApplyT(func(id string) (docker.ImageRegistry, error) {
 		creds, err := ecr.GetCredentials(ctx, &ecr.GetCredentialsArgs{RegistryId: id})
 		if err != nil {
@@ -42,7 +42,7 @@ func authenticate(ctx *pulumi.Context, repo *ecr.Repository) (docker.ImageRegist
 			Password: parts[1],
 		}, nil
 	}).(docker.ImageRegistryOutput)
-	return registryInfo, nil
+	return registryInfo
 }
 
 func main() {
@@ -53,14 +53,14 @@ func main() {
 			"dapp":    pulumi.String("dapp"),
 		}
 		cfg := config.New(ctx, "")
-		githubKey := cfg.RequireSecret("GITHUB_KEY")
-		githubId := cfg.RequireSecret("GITHUB_ID")
-		// underdogKey := cfg.RequireSecret("UNDERDOG_KEY")
-		// sbCollection := cfg.Require("SANDBLIZZARD_COLLECTION_ADDRESS")
-		// sbUrl := cfg.Require("SANDBLIZZARD_URL")
-		// githubAppLogin := cfg.Require("GITHUB_APP_LOGIN")
-		// cluster := cfg.Require("CLUSTER")
-		// key := cfg.RequireSecret("KEY")
+		githubKey := cfg.RequireSecret("githubKey")
+		githubId := cfg.RequireSecret("githubId")
+		underdogKey := cfg.RequireSecret("underdogKey")
+		sbCollection := cfg.Require("sbCollectionAddress")
+		sbUrl := cfg.Require("sbURL")
+		githubAppLogin := cfg.Require("githubAppLogin")
+		//cluster := cfg.Require("CLUSTER")
+		key := cfg.RequireSecret("key")
 
 		// setup aws ecs
 		t := true
@@ -223,36 +223,26 @@ func main() {
 			return err
 		}
 
-		repo, err := ecr.NewRepository(ctx, "sandblizzard-relayer", nil)
+		// FIXME: add a repo for the dapp as well
+		relayerRepo, err := ecr.NewRepository(ctx, "sandblizzard-relayer", nil)
 		if err != nil {
 			return err
 		}
 
-		registryInfo := repo.RegistryId.ApplyT(func(id string) (docker.ImageRegistry, error) {
-			creds, err := ecr.GetCredentials(ctx, &ecr.GetCredentialsArgs{RegistryId: id})
-			if err != nil {
-				return docker.ImageRegistry{}, err
-			}
-			decoded, err := base64.StdEncoding.DecodeString(creds.AuthorizationToken)
-			if err != nil {
-				return docker.ImageRegistry{}, err
-			}
-			parts := strings.Split(string(decoded), ":")
-			if len(parts) != 2 {
-				return docker.ImageRegistry{}, errors.New("Invalid credentials")
-			}
-			return docker.ImageRegistry{
-				Server:   creds.ProxyEndpoint,
-				Username: parts[0],
-				Password: parts[1],
-			}, nil
-		}).(docker.ImageRegistryOutput)
+		dappRepo, err := ecr.NewRepository(ctx, "sandblizzard-dapp", nil)
+		if err != nil {
+			return err
+		}
+
+		// authenticate with relayer repo
+		relayerRegistryInfo := authenticate(ctx, relayerRepo)
+		dappRegistryInfo := authenticate(ctx, dappRepo)
 
 		relayerImage, err := docker.NewImage(ctx, "relayer", &docker.ImageArgs{
 			Build:     &docker.DockerBuildArgs{Context: pulumi.String("./.."), Dockerfile: pulumi.String("./../dockerfile.relayer")},
-			ImageName: repo.RepositoryUrl,
-			Registry:  registryInfo,
-		}, pulumi.DependsOn([]pulumi.Resource{repo}))
+			ImageName: relayerRepo.RepositoryUrl,
+			Registry:  relayerRegistryInfo,
+		}, pulumi.DependsOn([]pulumi.Resource{relayerRepo}))
 		if err != nil {
 			return err
 		}
@@ -262,9 +252,9 @@ func main() {
 
 		dappImage, err := docker.NewImage(ctx, "dapp", &docker.ImageArgs{
 			Build:     &docker.DockerBuildArgs{Context: pulumi.String("./.."), Dockerfile: pulumi.String("./../dockerfile.dapp")},
-			ImageName: repo.RepositoryUrl,
-			Registry:  registryInfo,
-		}, pulumi.DependsOn([]pulumi.Resource{repo}))
+			ImageName: dappRepo.RepositoryUrl,
+			Registry:  dappRegistryInfo,
+		}, pulumi.DependsOn([]pulumi.Resource{dappRepo}))
 		if err != nil {
 			return err
 		}
@@ -281,7 +271,7 @@ func main() {
 		// cluster := cfg.Require("CLUSTER")
 		// key := cfg.RequireSecret("KEY")
 		// Deploy relayer to the new cluster
-		relayerDeployment, err := appsv1.NewDeployment(ctx, "relayer-deployment", &appsv1.DeploymentArgs{
+		deployment, err := appsv1.NewDeployment(ctx, "relayer-deployment", &appsv1.DeploymentArgs{
 			Metadata: &metav1.ObjectMetaArgs{
 				Namespace: namespace.Metadata.Elem().Name(),
 			},
@@ -298,7 +288,7 @@ func main() {
 						Containers: corev1.ContainerArray{
 							corev1.ContainerArgs{
 								Name:  pulumi.String("relayer"),
-								Image: repo.RepositoryUrl,
+								Image: relayerRepo.RepositoryUrl,
 								Env: corev1.EnvVarArray{
 									corev1.EnvVarArgs{
 										Name:  pulumi.String("RUST_LOG"),
@@ -314,38 +304,38 @@ func main() {
 									},
 									corev1.EnvVarArgs{
 										Name:  pulumi.String("UNDERDOG_KEY"),
-										Value: githubKey,
+										Value: underdogKey,
 									},
 									corev1.EnvVarArgs{
 										Name:  pulumi.String("SANDBLIZZARD_COLLECTION_ADDRESS"),
-										Value: githubKey,
+										Value: pulumi.String(sbCollection),
 									},
 									corev1.EnvVarArgs{
 										Name:  pulumi.String("SANDBLIZZARD_URL"),
-										Value: githubKey,
+										Value: pulumi.String(sbUrl),
 									},
 									corev1.EnvVarArgs{
 										Name:  pulumi.String("GITHUB_APP_LOGIN"),
-										Value: githubKey,
+										Value: pulumi.String(githubAppLogin),
 									},
 									corev1.EnvVarArgs{
 										Name:  pulumi.String("CLUSTER"),
-										Value: githubKey,
+										Value: pulumi.String("devnet"),
 									},
 									corev1.EnvVarArgs{
 										Name:  pulumi.String("KEY"),
-										Value: githubKey,
+										Value: key,
 									},
 								},
 							},
 							corev1.ContainerArgs{
 								Name:  pulumi.String("dapp"),
-								Image: repo.RepositoryUrl,
+								Image: dappRepo.RepositoryUrl,
 							},
 						},
 					},
 				},
-			}}, pulumi.Provider(k8sProvider))
+			}}, pulumi.Provider(k8sProvider), pulumi.DependsOn([]pulumi.Resource{relayerImage, dappImage}))
 		if err != nil {
 			return err
 		}
@@ -359,7 +349,7 @@ func main() {
 				Ports: corev1.ServicePortArray{
 					corev1.ServicePortArgs{
 						Port:       pulumi.Int(80),
-						TargetPort: pulumi.Int(8080),
+						TargetPort: pulumi.Int(80),
 					},
 				},
 				Selector: appLabels,
@@ -379,7 +369,7 @@ func main() {
 			return ingress.Ip
 		}))
 
-		ctx.Export("relayerName", relayerDeployment.Metadata.Elem().Name())
+		ctx.Export("deploymentName", deployment.Metadata.Elem().Name())
 		return nil
 	})
 }
