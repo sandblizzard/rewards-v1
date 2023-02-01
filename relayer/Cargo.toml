@@ -32,3 +32,4 @@ actix-files = "0.6.2"
 bounty = {path="../programs/bounty"}
 coingecko = "1.0.1"
 octocrab = { version="=0.15.4"}
+ed25519-dalek = "1.0.1"

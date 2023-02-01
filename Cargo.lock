@@ -3155,6 +3155,7 @@ dependencies = [
  "bounty",
  "coingecko",
  "dotenv",
+ "ed25519-dalek",
  "env_logger",
  "jsonwebtoken",
  "log",

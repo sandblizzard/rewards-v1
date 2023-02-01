@@ -337,8 +337,7 @@ impl Github {
                     err.to_string()
                 );
                 // get bounty if proposed in issue
-                let bounty_proposed_in_issue =
-                    self.get_bounty_from_issue(&issue.clone()).await.unwrap();
+                let bounty_proposed_in_issue = self.get_bounty_from_issue(&issue.clone()).await?;
 
                 // Check the status of the bounty
                 // -> If there is no signing link -> look for bounty -> post signing link
