@@ -16,6 +16,7 @@ import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes"
 	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
+	helmv3 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -109,7 +110,7 @@ func main() {
 			}
 		}
 
-		// Create teh EC2 NodeGroup
+		// Create the  EC2 NodeGroup
 		nodeGroupRole, err := iam.NewRole(ctx, "nodegroup-iam-role", &iam.RoleArgs{
 			AssumeRolePolicy: pulumi.String(`{
 				"Version": "2012-10-17",
@@ -183,6 +184,8 @@ func main() {
 		if err != nil {
 			return err
 		}
+		// Export the cluster's kubeconfig.
+		ctx.Export("kubeconfig", eksCluster.KubernetesNetworkConfig)
 
 		// new node
 		nodeGroup, err := eks.NewNodeGroup(ctx, "node-group-2", &eks.NodeGroupArgs{
@@ -262,15 +265,18 @@ func main() {
 		ctx.Export("dappBaseImageName", dappImage.BaseImageName)
 		ctx.Export("dappFullImageName", dappImage.ImageName)
 
-		// githubKey := cfg.RequireSecret("GITHUB_KEY")
-		// githubId := cfg.RequireSecret("GITHUB_ID")
-		// underdogKey := cfg.RequireSecret("UNDERDOG_KEY")
-		// sbCollection := cfg.Require("SANDBLIZZARD_COLLECTION_ADDRESS")
-		// sbUrl := cfg.Require("SANDBLIZZARD_URL")
-		// githubAppLogin := cfg.Require("GITHUB_APP_LOGIN")
-		// cluster := cfg.Require("CLUSTER")
-		// key := cfg.RequireSecret("KEY")
-		// Deploy relayer to the new cluster
+		// deploy fluentbit
+		fluentBitRelease, err := helmv3.NewRelease(ctx, "fluentbit", &helmv3.ReleaseArgs{
+			RepositoryOpts: &helmv3.RepositoryOptsArgs{
+				Repo: pulumi.String("https://fluent.github.io/helm-charts"),
+			},
+			Chart: pulumi.String("fluentbit"),
+		}, pulumi.Provider(k8sProvider))
+		if err != nil {
+			return err
+		}
+		ctx.Export("fluentBitRelease", fluentBitRelease.Name)
+
 		deployment, err := appsv1.NewDeployment(ctx, "relayer-deployment", &appsv1.DeploymentArgs{
 			Metadata: &metav1.ObjectMetaArgs{
 				Namespace: namespace.Metadata.Elem().Name(),
@@ -370,6 +376,8 @@ func main() {
 		}))
 
 		ctx.Export("deploymentName", deployment.Metadata.Elem().Name())
+		ctx.Export("namespaceName", namespace.Metadata.Elem().Name())
+		ctx.Export("serviceName", service.Metadata.Elem().Name())
 		return nil
 	})
 }

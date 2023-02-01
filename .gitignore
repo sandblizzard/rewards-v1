@@ -8,3 +8,4 @@ test-ledger
 .env
 relayer.json
 */**/*.pem
+*/**/kubeconfig*
