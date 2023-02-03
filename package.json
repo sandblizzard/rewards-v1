@@ -3,6 +3,7 @@
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "dapp": "cd app && yarn dev",
+    "dapp:idl": "cd app && yarn idl",
     "relayer": "solana address --keypair ./../relayer/relayer.json",
     "bounty": "solana address --keypair ./target/deploy/bounty-keypair.json",
     "bounty-cli": "./target/debug/bounty-cli"

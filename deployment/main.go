@@ -265,23 +265,28 @@ func main() {
 
 		// authenticate with relayer repo
 		relayerRegistryInfo := authenticate(ctx, relayerRepo)
-		relayerImage, _ := docker.NewImage(ctx, "sb-relayer", &docker.ImageArgs{
+		relayerImage, err := docker.NewImage(ctx, "sb-relayer", &docker.ImageArgs{
 			Build:     &docker.DockerBuildArgs{Context: pulumi.String("./.."), Dockerfile: pulumi.String("./../dockerfile.relayer")},
 			ImageName: relayerRepo.RepositoryUrl,
 			Registry:  relayerRegistryInfo,
 		}, pulumi.DependsOn([]pulumi.Resource{relayerRepo}))
+		if err != nil {
+			return err
+		}
 
 		// Export the base and specific version image name.
 		ctx.Export("relayerBaseImageName", relayerImage.BaseImageName)
 		ctx.Export("relayerFullImageName", relayerImage.ImageName)
 
 		dappRegistryInfo := authenticate(ctx, dappRepo)
-		dappImage, _ := docker.NewImage(ctx, "sb-dapp", &docker.ImageArgs{
+		dappImage, err := docker.NewImage(ctx, "sb-dapp", &docker.ImageArgs{
 			Build:     &docker.DockerBuildArgs{Context: pulumi.String("./.."), Dockerfile: pulumi.String("./../dockerfile.dapp")},
 			ImageName: dappRepo.RepositoryUrl,
 			Registry:  dappRegistryInfo,
 		}, pulumi.DependsOn([]pulumi.Resource{dappRepo, relayerImage}))
-
+		if err != nil {
+			return err
+		}
 		// Export the base and specific version image name.
 		ctx.Export("dappBaseImageName", dappImage.BaseImageName)
 		ctx.Export("dappFullImageName", dappImage.ImageName)
@@ -314,7 +319,7 @@ func main() {
 					},
 					{
 						"Name": "GITHUB_APP_LOGIN",
-						"ValueFrom": "sandblizzard-app[bot]"
+						"ValueFrom": "sandblizzard-app"
 					},
 					{
 						"Name": "CLUSTER",
@@ -355,6 +360,7 @@ func main() {
 
 		// setup the service
 		_, err = ecs.NewService(ctx, "sandblizzard-svc", &ecs.ServiceArgs{
+			Name:           pulumi.String("sandblizzard-svc"),
 			Cluster:        cluster.ID(),
 			DesiredCount:   pulumi.Int(5),
 			LaunchType:     pulumi.String("FARGATE"),
@@ -366,13 +372,10 @@ func main() {
 			},
 			LoadBalancers: ecs.ServiceLoadBalancerArray{
 				ecs.ServiceLoadBalancerArgs{
+					ElbName:        loadBalancer.Name,
 					TargetGroupArn: targetGroupHttp.Arn,
 					ContainerName:  pulumi.String("sandlizzard-dapp-cd"),
 					ContainerPort:  pulumi.Int(80),
-				},
-				ecs.ServiceLoadBalancerArgs{
-					ContainerName: pulumi.String("sandlizzard-relayer-cd"),
-					ContainerPort: pulumi.Int(81),
 				},
 			},
 		}, pulumi.DependsOn([]pulumi.Resource{cluster, httpsListener}))
