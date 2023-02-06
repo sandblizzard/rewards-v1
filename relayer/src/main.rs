@@ -22,6 +22,7 @@ use domains::{
 use ed25519_dalek;
 pub use jobs::verification;
 use jobs::verification::verify_users;
+use log::info;
 use spl_associated_token_account::solana_program::example_mocks::solana_sdk;
 use std::{path::PathBuf, rc::Rc, thread, time};
 use std::{result::Result, sync::Arc};
@@ -31,15 +32,32 @@ use tokio::{self, sync::Mutex};
 ///
 /// get all domains that are to be indexed
 /// FIXME: get the domains from the bounty contract
-pub fn try_fetch_indexable_domains() -> Result<Vec<Domain>, SBError> {
-    let test_domain = Domain {
-        name: "github".to_string(),
-        owner: "sandblizzard".to_string(),
-        sub_domain_name: "rewards-v1".to_string(),
-        bounty_type: "issue".to_string(),
-        num_fails: 0,
+pub async fn try_fetch_indexable_domains() -> Result<Vec<Domain>, SBError> {
+    let gh = get_octocrab_instance()?;
+    let domains = match gh.apps().installations().send().await {
+        Ok(res) => res,
+        Err(err) => {
+            return Err(SBError::FailedOctocrabRequest(
+                "try_fetch_indexable_domains".to_string(),
+                err.to_string(),
+            ))
+        }
     };
-    let search_domains: Vec<Domain> = [test_domain].to_vec();
+    let search_domains: Vec<Domain> = domains
+        .into_iter()
+        .map(|domain| {
+            info!("domain: {:?}", domain);
+
+            return Domain {
+                name: "github".to_string(),
+                owner: domain.account.login,
+                access_token_url: domain.access_tokens_url.unwrap_or("".to_string()),
+                bounty_type: "issue".to_string(),
+                num_fails: 0,
+            };
+        })
+        .collect::<Vec<Domain>>();
+
     Ok(search_domains)
 }
 
@@ -71,7 +89,7 @@ async fn main() -> std::io::Result<()> {
 
     loop {
         // index domains for bounties
-        let search_domains = try_fetch_indexable_domains().unwrap();
+        let search_domains = try_fetch_indexable_domains().await.unwrap();
         for domain in &search_domains {
             log::info!("[relayer] try index: {}", domain.name);
             let domain_type = domain.get_type().await.unwrap();

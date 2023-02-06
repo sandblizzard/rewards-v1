@@ -298,7 +298,7 @@ impl BountySdk {
         issue_id: &u64,
         solvers: &Vec<Pubkey>,
         bounty_mint: &Pubkey,
-    ) -> Result<Bounty, SBError> {
+    ) -> Result<(Bounty, String), SBError> {
         let protocol = self.get_protocol_pda();
         let relayer = self.get_relayer_pda();
         let bounty_pda = self.get_bounty_pda(domain, sub_domain, issue_id);
@@ -336,9 +336,11 @@ impl BountySdk {
             request = request.instruction(ix);
         }
 
-        // FIXME: fails to complete bounty
-        let bounty = match request.instruction(complete_bounty_ix).send() {
-            Ok(bounty) => self.get_bounty(domain, sub_domain, issue_id).unwrap(),
+        let (bounty, sig) = match request.instruction(complete_bounty_ix).send() {
+            Ok(sig) => (
+                self.get_bounty(domain, sub_domain, issue_id).unwrap(),
+                sig.to_string(),
+            ),
             Err(err) => {
                 let protocol_data = self.get_protocol().unwrap();
                 let escrow = self.get_escrow(&bounty_pda.0).unwrap();
@@ -358,6 +360,6 @@ impl BountySdk {
                 ));
             }
         };
-        Ok(bounty)
+        Ok((bounty, sig))
     }
 }

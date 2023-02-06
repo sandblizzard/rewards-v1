@@ -3,7 +3,7 @@ use std::{
     rc::{self, Rc},
     result::Result,
     sync::Arc,
-    thread,
+    thread, time,
 };
 
 use super::{
@@ -13,14 +13,17 @@ use super::{
 use crate::{
     bounty_proto::{get_solvers, BountyProto},
     bounty_sdk::{self, BountySdk},
+    domains::utils::get_unix_time,
+    external::status_manager,
 };
 use anchor_client::{Client, Program};
 use async_trait::async_trait;
 use bounty;
+use log::{debug, info};
 use octocrab::{
     models::{
         issues::{Comment, Issue},
-        IssueId, IssueState,
+        InstallationId, IssueId, IssueState,
     },
     params::apps::CreateInstallationAccessToken,
     *,
@@ -53,8 +56,24 @@ pub fn is_relayer_login(login: &str) -> Result<bool, SBError> {
     Ok(login.eq(&app_login))
 }
 
+pub fn get_octocrab_instance() -> Result<Octocrab, SBError> {
+    let github_key = get_key_from_env("GITHUB_KEY")?;
+    let github_id = get_key_from_env("GITHUB_ID")?;
+    let app_id = github_id.parse::<u64>().unwrap().into();
+    let key = jsonwebtoken::EncodingKey::from_rsa_pem(github_key.as_bytes()).unwrap();
+    match Octocrab::builder().app(app_id, key).build() {
+        Ok(gh) => Ok(gh),
+        Err(err) => {
+            return Err(SBError::FailedOctocrabRequest(
+                "get_octocrab_instance".to_string(),
+                err.to_string(),
+            ))
+        }
+    }
+}
+
 /// get_connection establish a connection with github
-pub async fn get_connection() -> Result<Octocrab, SBError> {
+pub async fn get_connection(access_token_url: &str) -> Result<Octocrab, SBError> {
     let github_key = get_key_from_env("GITHUB_KEY")?;
     let github_id = get_key_from_env("GITHUB_ID")?;
 
@@ -62,17 +81,11 @@ pub async fn get_connection() -> Result<Octocrab, SBError> {
     let key = jsonwebtoken::EncodingKey::from_rsa_pem(github_key.as_bytes()).unwrap();
     let token = octocrab::auth::create_jwt(app_id, &key).unwrap();
     let gh = Octocrab::builder().personal_token(token).build().unwrap();
-    let installations = match gh.apps().installations().send().await {
-        Ok(mut res) => res.take_items(),
-        Err(err) => return Err(SBError::FailedToGetGithubInstallations(err.to_string())),
-    };
+
     let access_token = CreateInstallationAccessToken::default();
 
     let access: models::InstallationToken = gh
-        .post(
-            installations[0].access_tokens_url.as_ref().unwrap(),
-            Some(&access_token),
-        )
+        .post(access_token_url, Some(&access_token))
         .await
         .unwrap();
     Ok(octocrab::OctocrabBuilder::new()
@@ -84,7 +97,7 @@ pub async fn get_connection() -> Result<Octocrab, SBError> {
 impl Github {
     /// Create new Github interface
     pub async fn new(domain: &Domain) -> Result<Github, SBError> {
-        let github_client = get_connection().await?;
+        let github_client = get_connection(&domain.access_token_url).await?;
         Ok(Github {
             domain: domain.clone(),
             gh: Some(github_client),
@@ -128,7 +141,7 @@ impl Github {
     async fn try_get_closing_comment<'a>(
         &self,
         issue: &Issue,
-        comments: Vec<Comment>,
+        comments: &Vec<Comment>,
     ) -> Result<String, SBError> {
         // get comments on issue
 
@@ -215,51 +228,48 @@ impl Github {
     pub fn create_bounty_status_text(
         &self,
         bounty: &bounty::state::Bounty,
+        sig: Option<&str>,
     ) -> Result<String, SBError> {
-        Ok(format!(
-            "Bounty status: **{}**",
-            bounty.state.to_uppercase()
-        ))
+        let mut status = format!("Bounty status: **{}** ", bounty.state.to_uppercase());
+        if sig.is_some() {
+            status = format!(
+                "{} \n
+            Signature: {}
+            ",
+                status,
+                sig.unwrap()
+            )
+        }
+        Ok(status)
     }
 
     pub async fn try_post_bounty_status(
         &self,
-        gh: &Octocrab,
         issue_number: &u64,
-        issue_id: &u64,
-        bounty: &bounty::state::Bounty,
+        status: &str,
         comments: &Vec<&Comment>,
     ) -> Result<(), SBError> {
-        let bounty_status = self.create_bounty_status_text(bounty)?;
-
         if comments
             .iter()
-            .any(|comment| self.contains_bounty_status(comment, &bounty_status))
+            .any(|comment| self.contains_bounty_status(comment, &status))
         {
             return Ok(());
         } else {
-            log::info!("Post bounty status {} for {}", bounty_status, issue_number);
-            self.post_bounty_status(gh, issue_number, issue_id, bounty)
-                .await
+            self.post_bounty_status(issue_number, status).await
         }
     }
 
     pub async fn post_bounty_status(
         &self,
-        gh: &Octocrab,
         issue_number: &u64,
-        issue_id: &u64,
-        bounty: &bounty::state::Bounty,
+        status: &str,
     ) -> Result<(), SBError> {
-        log::info!(
-            "[relayer] try to post bounty statu for issue_id: {} ",
-            issue_id
-        );
-
-        let bounty_status = self.create_bounty_status_text(bounty)?;
-        return match gh
+        return match self
+            .gh
+            .as_ref()
+            .unwrap()
             .issues(&self.domain.owner, &self.domain.sub_domain_name)
-            .create_comment((*issue_number).try_into().unwrap(), bounty_status)
+            .create_comment((*issue_number).try_into().unwrap(), status)
             .await
         {
             Ok(comment) => {
@@ -289,8 +299,8 @@ impl Github {
         token_name: &str,
     ) -> Result<(), SBError> {
         log::info!(
-            "[relayer] try to create signing link for issue id: {} ",
-            issue_id
+            "[relayer] try to create signing link for issue number: {} ",
+            issue_number
         );
         return match gh
             .issues(&self.domain.owner, &self.domain.sub_domain_name)
@@ -327,8 +337,31 @@ impl Github {
             &issue.id.0,
         );
 
+        let comments: Vec<Comment> = self
+            .gh
+            .as_ref()
+            .unwrap()
+            .issues(&self.domain.owner, &self.domain.sub_domain_name)
+            .list_comments(issue.number as u64)
+            .per_page(150)
+            .send()
+            .await
+            .map_err(|err| SBError::CommentsNotFound("open issues".to_string(), err.to_string()))?
+            .take_items();
+        let mut relayer_comments_iter = comments
+            .iter()
+            .filter(|comment| is_relayer_login(&comment.user.login).unwrap());
+
         match bounty {
-            Ok(bounty) => (),
+            Ok(bounty) => {
+                let status = self.create_bounty_status_text(&bounty, None)?;
+                self.try_post_bounty_status(
+                    &(issue.number as u64),
+                    &status,
+                    &relayer_comments_iter.collect(),
+                )
+                .await?;
+            }
             Err(err) => {
                 // if issue is open, but bounty does not exist -> check if bounty is proposed
                 log::info!(
@@ -342,27 +375,16 @@ impl Github {
                 // Check the status of the bounty
                 // -> If there is no signing link -> look for bounty -> post signing link
                 // get the top 150 comments on the issue
-                let comments: Vec<Comment> = self
-                    .gh
-                    .as_ref()
-                    .unwrap()
-                    .issues(&self.domain.owner, &self.domain.sub_domain_name)
-                    .list_comments(issue.number as u64)
-                    .per_page(150)
-                    .send()
-                    .await
-                    .map_err(|err| {
-                        SBError::CommentsNotFound("open issues".to_string(), err.to_string())
-                    })?
-                    .take_items();
-                let mut relayer_comments_iter = comments
-                    .iter()
-                    .filter(|comment| is_relayer_login(&comment.user.login).unwrap());
 
                 let has_posted_signing_link = &relayer_comments_iter
                     .any(|comment| self.comment_contains_signing_link(&comment).unwrap());
+                log::info!(
+                    "Has posted signing link for {}: {}",
+                    issue.url,
+                    has_posted_signing_link
+                );
                 // bounty don't exist
-                if !has_posted_signing_link {
+                if !(*has_posted_signing_link) {
                     // if bounty is new then generate signing link
                     self.post_signing_link(
                         &self.gh.as_ref().unwrap(),
@@ -374,7 +396,7 @@ impl Github {
                     )
                     .await?;
                 }
-                log::debug!("issues: bounty for issue={} does not exists and signing link has been posted={} ",issue.id.0,has_posted_signing_link);
+                log::info!("issues: bounty for issue={} does not exists and signing link has been posted={} ",issue.id.0,has_posted_signing_link);
             }
         };
         Ok(())
@@ -406,7 +428,7 @@ impl Github {
             .take_items();
 
         // try to get the comment body. If no closing comment -> return
-        let comment_body = self.try_get_closing_comment(issue, page_comments).await?;
+        let comment_body = self.try_get_closing_comment(issue, &page_comments).await?;
 
         let solvers = get_solvers(
             &issue.user.id.to_string(),
@@ -416,13 +438,25 @@ impl Github {
         )
         .await?;
 
-        BountySdk::new()?.complete_bounty(
+        let (bounty, sig) = BountySdk::new()?.complete_bounty(
             &self.domain.owner,
             &self.domain.sub_domain_name,
             &issue.id.0,
             &solvers,
             &bounty.mint,
         )?;
+
+        // try post bounty statys
+        let mut relayer_comments_iter = page_comments
+            .iter()
+            .filter(|comment| is_relayer_login(&comment.user.login).unwrap());
+        let status = self.create_bounty_status_text(&bounty, Some(&sig))?;
+        self.try_post_bounty_status(
+            &(issue.number as u64),
+            &status,
+            &relayer_comments_iter.collect(),
+        )
+        .await?;
         Ok(())
     }
 
@@ -450,15 +484,6 @@ impl Github {
             .filter(|comment| is_relayer_login(&comment.user.login).unwrap());
 
         log::info!("[relayer] Try to post comments to issue {}", issue.url);
-
-        self.try_post_bounty_status(
-            self.gh.as_ref().unwrap(),
-            &(issue.number as u64),
-            &issue.id.0,
-            &bounty,
-            &relayer_comments_iter.collect::<Vec<&Comment>>(),
-        )
-        .await?;
 
         Ok(())
     }
@@ -496,12 +521,6 @@ impl Github {
             }
         }
 
-        match self.update_issue_status(&issue).await {
-            Ok(res) => res,
-            Err(err) => {
-                log::warn!("Could not update issue status {}. Cause {}", issue.url, err);
-            }
-        }
         Ok(())
     }
 
@@ -512,14 +531,9 @@ impl Github {
         log::info!(
             "[relayer] Index github issue for domain={}, repo={} ",
             self.domain.owner,
-            self.domain.sub_domain_name
         );
 
-        let issue_handler = self
-            .gh
-            .as_ref()
-            .unwrap()
-            .issues(&self.domain.owner, &self.domain.sub_domain_name);
+        let issue_handler = self.gh.as_ref().unwrap().issues(&self.domain.owner, "*");
         let mut issues = match issue_handler
             .list()
             .state(params::State::All)
@@ -542,7 +556,17 @@ impl Github {
         let shared_self = Arc::new(self);
         let self_copy = shared_self.clone();
         loop {
-            for issue in &issues.take_items() {
+            for issue in &issues
+                .take_items()
+                .iter()
+                .filter(|&issue| {
+                    issue
+                        .created_at
+                        .timestamp()
+                        .ge(&(get_unix_time(60 * 60 * 24 * 2) as i64))
+                })
+                .collect::<Vec<&Issue>>()
+            {
                 // get Status of Issue
                 // 1. Open - try create bounty
                 // 2. Closed -
