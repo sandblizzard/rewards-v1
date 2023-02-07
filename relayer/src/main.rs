@@ -13,6 +13,8 @@ use anchor_client::{
     },
     Cluster,
 };
+use futures::future::join_all;
+
 use bounty;
 use bounty_sdk::*;
 use domains::{
@@ -33,7 +35,7 @@ use tokio::{self, sync::Mutex};
 /// get all domains that are to be indexed
 /// FIXME: get the domains from the bounty contract
 pub async fn try_fetch_indexable_domains() -> Result<Vec<Domain>, SBError> {
-    let gh = get_octocrab_instance()?;
+    let gh = Rc::new(get_octocrab_instance()?);
     let domains = match gh.apps().installations().send().await {
         Ok(res) => res,
         Err(err) => {
@@ -43,20 +45,28 @@ pub async fn try_fetch_indexable_domains() -> Result<Vec<Domain>, SBError> {
             ))
         }
     };
-    let search_domains: Vec<Domain> = domains
-        .into_iter()
-        .map(|domain| {
-            info!("domain: {:?}", domain);
-
-            return Domain {
-                name: "github".to_string(),
-                owner: domain.account.login,
-                access_token_url: domain.access_tokens_url.unwrap_or("".to_string()),
-                bounty_type: "issue".to_string(),
-                num_fails: 0,
-            };
-        })
-        .collect::<Vec<Domain>>();
+    let search_domains = join_all(domains.into_iter().map(|domain| async move {
+        let repos = match get_octocrab_instance()
+            .unwrap()
+            .installation(domain.id)
+            .orgs(&domain.account.login)
+            .list_repos()
+            .send()
+            .await
+        {
+            Ok(mut repos) => repos.take_items(),
+            Err(_) => Vec::new(),
+        };
+        return Domain {
+            name: "github".to_string(),
+            owner: domain.account.login.clone(),
+            repos: repos,
+            access_token_url: domain.access_tokens_url.unwrap_or("".to_string()),
+            bounty_type: "issue".to_string(),
+            num_fails: 0,
+        };
+    }))
+    .await;
 
     Ok(search_domains)
 }
@@ -91,7 +101,11 @@ async fn main() -> std::io::Result<()> {
         // index domains for bounties
         let search_domains = try_fetch_indexable_domains().await.unwrap();
         for domain in &search_domains {
-            log::info!("[relayer] try index: {}", domain.name);
+            log::info!(
+                "[relayer] try index: {} with num repos {:?}",
+                domain.name,
+                domain.repos.len()
+            );
             let domain_type = domain.get_type().await.unwrap();
             match domain_type.handle().await {
                 Ok(_) => log::info!(
@@ -113,9 +127,6 @@ async fn main() -> std::io::Result<()> {
                 log::warn!("[relayer] failed to verify users with error={}", err)
             }
         };
-
-        // sleep for 5s after each loop
-        thread::sleep(time::Duration::from_secs(5));
     }
 
     Ok(())

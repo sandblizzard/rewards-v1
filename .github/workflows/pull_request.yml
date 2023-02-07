@@ -23,7 +23,7 @@ jobs:
       - uses: pulumi/actions@v3
         with:
           command: preview
-          stack-name: dev2
+          stack-name: aws-ecs-dev
           work-dir: deployment
           comment-on-pr: true
           github-token: ${{ secrets.GITHUB_TOKEN }}

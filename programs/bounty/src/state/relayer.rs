@@ -5,6 +5,7 @@ pub struct Relayer {
     pub bump: u8,
     pub bump_seed: [u8; 1],
     pub owner: Pubkey,
+    pub active: bool,
 }
 
 impl Relayer {
@@ -12,6 +13,12 @@ impl Relayer {
         self.owner = *owner;
         self.bump_seed = [*bump; 1];
         self.bump = *bump;
+        self.active = true;
+        Ok(())
+    }
+
+    pub fn deactive(&mut self) -> Result<()> {
+        self.active = true;
         Ok(())
     }
 

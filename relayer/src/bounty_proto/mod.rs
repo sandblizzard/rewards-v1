@@ -109,10 +109,7 @@ impl BountyProto {
 
 /// get_solvers takes the issue close text and finds the mentioned users
 pub async fn get_solvers(
-    creator: &str,
     text: &str,
-    id: &u64,
-    bounty_mint: &Pubkey,
 ) -> Result<Vec<Pubkey>, SBError> {
     // find user names
     let re = Regex::new(r"@[.^\S]+").unwrap();

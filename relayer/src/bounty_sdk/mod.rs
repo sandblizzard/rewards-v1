@@ -170,6 +170,12 @@ impl BountySdk {
         sub_domain: &str,
         issue_id: &u64,
     ) -> Result<bounty::state::Bounty, SBError> {
+        log::debug!(
+            "[bounty_sdk] get_bounty for domain={} sub_domain={} issue_id={}",
+            domain,
+            sub_domain,
+            issue_id
+        );
         let bounty_pda = anchor_client::solana_sdk::pubkey::Pubkey::find_program_address(
             &[
                 bounty::utils::BOUNTY_SEED.as_bytes().as_ref(),

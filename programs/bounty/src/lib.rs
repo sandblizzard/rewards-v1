@@ -9,6 +9,7 @@ declare_id!("HELsfudvMchbrYGCFiBPwGp5eXt2kwoPLKDVByy4cLzd");
 
 #[program]
 pub mod bounty {
+
     use super::*;
 
     /// initialize
@@ -40,5 +41,8 @@ pub mod bounty {
 
     pub fn add_relayer(ctx: Context<AddRelayer>, relayer_address: Pubkey) -> Result<()> {
         add_relayer::handler(ctx, relayer_address)
+    }
+    pub fn remove_relayer(ctx: Context<RemoveRelayer>) -> Result<()> {
+        remove_relayer::handler(ctx)
     }
 }
