@@ -35,7 +35,8 @@ pub struct CompleteBounty<'info> {
     /// validate the seeds
     #[account(
         seeds=[BOUNTY_SEED.as_bytes(), relayer.owner.key().to_bytes().as_ref()],
-        bump = relayer.bump
+        bump = relayer.bump,
+        constraint = relayer.active == true
     )]
     pub relayer: Box<Account<'info, Relayer>>,
 

@@ -1,5 +1,6 @@
 use anchor_client::{Client, Program};
 use async_trait::async_trait;
+use octocrab::models::{InstallationId, Repository};
 use std::{rc::Rc, result::Result, sync::Arc};
 use tokio::sync::Mutex;
 
@@ -11,7 +12,8 @@ use super::{github::Github, utils::SBError};
 pub struct Domain {
     pub name: String,
     pub owner: String,
-    pub sub_domain_name: String,
+    pub repos: Vec<Repository>,
+    pub access_token_url: String,
     pub bounty_type: String,
     pub num_fails: u64, // number of time failed to index the domain
 }
@@ -33,7 +35,8 @@ impl Domain {
         return Domain {
             name: name.to_string(),
             owner: owner.to_string(),
-            sub_domain_name: sub_domain_name.to_string(),
+            repos: Vec::new(),
+            access_token_url: "".to_string(),
             bounty_type: bounty_type.to_string(),
             num_fails: 0,
         };

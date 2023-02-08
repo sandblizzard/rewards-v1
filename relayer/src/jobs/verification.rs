@@ -1,5 +1,5 @@
 use crate::{
-    domains::{github::get_connection, utils::SBError},
+    domains::{github::get_octocrab_instance, utils::SBError},
     external::{get_sandblizzard_collection, UnderdogCollection},
 };
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::read_keypair_file};
@@ -41,7 +41,7 @@ struct VerificationData {
 /// reads the PRs into the verification list and
 /// mints NFTs if they don't exist already
 pub async fn verify_users() -> Result<(), SBError> {
-    let gh = get_connection().await?;
+    let gh = get_octocrab_instance()?;
 
     let mut verification = gh
         .repos("sandblizzard", "verification")

@@ -140,7 +140,7 @@ pub fn add_relayer(relayer_address: &Option<String>) {
             relayer_address.to_string(),
             res
         ),
-        Err(err) => log::error!("Failure. cause: {}", err.to_string()),
+        Err(err) => log::error!("Failure. cause: {:?}", err),
     };
 }
 

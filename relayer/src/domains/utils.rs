@@ -1,10 +1,13 @@
-use std::env;
 use std::fmt::Debug;
 use std::result::Result;
+use std::{env, time};
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq)]
 pub enum SBError {
+    #[error("{0} Octocrab request failed. Cause {1}")]
+    FailedOctocrabRequest(String, String),
+
     #[error("Github issue is not closed")]
     IssueNotClosed,
 
@@ -126,7 +129,7 @@ pub fn get_key_from_env(key: &str) -> Result<String, SBError> {
     match dotenv::from_path(&path) {
         Ok(_) => (),
         Err(err) => {
-            log::warn!(
+            log::debug!(
                 "get_key_from_env: could not get key {}. Will try to get it from the environment",
                 key
             );
@@ -137,4 +140,13 @@ pub fn get_key_from_env(key: &str) -> Result<String, SBError> {
         Ok(token) => return Ok(token.replace("\n", "")),
         Err(_err) => return Err(SBError::KeyNotFound(key.to_string())),
     }
+}
+
+pub fn get_unix_time(seconds_ago: u64) -> u64 {
+    time::SystemTime::now()
+        .checked_sub(time::Duration::new(seconds_ago, 0))
+        .unwrap()
+        .duration_since(time::SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
 }

@@ -16,8 +16,8 @@ services:
       - CLUSTER=devnet
     volumes: 
       - ./programs:/programs
-  signing:
-    image: sandblizzard-signing
+  dapp:
+    image: dapp
     build: 
       context: "."
       dockerfile: dockerfile.dapp

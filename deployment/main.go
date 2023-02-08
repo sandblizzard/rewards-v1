@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/pulumi/pulumi-aws/sdk/v5/go/aws/acm"
+	"github.com/pulumi/pulumi-aws/sdk/v5/go/aws/cloudwatch"
 	"github.com/pulumi/pulumi-aws/sdk/v5/go/aws/ec2"
 	"github.com/pulumi/pulumi-aws/sdk/v5/go/aws/ecr"
 	"github.com/pulumi/pulumi-aws/sdk/v5/go/aws/ecs"
@@ -160,16 +162,16 @@ func main() {
 			return err
 		}
 
-		// target group hit by listener on https
-		targetGroupHttps, err := lb.NewTargetGroup(ctx, "sandblizzard-tg-https", &lb.TargetGroupArgs{
-			Port:       pulumi.Int(443),
-			Protocol:   pulumi.String("HTTPS"),
-			TargetType: pulumi.String("ip"),
-			VpcId:      pulumi.String(vpc.Id),
-		})
-		if err != nil {
-			return err
-		}
+		// // target group hit by listener on https
+		// targetGroupHttps, err := lb.NewTargetGroup(ctx, "sandblizzard-tg-https", &lb.TargetGroupArgs{
+		// 	Port:       pulumi.Int(443),
+		// 	Protocol:   pulumi.String("HTTPS"),
+		// 	TargetType: pulumi.String("ip"),
+		// 	VpcId:      pulumi.String(vpc.Id),
+		// })
+		// if err != nil {
+		// 	return err
+		// }
 
 		// add DNS resolution for certificate
 		sandblizzardCert, err := acm.NewCertificate(ctx, "sandblizzard-dapp-cert", &acm.CertificateArgs{
@@ -182,7 +184,7 @@ func main() {
 		ctx.Export("sandblizzardCert", sandblizzardCert.Status)
 
 		// create a new listener on port 80 and redirect to https
-		_, err = lb.NewListener(ctx, "http-listener", &lb.ListenerArgs{
+		httpListener, err := lb.NewListener(ctx, "http-listener", &lb.ListenerArgs{
 			LoadBalancerArn: loadBalancer.Arn,
 			Port:            pulumi.Int(80),
 			DefaultActions: lb.ListenerDefaultActionArray{
@@ -210,7 +212,7 @@ func main() {
 			DefaultActions: lb.ListenerDefaultActionArray{
 				lb.ListenerDefaultActionArgs{
 					Type:           pulumi.String("forward"),
-					TargetGroupArn: targetGroupHttps.Arn,
+					TargetGroupArn: targetGroupHttp.Arn,
 				},
 			},
 		})
@@ -228,7 +230,7 @@ func main() {
 					"Principal": {
 						"Service": "ecs-tasks.amazonaws.com"
 					},
-					"Action": "sts:AssumeRole"
+					"Action":"sts:AssumeRole"
 				}]
 				}`),
 		})
@@ -236,21 +238,27 @@ func main() {
 			return err
 		}
 
-		// create new policy for role
-		_, err = iam.NewRolePolicyAttachment(ctx, "task-exec-policy", &iam.RolePolicyAttachmentArgs{
-			Role:      taskExecRole.Name,
-			PolicyArn: pulumi.String("arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"),
-		})
-		if err != nil {
-			return err
+		policies := []string{
+			"arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+			"arn:aws:iam::aws:policy/SecretsManagerReadWrite",
+			"arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM",
+		}
+		for i, policy := range policies {
+			// create new policy for role
+			_, err = iam.NewRolePolicyAttachment(ctx, fmt.Sprintf("task-exec-policy %d", i), &iam.RolePolicyAttachmentArgs{
+				Role:      taskExecRole.Name,
+				PolicyArn: pulumi.String(policy),
+			})
+			if err != nil {
+				return err
+			}
 		}
 
 		// create a new container cluster
-		cluster, err := ecs.NewCluster(ctx, "sure-cluster", nil)
+		cluster, err := ecs.NewCluster(ctx, "sb-cluster", nil)
 		if err != nil {
 			return err
 		}
-		ctx.Export("sandblizzard-cluster", cluster.ID())
 
 		// Build and push relayer and dapp
 		relayerRepo, err := ecr.NewRepository(ctx, "sb-relayer-ecr", nil)
@@ -264,38 +272,84 @@ func main() {
 		}
 
 		// authenticate with relayer repo
-		relayerRegistryInfo := authenticate(ctx, relayerRepo)
 		relayerImage, err := docker.NewImage(ctx, "sb-relayer", &docker.ImageArgs{
 			Build:     &docker.DockerBuildArgs{Context: pulumi.String("./.."), Dockerfile: pulumi.String("./../dockerfile.relayer")},
 			ImageName: relayerRepo.RepositoryUrl,
-			Registry:  relayerRegistryInfo,
+			Registry:  docker.ImageRegistryArgs{},
 		}, pulumi.DependsOn([]pulumi.Resource{relayerRepo}))
 		if err != nil {
 			return err
 		}
 
-		// Export the base and specific version image name.
-		ctx.Export("relayerBaseImageName", relayerImage.BaseImageName)
-		ctx.Export("relayerFullImageName", relayerImage.ImageName)
-
-		dappRegistryInfo := authenticate(ctx, dappRepo)
+		//dappRegistryInfo := authenticate(ctx, dappRepo)
 		dappImage, err := docker.NewImage(ctx, "sb-dapp", &docker.ImageArgs{
 			Build:     &docker.DockerBuildArgs{Context: pulumi.String("./.."), Dockerfile: pulumi.String("./../dockerfile.dapp")},
 			ImageName: dappRepo.RepositoryUrl,
-			Registry:  dappRegistryInfo,
+			Registry:  docker.ImageRegistryArgs{},
 		}, pulumi.DependsOn([]pulumi.Resource{dappRepo, relayerImage}))
 		if err != nil {
 			return err
 		}
-		// Export the base and specific version image name.
-		ctx.Export("dappBaseImageName", dappImage.BaseImageName)
-		ctx.Export("dappFullImageName", dappImage.ImageName)
 
+		_, err = cloudwatch.NewLogGroup(ctx, "awslogs-relayer", &cloudwatch.LogGroupArgs{
+			Tags: pulumi.StringMap{
+				"Application": pulumi.String("relayer"),
+				"Environment": pulumi.String("dev"),
+			},
+		})
+		if err != nil {
+			return err
+		}
+
+		_, err = cloudwatch.NewLogGroup(ctx, "awslogs-dapp", &cloudwatch.LogGroupArgs{
+			Tags: pulumi.StringMap{
+				"Application": pulumi.String("dapp"),
+				"Environment": pulumi.String("dev"),
+			},
+		})
+		if err != nil {
+			return err
+		}
 		// create container definition
 		containerDefinition := pulumi.Sprintf(`[
 			{
 				"name":"sandlizzard-relayer-cd",
 				"image": %q,
+				"logConfiguration": {
+					"logDriver": "awslogs",
+					"options": {
+						"awslogs-create-group": "true",
+						"awslogs-group": "awslogs-relayer",
+						"awslogs-region": "us-east-2",
+						"awslogs-stream-prefix": "relayer"
+					}
+				},
+				"environment": [
+					{
+						"Name": "GITHUB_ID",
+						"Value": "282074"
+					},
+					{
+						"Name": "SANDBLIZZARD_COLLECTION_ADDRESS",
+						"Value": "2AHfNu6sWRMPWKKQJTffWMWjkYL8AnYY852Fd7ZrkrFw"
+					},
+					{
+						"Name": "GITHUB_APP_LOGIN",
+						"Value": "sandblizzard-app[bot]"
+					},
+					{
+						"Name": "CLUSTER",
+						"Value": "devnet"
+					},
+					{
+						"Name": "RUST_LOG",
+						"Value": "info"
+					},
+					{
+						"Name": "SANDBLIZZARD_URL",
+						"Value": "https://sandblizzard.app"
+					}
+				],
 				"secrets": [
 					{
 						"Name": "GITHUB_KEY",
@@ -308,26 +362,6 @@ func main() {
 					{
 						"Name": "KEY",
 						"ValueFrom": %q
-					},
-					{
-						"Name": "GITHUB_ID",
-						"ValueFrom": "282074"
-					},
-					{
-						"Name": "SANDBLIZZARD_COLLECTION_ADDRESS",
-						"ValueFrom": "2AHfNu6sWRMPWKKQJTffWMWjkYL8AnYY852Fd7ZrkrFw"
-					},
-					{
-						"Name": "GITHUB_APP_LOGIN",
-						"ValueFrom": "sandblizzard-app"
-					},
-					{
-						"Name": "CLUSTER",
-						"ValueFrom": "devnet"
-					},
-					{
-						"Name": "RUST_LOG",
-						"ValueFrom": "info"
 					}
 				]
 			},
@@ -338,11 +372,19 @@ func main() {
 					"containerPort": 80,
 					"hostPort": 80,
 					"protocol": "tcp"
-				}]
+				}],
+				"logConfiguration": {
+					"logDriver": "awslogs",
+					"options": {
+						"awslogs-create-group": "true",
+						"awslogs-group": "awslogs-dapp",
+						"awslogs-region": "us-east-2",
+						"awslogs-stream-prefix": "dapp"
+					}
+				}
 			}
 		]`, relayerImage.ImageName, githubKeySecret.Arn, underdogKeySecret.Arn, keySecret.Arn, dappImage.ImageName)
 
-		ctx.Export("containerDefinition", containerDefinition)
 		//load the docker containers
 		// load the docker container
 		taskDefinition, err := ecs.NewTaskDefinition(ctx, "sandblizzard-td", &ecs.TaskDefinitionArgs{
@@ -362,7 +404,7 @@ func main() {
 		_, err = ecs.NewService(ctx, "sandblizzard-svc", &ecs.ServiceArgs{
 			Name:           pulumi.String("sandblizzard-svc"),
 			Cluster:        cluster.ID(),
-			DesiredCount:   pulumi.Int(5),
+			DesiredCount:   pulumi.Int(1),
 			LaunchType:     pulumi.String("FARGATE"),
 			TaskDefinition: taskDefinition.Arn,
 			NetworkConfiguration: ecs.ServiceNetworkConfigurationArgs{
@@ -372,17 +414,15 @@ func main() {
 			},
 			LoadBalancers: ecs.ServiceLoadBalancerArray{
 				ecs.ServiceLoadBalancerArgs{
-					ElbName:        loadBalancer.Name,
 					TargetGroupArn: targetGroupHttp.Arn,
 					ContainerName:  pulumi.String("sandlizzard-dapp-cd"),
 					ContainerPort:  pulumi.Int(80),
 				},
 			},
-		}, pulumi.DependsOn([]pulumi.Resource{cluster, httpsListener}))
+		}, pulumi.DependsOn([]pulumi.Resource{cluster, httpsListener, httpListener}))
 		if err != nil {
 			return err
 		}
-		ctx.Export("url", loadBalancer.DnsName)
 
 		return nil
 	})

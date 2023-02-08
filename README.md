@@ -20,3 +20,7 @@ The repo contains
 - Client for indexing repositories and storing information on-chain - TBD
 - Remote transaction trigger - TBD
 - User profile with defi tools -TBD
+
+## TODO
+
+- [ ] Create "Connect web2 <-> web3 dapp" - sveltekit
