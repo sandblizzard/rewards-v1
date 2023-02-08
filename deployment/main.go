@@ -99,6 +99,8 @@ func main() {
 			return err
 		}
 
+		// setup aws secret manager
+
 		// setup aws ecs
 		t := true
 		vpc, err := ec2.LookupVpc(ctx, &ec2.LookupVpcArgs{Default: &t})

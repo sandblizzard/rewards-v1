@@ -9,3 +9,5 @@ test-ledger
 relayer.json
 */**/*.pem
 */**/kubeconfig*
+*/**/.yarn
+.yarn
