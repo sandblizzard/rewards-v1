@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.16.x
+          go-version: 1.18.x
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -25,7 +25,7 @@ jobs:
       - uses: pulumi/actions@v3
         with:
           command: up
-          stack-name: dev2
+          stack-name: aws-ecs-dev
           work-dir: deployment
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

@@ -38,8 +38,8 @@ pub async fn get_token_address(
         Ok((address, coin.name))
     } else {
         Ok((
-            "bonkKjzREa7pVBRD6nFPAKRaHhS7XpDhhgZCZdGNkuU".to_string(),
-            token_name.to_string(),
+            "sandphoQsRiNd85VgRrdSXdhS56d58Xa9iDKwdnKfWR".to_string(),
+            "sandBonk".to_string(),
         ))
     }
 }
