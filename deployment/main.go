@@ -52,6 +52,11 @@ func main() {
 		githubKey := cfg.RequireSecret("githubKey")
 		underdogKey := cfg.RequireSecret("underdogKey")
 		key := cfg.RequireSecret("key")
+		localDocker := cfg.Require("localDocker")
+		isLocalDocker := false
+		if localDocker == "true" {
+			isLocalDocker = true
+		}
 
 		// setup aws secret manager
 		githubKeySecret, err := secretsmanager.NewSecret(ctx, "githubKey", nil)
@@ -271,22 +276,31 @@ func main() {
 			return err
 		}
 
-		// authenticate with relayer repo
-		relayerImage, err := docker.NewImage(ctx, "sb-relayer", &docker.ImageArgs{
+		// switch registry args based on environment
+		relayerDockerImageArgs := docker.ImageArgs{
 			Build:     &docker.DockerBuildArgs{Context: pulumi.String("./.."), Dockerfile: pulumi.String("./../dockerfile.relayer")},
 			ImageName: relayerRepo.RepositoryUrl,
 			Registry:  docker.ImageRegistryArgs{},
-		}, pulumi.DependsOn([]pulumi.Resource{relayerRepo}))
+		}
+		if !isLocalDocker {
+			relayerDockerImageArgs.Registry = authenticate(ctx, relayerRepo)
+		}
+		// authenticate with relayer repo
+		relayerImage, err := docker.NewImage(ctx, "sb-relayer", &relayerDockerImageArgs, pulumi.DependsOn([]pulumi.Resource{relayerRepo}))
 		if err != nil {
 			return err
 		}
 
-		//dappRegistryInfo := authenticate(ctx, dappRepo)
-		dappImage, err := docker.NewImage(ctx, "sb-dapp", &docker.ImageArgs{
+		// switch registry args based on environment
+		dappDockerImageArgs := docker.ImageArgs{
 			Build:     &docker.DockerBuildArgs{Context: pulumi.String("./.."), Dockerfile: pulumi.String("./../dockerfile.dapp")},
 			ImageName: dappRepo.RepositoryUrl,
 			Registry:  docker.ImageRegistryArgs{},
-		}, pulumi.DependsOn([]pulumi.Resource{dappRepo, relayerImage}))
+		}
+		if !isLocalDocker {
+			dappDockerImageArgs.Registry = authenticate(ctx, dappRepo)
+		}
+		dappImage, err := docker.NewImage(ctx, "sb-dapp", &dappDockerImageArgs, pulumi.DependsOn([]pulumi.Resource{dappRepo, relayerImage}))
 		if err != nil {
 			return err
 		}
