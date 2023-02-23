@@ -89,6 +89,7 @@ pub async fn get_connection(access_token_url: &str) -> Result<Octocrab, SBError>
         .post(access_token_url, Some(&access_token))
         .await
         .unwrap();
+
     Ok(octocrab::OctocrabBuilder::new()
         .personal_token(access.token)
         .build()

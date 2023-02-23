@@ -15,7 +15,7 @@ use anchor_client::{
 };
 use futures::future::join_all;
 
-use bounty;
+use bounty::{self, state::domain};
 use bounty_sdk::*;
 use domains::{
     utils::{get_key_from_env, SBError},
@@ -121,10 +121,18 @@ async fn main() -> std::io::Result<()> {
         }
 
         // Verify users based on verification file
-        match verify_users().await {
-            Ok(_) => (),
-            Err(err) => {
-                log::warn!("[relayer] failed to verify users with error={}", err)
+        match search_domains
+            .into_iter()
+            .find(|domain| domain.owner.eq("sandblizzard"))
+        {
+            Some(domain) => match verify_users(&domain).await {
+                Ok(_) => (),
+                Err(err) => {
+                    log::warn!("[relayer] failed to verify users with error={}", err)
+                }
+            },
+            None => {
+                log::warn!("[relayer] failed to find verification domain");
             }
         };
     }

@@ -199,7 +199,7 @@ impl UnderdogCollection {
                 ))
             }
             Err(err) => {
-                log::debug!(
+                log::info!(
                     "[mint_nft] error from find_nft_from_name {}",
                     err.to_string()
                 );
@@ -209,7 +209,7 @@ impl UnderdogCollection {
                 }
             }
         }
-        log::debug!("mint_nft: Mint nft for user {}", username.to_string());
+        log::info!("mint_nft: Mint nft for user {}", username.to_string());
         let client = reqwest::Client::new();
 
         let auth_token = get_key_from_env("UNDERDOG_KEY")?;
@@ -260,7 +260,7 @@ impl UnderdogCollection {
     /// Takes nft name and searches through an entire collection.
     /// Returns the NFT is found, if not throws an error
     pub async fn find_nft_from_name(&self, name: &str) -> Result<UnderdogNFT, SBError> {
-        log::debug!("[find_nft_from_name]: for name {}", name.to_string());
+        log::info!("[find_nft_from_name]: for name {}", name.to_string());
         let collection_address = get_sandblizzard_collection()?;
         let client = reqwest::Client::new();
         let auth_token = get_key_from_env("UNDERDOG_KEY")?;
@@ -268,7 +268,7 @@ impl UnderdogCollection {
 
         let mut cursor = 1;
         loop {
-            log::debug!("[name] search with cursor {}", cursor);
+            log::info!("[name] search with cursor {}", cursor);
             params.insert("page", cursor);
             let nfts_response_raw = client
                 .get(format!(
@@ -292,7 +292,7 @@ impl UnderdogCollection {
 
             match nfts_response.results.iter().find(|nft| nft.name == name) {
                 Some(nft) => {
-                    log::debug!(
+                    log::info!(
                         "[find_nft_from_username] found user {}",
                         nft.name.to_string()
                     );
@@ -304,7 +304,7 @@ impl UnderdogCollection {
             // move cursor
             cursor += 1;
             if cursor == nfts_response.total_pages {
-                log::debug!(
+                log::info!(
                     "[find_nft_from_username] cursor reached total pages {}",
                     nfts_response.total_pages
                 );

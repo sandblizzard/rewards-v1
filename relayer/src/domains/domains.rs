@@ -8,7 +8,7 @@ use crate::bounty_sdk::BountySdk;
 
 use super::{github::Github, utils::SBError};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Domain {
     pub name: String,
     pub owner: String,

@@ -1,12 +1,16 @@
 use crate::{
-    domains::{github::get_octocrab_instance, utils::SBError},
+    domains::{
+        github::{get_connection, get_octocrab_instance},
+        utils::SBError,
+        Domain,
+    },
     external::{get_sandblizzard_collection, UnderdogCollection},
 };
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::read_keypair_file};
-use base64::engine::general_purpose;
+use log::*;
+use octocrab::*;
 use serde::{Deserialize, Serialize};
 use std::env;
-
 use std::{fs::File, result::Result};
 pub struct UserLink {
     domain: String,
@@ -40,9 +44,8 @@ struct VerificationData {
 ///
 /// reads the PRs into the verification list and
 /// mints NFTs if they don't exist already
-pub async fn verify_users() -> Result<(), SBError> {
-    let gh = get_octocrab_instance()?;
-
+pub async fn verify_users(domain: &Domain) -> Result<(), SBError> {
+    let gh = get_connection(&domain.access_token_url).await?;
     let mut verification = gh
         .repos("sandblizzard", "verification")
         .get_content()
@@ -67,16 +70,24 @@ pub async fn verify_users() -> Result<(), SBError> {
 
     let parsed_file: VerificationData = serde_json::from_str(&decoded_file)
         .map_err(|err| SBError::FailedToParseFile("verify_users".to_string(), err.to_string()))?;
-    log::debug!("[verify_users] parsed_file {:?}", parsed_file);
+    log::info!("[verify_users] parsed_file {:?}", parsed_file);
     // try generate the users using underdog
     let profiles = parsed_file.profiles;
     let blizzard_collection = get_sandblizzard_collection()?;
     let collection = UnderdogCollection::new(&blizzard_collection.to_string());
     for profile in profiles {
         // create user
-        collection
+        match collection
             .mint_nft(&profile.solana_address, &profile.github)
-            .await?;
+            .await
+        {
+            Ok(_) => {
+                info!("Minted NFT for {}", profile.github)
+            }
+            Err(err) => {
+                warn!("Failed to mint NFT for {}: {}", profile.github, err)
+            }
+        };
     }
     Ok(())
 }
