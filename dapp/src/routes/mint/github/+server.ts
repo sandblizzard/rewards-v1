@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import jwt from 'jsonwebtoken';
-const PROJECT_ID = '2';
+const PROJECT_ID = '1';
 import { toBigNumber, Metaplex, sol, type CandyMachineV2Item } from '@metaplex-foundation/js';
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 
@@ -20,76 +20,6 @@ type User = {
 	};
 };
 
-/**
- * createCandyMachine creates a new candy machine
- * @param walletAddress
- */
-const createCandyMachine = async (walletAddress: string) => {
-	const connection = new Connection(clusterApiUrl('mainnet-beta'));
-	const metaplex = new Metaplex(connection);
-
-	const { nft: collectionNft } = await metaplex.nfts().create({
-		name: 'Sandblizzard',
-		uri: 'https://arweave.net/',
-		sellerFeeBasisPoints: 0,
-		isCollection: true
-	});
-
-	const { candyMachine } = await metaplex.candyMachines().create({
-		itemsAvailable: toBigNumber(0),
-		sellerFeeBasisPoints: 123,
-		collection: {
-			address: collectionNft.address,
-			updateAuthority: new PublicKey('')
-		},
-		guards: {
-			mintLimit: {
-				id: 1,
-				limit: 1
-			},
-			solPayment: {
-				amount: sol(1),
-				destination: new PublicKey('')
-			}
-		}
-	});
-	candyMachine.address;
-};
-
-/**
- * createSandblizzard prepares an NFT to be minted by a user,
- * if the user does not have an NFT, it will mint one for them
- */
-const createSandblizzard = async (walletAddress: string, userName: string) => {
-	const connection = new Connection(clusterApiUrl('mainnet-beta'));
-	const metaplex = new Metaplex(connection);
-	const candyMachine = await metaplex.candyMachines().findByAddress({ address: new PublicKey('') });
-
-	// check if there's an nft with the user's name
-
-	const { uri } = await metaplex.nfts().uploadMetadata({
-		name: userName,
-		description: 'Sandblizzard',
-		image: 'https://cdn.fansided.com/wp-content/blogs.dir/229/files/2016/08/Alolan-Sandslash.jpg'
-	});
-
-	// insert the item
-	const res = await metaplex.candyMachines().insertItems({
-		candyMachine,
-		items: [{ name: userName, uri }]
-	});
-};
-
-/**
- * Allows a user to update their NFT with their github userName
- * @param walletAddress
- * @param userName
- */
-const linkNft = async (walletAddress: string, userName: string) => {
-	const connection = new Connection(clusterApiUrl('mainnet-beta'));
-	const metaplex = new Metaplex(connection);
-};
-
 const mintNFT = async (walletAddress: string, userName: string) => {
 	const user = await getUser(userName);
 	if (user) return user;
@@ -103,7 +33,7 @@ const mintNFT = async (walletAddress: string, userName: string) => {
 		},
 		receiverAddress: walletAddress
 	});
-	const resp = await fetch(`https://api.underdogprotocol.com/v2/projects/n/${PROJECT_ID}/nfts`, {
+	const resp = await fetch(`https://api.underdogprotocol.com/v2/projects/t/${PROJECT_ID}/nfts`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -120,13 +50,18 @@ const mintNFT = async (walletAddress: string, userName: string) => {
 };
 
 const getUser = async (userName: string): Promise<User | undefined> => {
-	const resp = await fetch(`https://api.underdogprotocol.com/v2/projects/n/${PROJECT_ID}/nfts`, {
+	const resp = await fetch(`https://api.underdogprotocol.com/v2/projects/t/${PROJECT_ID}/nfts`, {
 		method: 'GET',
 		headers: {
 			Authorization: `Bearer ${process.env.UNDERDOG_API_KEY}`
 		}
 	});
-	if (!resp.ok) throw new Error(`Failed to get user information: ${resp.status} for ${resp.url}`);
+	if (!resp.ok)
+		throw new Error(
+			`Failed to get user information: ${resp.status} for ${resp.url}. ${JSON.stringify(
+				await resp.json()
+			)}`
+		);
 	const data = await resp.json();
 	const results = data.results as User[];
 	return results.find((res) => res.name.toLowerCase() === userName.toLowerCase());
@@ -134,7 +69,7 @@ const getUser = async (userName: string): Promise<User | undefined> => {
 
 const generateClaimableLink = async (user: User): Promise<string> => {
 	const resp = await fetch(
-		`https://api.underdogprotocol.com/v2/projects/n/${PROJECT_ID}/nfts/${user.id}/claim`,
+		`https://api.underdogprotocol.com/v2/projects/t/${PROJECT_ID}/nfts/${user.id}/claim`,
 		{
 			method: 'GET',
 			headers: {
