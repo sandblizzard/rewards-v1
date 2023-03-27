@@ -3,6 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
+		"idl": "cp ../target/idl/bounty.json src/lib/assets/",
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -66,7 +67,8 @@
 		"eventemitter3": "^4.0.7",
 		"jsonwebtoken": "^9.0.0",
 		"moralis": "^2.14.3",
-		"svelte-select": "^5.5.2"
+		"svelte-select": "^5.5.2",
+		"tslog": "^4.8.2"
 	},
 	"packageManager": "yarn@3.5.0"
 }

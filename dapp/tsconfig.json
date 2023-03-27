@@ -11,7 +11,8 @@
 	  "paths": {
 		"$lib": ["src/lib"],
 		"$lib/*": ["src/lib/*"],
-		"$blocks/*": ["src/blocks/*"]
+		"$blocks/*": ["src/blocks/*"],
+		"$static": ["static"]
 	  }
 	}
   }

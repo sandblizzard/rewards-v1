@@ -17,6 +17,7 @@ const config = {
 	resolve: {
 		alias: {
 			$utils: path.resolve('src/utils/'),
+			$static: path.resolve('static/'),
 			stream: 'rollup-plugin-node-polyfills/polyfills/stream'
 		}
 	},
@@ -25,7 +26,9 @@ const config = {
 		'process.env.BROWSER': true,
 		'process.env.NODE_DEBUG': JSON.stringify(''),
 		'process.env.GITHUB_CLIENT_ID': JSON.stringify(process.env.GITHUB_CLIENT_ID),
-		'process.env.GITHUB_CLIENT_SECRET': JSON.stringify(process.env.GITHUB_CLIENT_SECRET)
+		'process.env.GITHUB_CLIENT_SECRET': JSON.stringify(process.env.GITHUB_CLIENT_SECRET),
+		'process.env.UNDERDOG_PROJECT_ID': JSON.stringify(process.env.UNDERDOG_PROJECT_ID),
+		'process.env.UNDERDOG_API_KEY': JSON.stringify(process.env.UNDERDOG_API_KEY)
 	},
 	build: {
 		target: 'esnext',
