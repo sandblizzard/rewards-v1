@@ -67,5 +67,6 @@
 		"jsonwebtoken": "^9.0.0",
 		"moralis": "^2.14.3",
 		"svelte-select": "^5.5.2"
-	}
+	},
+	"packageManager": "yarn@3.5.0"
 }
