@@ -4,7 +4,6 @@ import { dev } from '$app/environment';
 import jwt from 'jsonwebtoken';
 
 export const GET = (async ({ url, cookies }) => {
-	console.log('login/github/callback GET');
 	const code = String(url.searchParams.get('code'));
 
 	// authorize code
@@ -16,7 +15,6 @@ export const GET = (async ({ url, cookies }) => {
 		}
 	});
 	if (!resp.ok) throw Error(`Failed to authorize code: ${resp.status}`);
-	console.log(resp.url);
 	const text = JSON.parse(await resp.text());
 	const accessToken = text.access_token;
 	if (!accessToken) throw redirect(300, '/error');
@@ -30,9 +28,6 @@ export const GET = (async ({ url, cookies }) => {
 		}
 	});
 	if (!getUserResponse.ok) throw Error(`Failed to get user information: ${getUserResponse.status}`);
-	const _userData = await getUserResponse.json();
-
-	console.log('userdata: ', _userData);
 
 	const jwtToken = jwt.sign({ token: accessToken }, process.env.JWT_SECRET, { expiresIn: '1h' });
 	cookies.set('ghJwt', jwtToken, {
@@ -43,5 +38,6 @@ export const GET = (async ({ url, cookies }) => {
 		secure: true
 	});
 	// mint NFT
-	throw redirect(307, `http://localhost:5173/?ghLoginSuccess=true`);
+
+	throw redirect(307, `${url.origin}/?ghLoginSuccess=true`);
 }) satisfies RequestHandler;

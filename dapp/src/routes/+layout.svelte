@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import { clusterApiUrl } from '@solana/web3.js';
 	import { WalletProvider } from '@svelte-on-solana/wallet-adapter-ui';
-	import { walletStore } from '@svelte-on-solana/wallet-adapter-core';
+	import idl from '$lib/assets/bounty.json';
+
 	import { AnchorConnectionProvider } from '@svelte-on-solana/wallet-adapter-anchor';
 	import '../app.css';
 
@@ -32,7 +33,8 @@
 	});
 </script>
 
-<WalletProvider {localStorageKey} {wallets} autoConnect />
+<WalletProvider {localStorageKey} {wallets} />
+<AnchorConnectionProvider {network} {idl} />
 <div>
 	<slot />
 </div>
