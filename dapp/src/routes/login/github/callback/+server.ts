@@ -28,7 +28,6 @@ export const GET = (async ({ url, cookies }) => {
 		}
 	});
 	if (!getUserResponse.ok) throw Error(`Failed to get user information: ${getUserResponse.status}`);
-	const _userData = await getUserResponse.json();
 
 	const jwtToken = jwt.sign({ token: accessToken }, process.env.JWT_SECRET, { expiresIn: '1h' });
 	cookies.set('ghJwt', jwtToken, {
@@ -39,5 +38,6 @@ export const GET = (async ({ url, cookies }) => {
 		secure: true
 	});
 	// mint NFT
-	throw redirect(307, `http://localhost:5173/?ghLoginSuccess=true`);
+
+	throw redirect(307, `${url.origin}/?ghLoginSuccess=true`);
 }) satisfies RequestHandler;

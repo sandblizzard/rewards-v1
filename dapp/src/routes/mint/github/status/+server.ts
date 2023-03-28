@@ -9,7 +9,7 @@ export const GET = (async ({ url, cookies }) => {
 	const logger = new tslog.Logger();
 	// get wallet address from url
 	const walletAddress = String(url.searchParams.get('walletAddress'));
-	if (!walletAddress) throw redirect(307, `http://localhost:5173/login/github`);
+	if (!walletAddress) throw redirect(307, url.origin);
 
 	//
 	const jwtToken = cookies.get('ghJwt');
