@@ -1,9 +1,6 @@
 use std::{
-    fmt::format,
-    rc::{self, Rc},
     result::Result,
-    sync::Arc,
-    thread, time,
+    thread,
 };
 
 use super::{
@@ -12,24 +9,22 @@ use super::{
 };
 use crate::{
     bounty_proto::{get_solvers, BountyProto},
-    bounty_sdk::{self, BountySdk},
+    bounty_sdk::{BountySdk},
     domains::utils::get_unix_time,
-    external::status_manager,
+    external::{get_connection, is_relayer_login},
 };
-use anchor_client::{Client, Program};
+
 use async_trait::async_trait;
 use bounty;
 use futures::future::join_all;
-use log::{debug, info};
+use log::{info};
 use octocrab::{
     models::{
         issues::{Comment, Issue},
-        InstallationId, IssueId, IssueState,
     },
-    params::apps::CreateInstallationAccessToken,
     *,
 };
-use tokio::sync::Mutex;
+
 pub struct Github {
     pub domain: Domain,
     pub gh: Option<Octocrab>,
@@ -50,49 +45,6 @@ impl DomainHandler for Github {
     fn name(&self) -> String {
         return "github".to_string();
     }
-}
-
-pub fn is_relayer_login(login: &str) -> Result<bool, SBError> {
-    let app_login = get_key_from_env("GITHUB_APP_LOGIN")?;
-    Ok(login.eq(&app_login))
-}
-
-pub fn get_octocrab_instance() -> Result<Octocrab, SBError> {
-    let github_key = get_key_from_env("GITHUB_KEY")?;
-    let github_id = get_key_from_env("GITHUB_ID")?;
-    let app_id = github_id.parse::<u64>().unwrap().into();
-    let key = jsonwebtoken::EncodingKey::from_rsa_pem(github_key.as_bytes()).unwrap();
-    match Octocrab::builder().app(app_id, key).build() {
-        Ok(gh) => Ok(gh),
-        Err(err) => {
-            return Err(SBError::FailedOctocrabRequest(
-                "get_octocrab_instance".to_string(),
-                err.to_string(),
-            ))
-        }
-    }
-}
-
-/// get_connection establish a connection with github
-pub async fn get_connection(access_token_url: &str) -> Result<Octocrab, SBError> {
-    let github_key = get_key_from_env("GITHUB_KEY")?;
-    let github_id = get_key_from_env("GITHUB_ID")?;
-
-    let app_id = github_id.parse::<u64>().unwrap().into();
-    let key = jsonwebtoken::EncodingKey::from_rsa_pem(github_key.as_bytes()).unwrap();
-    let token = octocrab::auth::create_jwt(app_id, &key).unwrap();
-    let gh = Octocrab::builder().personal_token(token).build().unwrap();
-
-    let access_token = CreateInstallationAccessToken::default();
-
-    let access: models::InstallationToken = gh
-        .post(access_token_url, Some(&access_token))
-        .await
-        .unwrap();
-    Ok(octocrab::OctocrabBuilder::new()
-        .personal_token(access.token)
-        .build()
-        .unwrap())
 }
 
 impl Github {
@@ -300,7 +252,7 @@ impl SBIssue {
         let gh = get_connection(&self.access_token_url).await?;
         return match gh
             .issues(&self.owner, &self.repo)
-            .create_comment((self.number as u64), status)
+            .create_comment(self.number as u64, status)
             .await
         {
             Ok(comment) => {

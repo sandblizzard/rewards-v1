@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use anchor_client::solana_sdk::{pubkey::Pubkey, signature};
+
 use reqwest::header::HeaderMap;
 
 use crate::domains::utils::{get_key_from_env, SBError};

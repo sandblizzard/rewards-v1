@@ -1,28 +1,20 @@
 use crate::{
-    bounty_sdk::BountySdk,
     domains::utils::{get_key_from_env, SBError},
     external::{tokens, UnderdogCollection},
-    load_keypair,
 };
 use anchor_client::{
-    anchor_lang::{system_program, InstructionData, ToAccountMetas},
     solana_sdk::{
-        commitment_config::CommitmentConfig,
-        genesis_config::ClusterType,
         pubkey::*,
-        signature::{read_keypair, read_keypair_file, Keypair},
-        signer::Signer,
     },
-    *,
 };
-use anchor_spl::{token::TokenAccount, *};
-use regex::Regex;
-use spl_associated_token_account::{instruction::create_associated_token_account, *};
 
-use bounty::{self, state::Bounty};
-use spl_associated_token_account::get_associated_token_address;
+use regex::Regex;
+
+
+
+
 /// Bounty is the SDK for the bounty program
-use std::{fs::OpenOptions, rc::Rc, result::Result, str::FromStr, sync::Arc};
+use std::{result::Result, str::FromStr};
 pub struct BountyProto {
     pub amount: Option<f64>,
     pub token_name: Option<String>,
@@ -72,7 +64,7 @@ impl BountyProto {
         } else {
             let token = match captured_items[0].to_string().parse::<String>() {
                 Ok(token) => token,
-                Err(err) => {
+                Err(_err) => {
                     return Err(SBError::FailedToParseBounty(
                         "new_bounty_proto".to_string(),
                         id.to_string(),
@@ -108,9 +100,7 @@ impl BountyProto {
 }
 
 /// get_solvers takes the issue close text and finds the mentioned users
-pub async fn get_solvers(
-    text: &str,
-) -> Result<Vec<Pubkey>, SBError> {
+pub async fn get_solvers(text: &str) -> Result<Vec<Pubkey>, SBError> {
     // find user names
     let re = Regex::new(r"@[.^\S]+").unwrap();
     let captures = match re.captures(text) {

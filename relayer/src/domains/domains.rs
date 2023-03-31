@@ -1,10 +1,10 @@
-use anchor_client::{Client, Program};
-use async_trait::async_trait;
-use octocrab::models::{InstallationId, Repository};
-use std::{rc::Rc, result::Result, sync::Arc};
-use tokio::sync::Mutex;
 
-use crate::bounty_sdk::BountySdk;
+use async_trait::async_trait;
+use octocrab::models::{Repository};
+use std::{result::Result};
+
+
+
 
 use super::{github::Github, utils::SBError};
 
@@ -31,7 +31,7 @@ pub trait DomainHandler {
 }
 
 impl Domain {
-    pub fn new(name: &str, owner: &str, sub_domain_name: &str, bounty_type: &str) -> Domain {
+    pub fn new(name: &str, owner: &str, _sub_domain_name: &str, bounty_type: &str) -> Domain {
         return Domain {
             name: name.to_string(),
             owner: owner.to_string(),

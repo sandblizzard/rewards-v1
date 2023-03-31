@@ -7,28 +7,27 @@ use anchor_client::{
     anchor_lang::{system_program, InstructionData, ToAccountMetas},
     solana_sdk::{
         commitment_config::CommitmentConfig,
-        genesis_config::ClusterType,
         instruction::Instruction,
         pubkey::*,
-        signature::{read_keypair, read_keypair_file, Keypair},
+        signature::{Keypair},
         signer::Signer,
     },
     *,
 };
 use anchor_spl::{token::TokenAccount, *};
-use regex::Regex;
-use spl_associated_token_account::{instruction::create_associated_token_account, *};
+
+use spl_associated_token_account::{instruction::create_associated_token_account};
 
 use bounty::{self, state::Bounty};
 use spl_associated_token_account::get_associated_token_address;
 /// Bounty is the SDK for the bounty program
 use std::{
-    rc::{self, Rc},
+    rc::{Rc},
     result::Result,
     str::FromStr,
     sync::Arc,
 };
-use tokio::sync::Mutex;
+
 
 pub struct BountySdk {
     pub program: Program,
@@ -255,7 +254,7 @@ impl BountySdk {
         let account_address = get_associated_token_address(owner, mint);
         let account = match self.program.rpc().get_token_account(&account_address) {
             Ok(account) => account,
-            Err(err) => return false,
+            Err(_err) => return false,
         };
 
         if account.is_some() {

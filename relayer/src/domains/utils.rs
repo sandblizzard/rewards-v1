@@ -128,7 +128,7 @@ pub fn get_key_from_env(key: &str) -> Result<String, SBError> {
     };
     match dotenv::from_path(&path) {
         Ok(_) => (),
-        Err(err) => {
+        Err(_err) => {
             log::debug!(
                 "get_key_from_env: could not get key {}. Will try to get it from the environment",
                 key
