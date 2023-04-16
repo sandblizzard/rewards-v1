@@ -1,10 +1,6 @@
-
 use async_trait::async_trait;
-use octocrab::models::{Repository};
-use std::{result::Result};
-
-
-
+use octocrab::models::Repository;
+use std::result::Result;
 
 use super::{github::Github, utils::SBError};
 
@@ -45,6 +41,10 @@ impl Domain {
     pub async fn get_type(&self) -> Result<Box<dyn DomainHandler>, SBError> {
         match self.bounty_type.as_str() {
             "issue" => {
+                let github = Github::new(&self).await?;
+                Ok(Box::new(github))
+            }
+            "pull_request" => {
                 let github = Github::new(&self).await?;
                 Ok(Box::new(github))
             }

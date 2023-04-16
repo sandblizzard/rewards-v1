@@ -5,6 +5,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq)]
 pub enum SBError {
+    #[error("{0} is not implemented yet")]
+    NotImplemented(String),
+
     #[error("{0} Octocrab request failed. Cause {1}")]
     FailedOctocrabRequest(String, String),
 
