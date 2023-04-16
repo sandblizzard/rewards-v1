@@ -24,3 +24,10 @@ The repo contains
 ## TODO
 
 - [x] Create "Connect web2 <-> web3 dapp" - sveltekit
+- [ ] Write unit tests for relayer
+- [ ] Get bounties from contract rather than based on installations
+- [ ] Calculate mint price based on github profile.
+- [ ] Move "create bounty" dapp to new dapp
+- [ ] Go through bounty contract and deploy to mainnet
+- [ ] Update status text on github
+- [ ] Bounties for PRs

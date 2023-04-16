@@ -53,7 +53,6 @@ async fn main() -> std::io::Result<()> {
                 ),
             }
         }
+        tokio::time::sleep(tokio::time::Duration::from_secs(4)).await;
     }
-
-    Ok(())
 }

@@ -260,7 +260,6 @@ impl SBIssue {
             .take_items();
 
         // try to get the comment body. If no closing comment -> return
-
         let solvers = get_solvers(&self.creator.to_string()).await?;
 
         let (bounty, sig) = BountySdk::new()?.complete_bounty(

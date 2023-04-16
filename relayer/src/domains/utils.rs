@@ -41,8 +41,8 @@ pub enum SBError {
     #[error("{0} failed to get bounty from text. Reason {1}")]
     FailedToCompleteBounty(String, String),
 
-    #[error("could not get bounty capture. Reason {0}")]
-    CouldNotGetBountyCapture(String),
+    #[error("could not get bounty capture on text {0}. Reason {1}")]
+    CouldNotGetBountyCapture(String, String),
 
     #[error("inner capture not found. Reason {0}")]
     CouldNotFindInnerCapture(String),

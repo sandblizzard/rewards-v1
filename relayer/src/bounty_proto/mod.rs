@@ -2,16 +2,9 @@ use crate::{
     domains::utils::{get_key_from_env, SBError},
     external::{tokens, UnderdogCollection},
 };
-use anchor_client::{
-    solana_sdk::{
-        pubkey::*,
-    },
-};
+use anchor_client::solana_sdk::pubkey::*;
 
 use regex::Regex;
-
-
-
 
 /// Bounty is the SDK for the bounty program
 use std::{result::Result, str::FromStr};
@@ -40,6 +33,7 @@ impl BountyProto {
             Some(bounty) => bounty,
             None => {
                 return Err(SBError::CouldNotGetBountyCapture(
+                    text.to_string(),
                     "could not get text capture".to_string(),
                 ))
             }
@@ -49,6 +43,7 @@ impl BountyProto {
             Some(capture) => capture,
             None => {
                 return Err(SBError::CouldNotGetBountyCapture(
+                    text.to_string(),
                     "capture was not found".to_string(),
                 ))
             }
@@ -107,6 +102,7 @@ pub async fn get_solvers(text: &str) -> Result<Vec<Pubkey>, SBError> {
         Some(bounty) => bounty,
         None => {
             return Err(SBError::CouldNotGetBountyCapture(
+                text.to_string(),
                 "could not get text capture".to_string(),
             ))
         }

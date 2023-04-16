@@ -36,7 +36,14 @@ pub async fn try_fetch_github_indexable_domains() -> Result<Vec<Domain>, SBError
             .await
         {
             Ok(mut repos) => repos.take_items(),
-            Err(_) => Vec::new(),
+            Err(err) => {
+                log::error!(
+                    "could not get repos for {}. Cause: {:?}",
+                    domain.account.login,
+                    err.to_string()
+                );
+                Vec::new()
+            }
         };
         return vec![Domain {
             name: "github".to_string(),

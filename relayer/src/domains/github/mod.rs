@@ -79,6 +79,7 @@ impl Github {
                 // get top 100 issues
                 let mut issues = match issue_handler
                     .list()
+                    .sort(params::issues::Sort::Created)
                     .state(params::State::All)
                     .per_page(100)
                     .send()
@@ -96,9 +97,10 @@ impl Github {
             .await;
 
         log::info!(
-            "[relayer] {} issues for {} ",
+            "[relayer] {} issues for name: {}, owner: {}",
             issues.len(),
             self.domain.name,
+            self.domain.owner,
         );
 
         let issues_flat: Vec<SBIssue> = issues
