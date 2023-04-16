@@ -5,6 +5,9 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq, Eq)]
 pub enum SBError {
+    #[error("{0} is not implemented yet")]
+    NotImplemented(String),
+
     #[error("{0} Octocrab request failed. Cause {1}")]
     FailedOctocrabRequest(String, String),
 
@@ -128,7 +131,7 @@ pub fn get_key_from_env(key: &str) -> Result<String, SBError> {
     };
     match dotenv::from_path(&path) {
         Ok(_) => (),
-        Err(err) => {
+        Err(_err) => {
             log::debug!(
                 "get_key_from_env: could not get key {}. Will try to get it from the environment",
                 key

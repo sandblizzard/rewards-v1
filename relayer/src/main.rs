@@ -2,83 +2,17 @@ pub mod bounty_proto;
 pub mod bounty_sdk;
 pub mod domains;
 pub mod external;
-pub mod jobs;
-use actix_files::*;
-use actix_web::{rt::spawn, *};
-use anchor_client::{
-    solana_sdk::{
-        commitment_config::CommitmentConfig,
-        signature::{read_keypair, read_keypair_file, Keypair},
-        signer::Signer,
-    },
-    Cluster,
-};
-use futures::future::join_all;
 
-use bounty;
-use bounty_sdk::*;
+use anchor_client::solana_sdk::signature::Keypair;
+
 use domains::{
+    github::utils::try_fetch_github_indexable_domains,
     utils::{get_key_from_env, SBError},
     *,
 };
-use ed25519_dalek;
-pub use jobs::verification;
-use jobs::verification::verify_users;
-use log::info;
-use spl_associated_token_account::solana_program::example_mocks::solana_sdk;
-use std::{path::PathBuf, rc::Rc, thread, time};
-use std::{result::Result, sync::Arc};
-use tokio::{self, sync::Mutex};
 
-/// try_fetch_indexable_domains
-///
-/// get all domains that are to be indexed
-/// FIXME: get the domains from the bounty contract
-pub async fn try_fetch_indexable_domains() -> Result<Vec<Domain>, SBError> {
-    let gh = Rc::new(get_octocrab_instance()?);
-    let domains = match gh.apps().installations().send().await {
-        Ok(res) => res,
-        Err(err) => {
-            return Err(SBError::FailedOctocrabRequest(
-                "try_fetch_indexable_domains".to_string(),
-                err.to_string(),
-            ))
-        }
-    };
-    let search_domains = join_all(domains.into_iter().map(|domain| async move {
-        let repos = match get_octocrab_instance()
-            .unwrap()
-            .installation(domain.id)
-            .orgs(&domain.account.login)
-            .list_repos()
-            .send()
-            .await
-        {
-            Ok(mut repos) => repos.take_items(),
-            Err(_) => Vec::new(),
-        };
-        return Domain {
-            name: "github".to_string(),
-            owner: domain.account.login.clone(),
-            repos: repos,
-            access_token_url: domain.access_tokens_url.unwrap_or("".to_string()),
-            bounty_type: "issue".to_string(),
-            num_fails: 0,
-        };
-    }))
-    .await;
-
-    Ok(search_domains)
-}
-
-/// sign_create_bounty
-///
-/// returns a web page for signing a create_bounty tx
-#[get("/create_bounty")]
-async fn serve_static() -> actix_web::Result<NamedFile> {
-    let path: PathBuf = "./dist/index.html".parse().unwrap();
-    Ok(NamedFile::open(path)?)
-}
+use std::result::Result;
+use tokio::{self};
 
 pub fn load_keypair() -> Result<Keypair, SBError> {
     let key = get_key_from_env("KEY").unwrap();
@@ -99,7 +33,7 @@ async fn main() -> std::io::Result<()> {
 
     loop {
         // index domains for bounties
-        let search_domains = try_fetch_indexable_domains().await.unwrap();
+        let search_domains = try_fetch_github_indexable_domains().await.unwrap();
         for domain in &search_domains {
             log::info!(
                 "[relayer] try index: {} with num repos {:?}",
@@ -119,14 +53,6 @@ async fn main() -> std::io::Result<()> {
                 ),
             }
         }
-
-        // Verify users based on verification file
-        match verify_users().await {
-            Ok(_) => (),
-            Err(err) => {
-                log::warn!("[relayer] failed to verify users with error={}", err)
-            }
-        };
     }
 
     Ok(())

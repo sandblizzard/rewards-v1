@@ -1,264 +1,29 @@
-use std::{
-    fmt::format,
-    rc::{self, Rc},
-    result::Result,
-    sync::Arc,
-    thread, time,
-};
+use octocrab::models::issues::Comment;
 
-use super::{
-    utils::{get_key_from_env, SBError},
-    Domain, DomainHandler,
-};
 use crate::{
     bounty_proto::{get_solvers, BountyProto},
-    bounty_sdk::{self, BountySdk},
-    domains::utils::get_unix_time,
-    external::status_manager,
-};
-use anchor_client::{Client, Program};
-use async_trait::async_trait;
-use bounty;
-use futures::future::join_all;
-use log::{debug, info};
-use octocrab::{
-    models::{
-        issues::{Comment, Issue},
-        InstallationId, IssueId, IssueState,
+    bounty_sdk::BountySdk,
+    domains::{
+        github::utils::{comment_contains_signing_link, create_bounty_status_text},
+        utils::{get_key_from_env, SBError},
     },
-    params::apps::CreateInstallationAccessToken,
-    *,
+    external::{get_connection, is_relayer_login},
 };
-use tokio::sync::Mutex;
-pub struct Github {
-    pub domain: Domain,
-    pub gh: Option<Octocrab>,
-}
 
-#[async_trait]
-impl DomainHandler for Github {
-    async fn handle(&self) -> Result<(), SBError> {
-        match self.domain.bounty_type.as_str() {
-            "issue" => self.issues().await,
-            _ => Err(SBError::UndefinedBountyType(format!(
-                "could not find {} type",
-                self.domain.bounty_type.as_str()
-            ))),
-        }
-    }
-
-    fn name(&self) -> String {
-        return "github".to_string();
-    }
-}
-
-pub fn is_relayer_login(login: &str) -> Result<bool, SBError> {
-    let app_login = get_key_from_env("GITHUB_APP_LOGIN")?;
-    Ok(login.eq(&app_login))
-}
-
-pub fn get_octocrab_instance() -> Result<Octocrab, SBError> {
-    let github_key = get_key_from_env("GITHUB_KEY")?;
-    let github_id = get_key_from_env("GITHUB_ID")?;
-    let app_id = github_id.parse::<u64>().unwrap().into();
-    let key = jsonwebtoken::EncodingKey::from_rsa_pem(github_key.as_bytes()).unwrap();
-    match Octocrab::builder().app(app_id, key).build() {
-        Ok(gh) => Ok(gh),
-        Err(err) => {
-            return Err(SBError::FailedOctocrabRequest(
-                "get_octocrab_instance".to_string(),
-                err.to_string(),
-            ))
-        }
-    }
-}
-
-/// get_connection establish a connection with github
-pub async fn get_connection(access_token_url: &str) -> Result<Octocrab, SBError> {
-    let github_key = get_key_from_env("GITHUB_KEY")?;
-    let github_id = get_key_from_env("GITHUB_ID")?;
-
-    let app_id = github_id.parse::<u64>().unwrap().into();
-    let key = jsonwebtoken::EncodingKey::from_rsa_pem(github_key.as_bytes()).unwrap();
-    let token = octocrab::auth::create_jwt(app_id, &key).unwrap();
-    let gh = Octocrab::builder().personal_token(token).build().unwrap();
-
-    let access_token = CreateInstallationAccessToken::default();
-
-    let access: models::InstallationToken = gh
-        .post(access_token_url, Some(&access_token))
-        .await
-        .unwrap();
-    Ok(octocrab::OctocrabBuilder::new()
-        .personal_token(access.token)
-        .build()
-        .unwrap())
-}
-
-impl Github {
-    /// Create new Github interface
-    pub async fn new(domain: &Domain) -> Result<Github, SBError> {
-        let github_client = get_connection(&domain.access_token_url).await?;
-        Ok(Github {
-            domain: domain.clone(),
-            gh: Some(github_client),
-        })
-    }
-
-    /// issues
-    ///
-    /// Handles the github issues
-    pub async fn issues(&self) -> Result<(), SBError> {
-        log::info!(
-            "[relayer] Index github issue for domain={}",
-            self.domain.owner,
-        );
-
-        let issues: Vec<Vec<Issue>> =
-            join_all(self.domain.repos.clone().iter().map(|repo| async move {
-                let issue_handler = self
-                    .gh
-                    .as_ref()
-                    .unwrap()
-                    .issues(&self.domain.owner, &repo.name);
-                let mut issues = match issue_handler
-                    .list()
-                    .state(params::State::All)
-                    .per_page(100)
-                    .send()
-                    .await
-                {
-                    Ok(issues) => issues,
-                    Err(_) => {
-                        log::warn!("[relayer] Could not get issues for {}", repo.name);
-                        return Vec::new();
-                    }
-                };
-
-                return issues.take_items();
-            }))
-            .await;
-
-        log::info!(
-            "[relayer] {} issues for {} ",
-            issues.len(),
-            self.domain.name,
-        );
-
-        let issues_flat: Vec<SBIssue> = issues
-            .iter()
-            .flatten()
-            .filter(|&issue| {
-                issue
-                    .created_at
-                    .timestamp()
-                    .ge(&(get_unix_time(60 * 60 * 24 * 2) as i64))
-            })
-            .map(|issue| {
-                let repo = issue
-                    .repository_url
-                    .path()
-                    .split("/")
-                    .collect::<Vec<&str>>();
-                return SBIssue {
-                    id: issue.id.0,
-                    creator: issue.user.id.0.to_string(),
-                    access_token_url: self.domain.access_token_url.clone(),
-                    owner: self.domain.owner.clone(),
-                    repo: repo.last().unwrap_or(&"").to_string(),
-                    number: issue.number,
-                    url: issue.url.to_string(),
-                    state: issue.state.to_string(),
-                    body: issue.body.clone(),
-                    closed_at: issue.closed_at,
-                };
-            })
-            .collect();
-
-        let mut handles = vec![];
-        for issue in issues_flat {
-            // get Status of Issue
-            // 1. Open - try create bounty
-            // 2. Closed -
-            //  - pay out bounty if mentioned users
-            //  - close bounty if no one mentioned
-            let handle = thread::spawn(|| async move {
-                info!("Issue {}", issue.url);
-                issue.handle().await
-            });
-            handles.push(handle)
-        }
-
-        for handle in handles {
-            match handle.join() {
-                Ok(res) => {
-                    res.await;
-                }
-                Err(err) => {
-                    log::error!("Faild to join {:?}", err);
-                    return Err(SBError::IssueNotClosed);
-                }
-            }
-        }
-
-        Ok(())
-    }
-}
-
-/// comment_contains_signing_link
-///
-/// checks if a comment contains the sandblizzard domain
-pub fn comment_contains_signing_link(comment: &Comment) -> Result<bool, SBError> {
-    let comment_body = match &comment.body {
-        Some(body) => body,
-        None => return Ok(false),
-    };
-    let sb_bounty_domain = get_key_from_env("SANDBLIZZARD_URL")?;
-    Ok(comment_body.contains(&sb_bounty_domain))
-}
-
-/// contains_bounty_status
-///
-/// checks if a comment contains the given bounty status
-pub fn contains_bounty_status(comment: &Comment, bounty_status: &str) -> bool {
-    let comment_body = match &comment.body {
-        Some(body) => body,
-        None => return false,
-    };
-    bounty_status.contains(comment_body)
-}
-
-/// create_bounty_status_text
-
-pub fn create_bounty_status_text(
-    bounty: &bounty::state::Bounty,
-    sig: Option<&str>,
-) -> Result<String, SBError> {
-    let mut status = format!("Bounty status: **{}** ", bounty.state.to_uppercase());
-    if sig.is_some() {
-        status = format!(
-            "{} \n
-        Signature: {}
-        ",
-            status,
-            sig.unwrap()
-        )
-    }
-    Ok(status)
-}
+use super::utils::contains_bounty_status;
 
 #[derive(Debug)]
 pub struct SBIssue {
-    id: u64,
-    creator: String,
-    access_token_url: String,
-    owner: String,
-    repo: String,
-    number: i64,
-    url: String,
-    state: String,
-    body: Option<String>,
-    closed_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub id: u64,
+    pub creator: String,
+    pub access_token_url: String,
+    pub owner: String,
+    pub repo: String,
+    pub number: i64,
+    pub url: String,
+    pub state: String,
+    pub body: Option<String>,
+    pub closed_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 impl SBIssue {
@@ -300,7 +65,7 @@ impl SBIssue {
         let gh = get_connection(&self.access_token_url).await?;
         return match gh
             .issues(&self.owner, &self.repo)
-            .create_comment((self.number as u64), status)
+            .create_comment(self.number as u64, status)
             .await
         {
             Ok(comment) => {
@@ -516,33 +281,35 @@ impl SBIssue {
         Ok(())
     }
 
-    pub async fn handle(&self) -> Result<(), SBError> {
+    pub async fn handle(&self) -> Result<String, SBError> {
         if self.state.eq("open") {
             // -> If open -> try to complete bounty
             match self.open_issue().await {
-                Ok(res) => res,
+                Ok(res) => return Ok(self.url.clone()),
                 Err(err) => {
                     log::warn!(
                         "Could not handle open issue for {}. Cause {}",
                         self.url,
                         err
                     );
+                    return Err(err);
                 }
             };
         } else {
             // -> If closed -> try to complete bounty
             match self.close_issue().await {
-                Ok(res) => res,
+                Ok(res) => return Ok(self.url.clone()),
                 Err(err) => {
                     log::warn!(
                         "Could not handle closed issue for {}. Cause {}",
                         self.url,
                         err
                     );
+                    return Err(err);
                 }
             }
         }
 
-        Ok(())
+        Ok(self.url)
     }
 }

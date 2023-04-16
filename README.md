@@ -23,4 +23,4 @@ The repo contains
 
 ## TODO
 
-- [ ] Create "Connect web2 <-> web3 dapp" - sveltekit
+- [x] Create "Connect web2 <-> web3 dapp" - sveltekit
