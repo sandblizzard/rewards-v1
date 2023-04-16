@@ -49,7 +49,7 @@ pub async fn try_fetch_github_indexable_domains() -> Result<Vec<Domain>, SBError
     }))
     .await;
 
-    Ok(search_domains)
+    Ok(search_domains.into_iter().flatten().collect())
 }
 
 /// comment_contains_signing_link

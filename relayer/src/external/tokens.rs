@@ -3,6 +3,7 @@ use crate::domains::utils::SBError;
 use coingecko;
 use std::result::Result;
 
+/// get_token_address returns the token address from coingecko
 pub async fn get_token_address(
     token_name: &str,
     cluster: &str,
