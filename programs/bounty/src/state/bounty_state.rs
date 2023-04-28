@@ -1,5 +1,4 @@
-use core::num;
-use std::{io::Read, ops::Div};
+use std::ops::Div;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
@@ -32,7 +31,7 @@ pub struct Bounty {
 
     pub bounty_amount: u64,
 
-    pub completed_by: Vec<Pubkey>,
+    pub completed_by: Option<Vec<Pubkey>>,
 }
 
 impl Bounty {
@@ -84,6 +83,7 @@ impl Bounty {
         self.mint = *mint;
         self.escrow_bump = *escrow_bump;
         self.bounty_amount = bounty_amount;
+        self.completed_by = None;
         Ok(())
     }
 
@@ -93,7 +93,6 @@ impl Bounty {
         fee_collector: &Account<'info, TokenAccount>,
     ) -> Result<Vec<(AccountInfo<'info>, u64)>> {
         self.state = "completed".to_string();
-        //self.completed_by = solvers.iter().map(|solver| solver.owner).collect();
 
         let total_amount = self.bounty_amount;
         let num_solvers = solvers.len();
@@ -106,5 +105,39 @@ impl Bounty {
         bounty_payout.push((fee_collector.to_account_info(), fee));
 
         Ok(bounty_payout)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use std::{cell::RefCell, rc::Rc, str::FromStr};
+
+    use anchor_lang::solana_program::program_option::COption;
+
+    use super::*;
+    #[test]
+    fn test_creation() {
+        let owner = Pubkey::from_str("Acyq4k7tJ38DyG4kppEEUF9AH1Cuiw7cGCfBuoEh8zH9").unwrap();
+        let bounty = Bounty {
+            bump: 0,
+            bump_array: [0; 1],
+            escrow_bump: 0,
+            domain: "".to_string(),
+            sub_domain: "".to_string(),
+            id: "".to_string(),
+            owner: owner,
+            mint: Pubkey::new_unique(),
+            state: "".to_string(),
+            escrow: Pubkey::new_unique(),
+            bounty_amount: 0,
+            completed_by: None,
+        };
+        assert_eq!(bounty.is_owner(&owner), true);
+    }
+
+    #[test]
+    fn test_complete_bounty() {
+        // TODO: try to close bounty
     }
 }

@@ -3,7 +3,6 @@ use crate::utils::BOUNTY_SEED;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
-#[instruction(relayer_address: Pubkey)]
 pub struct RemoveRelayer<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -18,6 +17,7 @@ pub struct RemoveRelayer<'info> {
     pub protocol: Account<'info, Protocol>,
 
     #[account(
+        mut,
         seeds=[BOUNTY_SEED.as_bytes(), relayer.owner.key().to_bytes().as_ref()],
         bump = relayer.bump,
         constraint = relayer.active == true

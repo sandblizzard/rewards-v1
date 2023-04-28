@@ -112,6 +112,7 @@ pub fn handler(ctx: Context<CompleteBounty>) -> Result<()> {
             bounty_payout.iter().map(|pay| pay.1).collect::<Vec<u64>>()
         );
 
+        // payout bounty
         bounty_payout.iter().for_each(|(solver, amount)| {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(

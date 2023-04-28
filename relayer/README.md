@@ -62,3 +62,4 @@ BOUNTY_CREATOR can always `cancel_bounty` to get the funds out.
 - [ ] Be able to change payer address
 - [ ] Add web server for hosting dapp
 - [ ] (Implement JPEG module for creation of new NFT JPEGS)
+- [ ] Use bounties created in SC to get indexable domains

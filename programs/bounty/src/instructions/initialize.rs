@@ -1,7 +1,9 @@
 use crate::state::*;
-use crate::utils::BOUNTY_SEED;
+use crate::utils::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
+use anchor_spl::token::Token;
+use anchor_spl::token::TokenAccount;
 use std::mem::size_of;
 
 #[derive(Accounts)]
@@ -26,9 +28,27 @@ pub struct Initialize<'info> {
     #[account()]
     pub fee_collector: AccountInfo<'info>,
 
+    pub sand_token_mint: Account<'info, Mint>,
+
+    // tokenAccount for the sandtoken
+    #[account(
+        init,
+        payer = creator,
+        seeds=[
+            BOUNTY_SEED.as_bytes(),
+            sand_token_mint.key().as_ref(),
+        ],
+        bump,
+        token::mint = sand_token_mint,
+        token::authority = creator,
+
+    )]
+    pub sand_token_account: Account<'info, TokenAccount>,
+
     /// mint used for the collection
     pub collection: Account<'info, Mint>,
 
+    pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
 
@@ -46,6 +66,7 @@ pub fn handler(ctx: Context<Initialize>) -> Result<()> {
             &ctx.accounts.fee_collector.key(),
             &ctx.accounts.creator.key(),
             &collection.key(),
+            &ctx.accounts.sand_token_account.key(),
         )
         .unwrap();
 

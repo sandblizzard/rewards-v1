@@ -1,16 +1,19 @@
 use anchor_lang::prelude::*;
 
-/// Domain is the identifier
+/// Domain is the domain to be indexed
 #[account]
 pub struct Domain {
     /// id is the identifier within the domain
     id: String,
 
-    /// name is the name of the domain
+    /// name is the domain such as GitHub
     name: String,
 
     /// owner of the domain, could be an individual or dao
     owner: Pubkey,
+
+    /// repo is the repo within the domain
+    repo: String,
 }
 
 impl Domain {

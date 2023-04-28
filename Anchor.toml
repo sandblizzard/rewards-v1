@@ -16,7 +16,7 @@ bounty = "HELsfudvMchbrYGCFiBPwGp5eXt2kwoPLKDVByy4cLzd"
 bounty = "HELsfudvMchbrYGCFiBPwGp5eXt2kwoPLKDVByy4cLzd"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

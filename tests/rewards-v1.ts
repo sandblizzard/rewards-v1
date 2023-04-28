@@ -13,28 +13,46 @@ import {
 import * as web3 from '@solana/web3.js';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 import { assert, expect } from 'chai';
+import { createBounty, createRelayer } from './utils';
 import { getOrCreateAssociatedTokenAccountIx } from '../app/src/helper';
-import { publicKey } from '@project-serum/anchor/dist/cjs/utils';
 
 const program = anchor.workspace.Bounty as Program<Bounty>;
 let collection_mint: anchor.web3.PublicKey;
-let bonk_mint: anchor.web3.PublicKey;
+const { wallet } = program.provider as anchor.AnchorProvider;
 describe('bounty', () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const { wallet } = program.provider as anchor.AnchorProvider;
-  it('Is initialized!', async () => {
-    // Add your test here.
-    const domain = 'sandblizzard';
-    const subDomain = 'rewards_v1';
-    const id = '123';
-    const bountyAmount = new anchor.BN(1000000);
-    const feeCollector = new web3.PublicKey(
-      'CNY467c6XURCPjiXiKRLCvxdRf3bpunagYTJpr685gPv'
+  // set global variables
+  const domain = 'sandblizzard';
+  const subDomain = 'rewards_v1';
+  const id = '123';
+  const bountyAmount = new anchor.BN(1000000);
+  const feeCollector = new web3.PublicKey(
+    'CNY467c6XURCPjiXiKRLCvxdRf3bpunagYTJpr685gPv'
+  );
+
+  // global variables to be init
+  let sandMint: anchor.web3.PublicKey;
+  let bountyPDA: [anchor.web3.PublicKey, number];
+  let protocolPDA: [anchor.web3.PublicKey, number];
+  let escrowPDA: [anchor.web3.PublicKey, number];
+  let sandTokenAccount: [anchor.web3.PublicKey, number];
+  let bonkMint: anchor.web3.PublicKey;
+  let creatorBonkTokenAccount: anchor.web3.PublicKey;
+  let relayerOne: [anchor.web3.PublicKey, number];
+
+  // Setup test environment
+  before(async () => {
+    sandMint = await createMint(
+      program.provider.connection,
+      (wallet as NodeWallet).payer,
+      wallet.publicKey,
+      wallet.publicKey,
+      6
     );
-    const bountyPDA = findProgramAddressSync(
+    bountyPDA = findProgramAddressSync(
       [
         anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD'),
         anchor.utils.bytes.utf8.encode(domain),
@@ -44,12 +62,12 @@ describe('bounty', () => {
       program.programId
     );
 
-    const protocolPDA = findProgramAddressSync(
+    protocolPDA = findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD')],
       program.programId
     );
 
-    const escrowPDA = findProgramAddressSync(
+    escrowPDA = findProgramAddressSync(
       [bountyPDA[0].toBytes()],
       program.programId
     );
@@ -69,14 +87,46 @@ describe('bounty', () => {
         0
       );
     } catch (err) {
-      console.log('Failed to initialize test ', program.programId);
       console.log(err);
       throw new Error(err);
     }
 
-    try {
-      // initialize
+    // sand token account is the program account holding all the sand
+    sandTokenAccount = findProgramAddressSync(
+      [
+        anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD'),
+        sandMint.toBytes(),
+      ],
+      program.programId
+    );
 
+    // bonk is one bounty reward tokens
+    bonkMint = await createMint(
+      program.provider.connection,
+      (wallet as NodeWallet).payer,
+      wallet.publicKey,
+      wallet.publicKey,
+      6
+    );
+
+    // mint bonk to the creator
+    creatorBonkTokenAccount = await createAssociatedTokenAccount(
+      program.provider.connection,
+      (wallet as NodeWallet).payer,
+      bonkMint,
+      wallet.publicKey
+    );
+    await mintTo(
+      program.provider.connection,
+      (wallet as NodeWallet).payer,
+      bonkMint,
+      creatorBonkTokenAccount,
+      wallet.publicKey,
+      1_000_000_000
+    );
+
+    // initialize protocol
+    try {
       // Initialize protocol
       const res = await program.methods
         .initialize()
@@ -84,6 +134,8 @@ describe('bounty', () => {
           protocol: protocolPDA[0],
           feeCollector: feeCollector,
           collection: collection_mint,
+          sandTokenMint: sandMint,
+          sandTokenAccount: sandTokenAccount[0],
         })
         .rpc();
       assert(res);
@@ -93,55 +145,28 @@ describe('bounty', () => {
       throw new Error(err);
     }
 
-    // CREATE_BOUNTY
-    try {
-      // FIXME: find an ok mint
+    // Add default relayer
+    relayerOne = await createRelayer(program, protocolPDA[0]);
+  });
 
-      bonk_mint = await createMint(
-        program.provider.connection,
-        (wallet as NodeWallet).payer,
-        wallet.publicKey,
-        wallet.publicKey,
-        6
-      );
+  it('Create a bounty -> Should succeed', async () => {
+    const bountyRes = await createBounty(
+      wallet,
+      program,
+      domain,
+      subDomain,
+      id,
+      bountyAmount,
+      bonkMint
+    );
+    let createdBounty = await program.account.bounty.fetch(
+      bountyRes.bountyPDA[0]
+    );
+    expect(createdBounty.domain).to.equal(domain);
+  });
 
-      const creatorAccount = await createAssociatedTokenAccount(
-        program.provider.connection,
-        (wallet as NodeWallet).payer,
-        bonk_mint,
-        wallet.publicKey
-      );
-      await mintTo(
-        program.provider.connection,
-        (wallet as NodeWallet).payer,
-        bonk_mint,
-        creatorAccount,
-        wallet.publicKey,
-        1_000_000_000
-      );
-
-      console.log('bountyPDA[0] ', bountyPDA[0].toString());
-      const resCreateBounty = await program.methods
-        .createBounty(domain, subDomain, id, bountyAmount)
-        .accounts({
-          bounty: bountyPDA[0],
-          creatorAccount,
-          mint: bonk_mint,
-          escrow: escrowPDA[0],
-        })
-        .rpc();
-      let createBounty = await program.account.bounty.fetch(bountyPDA[0]);
-
-      console.log('bounty: ', createBounty);
-      assert(createBounty.state === 'started');
-    } catch (err) {
-      console.log('TOKEN_PROGRAM_ID_ ', TOKEN_PROGRAM_ID);
-      console.log('Failed to create bounty');
-      console.log(err);
-      throw new Error(err);
-    }
-    // add relayer
-
+  it('Add and remove Relayer -> Should Succees', async () => {
+    // add relayer - relayer should be  pk + BOUNTY_SANDBLIZZARD
     const relayerKeys = anchor.web3.Keypair.generate();
     const relayer = findProgramAddressSync(
       [
@@ -150,6 +175,7 @@ describe('bounty', () => {
       ],
       program.programId
     );
+
     try {
       await program.methods
         .addRelayer(relayerKeys.publicKey)
@@ -158,23 +184,58 @@ describe('bounty', () => {
           relayer: relayer[0],
         })
         .rpc();
-      console.log('Successfully added relayer!');
     } catch (err) {
       console.log('Failed to add relayer ', err);
       throw new Error(err);
     }
+    const relayerAccount = await program.account.relayer.fetch(relayer[0]);
+    expect(relayer, `relayer not found after creation`).not.eq(undefined);
+    expect(relayerAccount.active, `relayer is not active`).eq(true);
+
+    // Remove relayer
+    try {
+      const tx = await program.methods
+        .removeRelayer()
+        .accounts({
+          protocol: protocolPDA[0],
+          relayer: relayer[0],
+        })
+        .rpc();
+      await program.provider.connection.confirmTransaction(tx);
+    } catch (err) {
+      console.log('Failed to remove relayer ', err);
+      throw new Error(err);
+    }
+
+    const deactivatedRelayer = await program.account.relayer.fetch(relayer[0]);
+    expect(deactivatedRelayer.active, `relayer is not deactivated`).eq(false);
+  });
+
+  it('Create bounty and try to complete it -> Should Succeed', async () => {
+    const bountyRes = await createBounty(
+      wallet,
+      program,
+      domain,
+      subDomain,
+      '42343',
+      bountyAmount,
+      bonkMint
+    );
+    let createdBounty = await program.account.bounty.fetch(
+      bountyRes.bountyPDA[0]
+    );
+    expect(createdBounty.domain).to.equal(domain);
 
     // try to complte bounty
-
     const feeCollectorAccount = await createAssociatedTokenAccount(
       program.provider.connection,
       (wallet as NodeWallet).payer,
-      bonk_mint,
+      bonkMint,
       feeCollector
     );
     try {
       let creatorAccount = await getAssociatedTokenAddress(
-        bonk_mint,
+        bonkMint,
         wallet.publicKey
       );
       await program.methods
@@ -182,28 +243,85 @@ describe('bounty', () => {
         .accounts({
           protocol: protocolPDA[0],
           feeCollector: feeCollectorAccount,
-          relayer: relayer[0],
-          bounty: bountyPDA[0],
-          escrow: escrowPDA[0],
+          relayer: relayerOne[0],
+          bounty: bountyRes.bountyPDA[0],
+          escrow: bountyRes.escrowPDA[0],
           solver1: creatorAccount,
           solver2: creatorAccount,
           solver3: creatorAccount,
           solver4: creatorAccount,
         })
         .rpc();
-      console.log('Successfully completed bounty!');
     } catch (err) {
       console.log('Failed to complete bounty: ', err);
       throw new Error(err);
     }
+  });
 
-    console.log(
-      'LOG: feeCollector: ',
-      feeCollector.toString(),
-      ' ata: ',
-      feeCollectorAccount.toString(),
-      ' protocol: ',
-      protocolPDA[0].toString()
+  it('Create bounty and try to complete it not as a creator or relayer -> Should Fail', async () => {
+    const aUser = await anchor.web3.Keypair.generate();
+
+    // allow main wallet to create bounty
+    const bountyRes = await createBounty(
+      wallet,
+      program,
+      domain,
+      subDomain,
+      '78957',
+      bountyAmount,
+      bonkMint
     );
+    let createdBounty = await program.account.bounty.fetch(
+      bountyRes.bountyPDA[0]
+    );
+    expect(createdBounty.domain).to.equal(domain);
+
+    // try to complete bounty as anyone
+    const feeCollectorAccount = await getOrCreateAssociatedTokenAccountIx(
+      program.provider.connection,
+      wallet.publicKey,
+      bonkMint,
+      feeCollector
+    );
+    try {
+      let creatorAccount = await getAssociatedTokenAddress(
+        bonkMint,
+        wallet.publicKey
+      );
+
+      const ixs: web3.TransactionInstruction[] = [];
+      const ix = await program.methods
+        .completeBounty()
+        .accounts({
+          protocol: protocolPDA[0],
+          feeCollector: feeCollectorAccount.address,
+          relayer: relayerOne[0],
+          bounty: bountyRes.bountyPDA[0],
+          escrow: bountyRes.escrowPDA[0],
+          solver1: creatorAccount,
+          solver2: creatorAccount,
+          solver3: creatorAccount,
+          solver4: creatorAccount,
+        })
+        .instruction();
+      ixs.push(ix);
+
+      const txMessage = new web3.TransactionMessage({
+        payerKey: aUser.publicKey,
+        recentBlockhash: (await provider.connection.getRecentBlockhash())
+          .blockhash,
+        instructions: ixs,
+      }).compileToV0Message();
+      const tx = new web3.VersionedTransaction(txMessage);
+      tx.sign([aUser]);
+      provider.connection
+        .sendTransaction(tx)
+        .then((res) => {
+          throw new Error('should not success');
+        })
+        .catch((err) => undefined);
+    } catch (err) {
+      console.log('Failed to complete bounty: ', err);
+    }
   });
 });

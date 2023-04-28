@@ -18,7 +18,7 @@ impl Relayer {
     }
 
     pub fn deactive(&mut self) -> Result<()> {
-        self.active = true;
+        self.active = false;
         Ok(())
     }
 
