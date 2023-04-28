@@ -13,7 +13,7 @@ import {
 import * as web3 from '@solana/web3.js';
 import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 import { assert, expect } from 'chai';
-import { createBounty, createRelayer } from './utils';
+import { createBounty, createDomain, createRelayer } from './utils';
 import { getOrCreateAssociatedTokenAccountIx } from '../app/src/helper';
 
 const program = anchor.workspace.Bounty as Program<Bounty>;
@@ -324,4 +324,33 @@ describe('bounty', () => {
       console.log('Failed to complete bounty: ', err);
     }
   });
+
+  it('create multiple domains', async () => {
+    const domainType = 'issues';
+    const platform = 'github';
+    const repo = 'rewards-v1';
+    const subDomain = 'sanddblizzard';
+
+    const domain1 = await createDomain(
+      program,
+      protocolPDA[0],
+      domainType,
+      platform,
+      repo,
+      subDomain
+    );
+    expect(domain1[0]).to.not.be.undefined;
+
+    const domain2 = await createDomain(
+      program,
+      protocolPDA[0],
+      domainType,
+      platform,
+      'perpetuals',
+      subDomain
+    );
+    expect(domain2[0]).to.not.be.undefined;
+  });
+
+  it('create a domain and deactive it -> should succeed', async () => {});
 });

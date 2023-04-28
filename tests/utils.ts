@@ -42,6 +42,49 @@ export const createRelayer = async (
 };
 
 /**
+ * createDomain - creates a domain
+ * @param program
+ * @param domain
+ * @param subDomain
+ * @param id
+ * @returns
+ */
+export const createDomain = async (
+  program: anchor.Program<Bounty>,
+  protocolPDA: PublicKey,
+  domainType: string,
+  platform: string,
+  repo: string,
+  subDomain: string
+) => {
+  const domainPDA = findProgramAddressSync(
+    [
+      anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD'),
+      anchor.utils.bytes.utf8.encode(platform),
+      anchor.utils.bytes.utf8.encode(subDomain),
+      anchor.utils.bytes.utf8.encode(domainType),
+      anchor.utils.bytes.utf8.encode(repo),
+    ],
+    program.programId
+  );
+
+  try {
+    await program.methods
+      .createDomain(domainType, platform, repo, subDomain)
+      .accounts({
+        protocol: protocolPDA,
+        domain: domainPDA[0],
+      })
+      .rpc();
+    console.log('Successfully created domain!');
+    return domainPDA;
+  } catch (err) {
+    console.log('Failed to create domain ', err);
+    throw new Error(err);
+  }
+};
+
+/**
  * createBounty
  */
 export const createBounty = async (

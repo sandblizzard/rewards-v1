@@ -1,7 +1,6 @@
 use crate::state::{Protocol, Relayer};
 use crate::utils::BOUNTY_SEED;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::instruction;
 use std::mem::size_of;
 
 #[derive(Accounts)]

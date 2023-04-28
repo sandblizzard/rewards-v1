@@ -45,4 +45,20 @@ pub mod bounty {
     pub fn remove_relayer(ctx: Context<RemoveRelayer>) -> Result<()> {
         remove_relayer::handler(ctx)
     }
+
+    /// create domain
+    pub fn create_domain(
+        ctx: Context<CreateDomain>,
+        bounty_type: String,
+        name: String,
+        repo: String,
+        sub_domain: String,
+    ) -> Result<()> {
+        create_domain::handler(ctx, bounty_type, name, repo, sub_domain)
+    }
+
+    /// deactivate domain
+    pub fn deactivate_domain(ctx: Context<DeactivateDomain>) -> Result<()> {
+        deactivate_domain::handler(ctx)
+    }
 }
