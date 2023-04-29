@@ -18,7 +18,7 @@ pub struct DeactivateDomain<'info> {
             domain.repo.as_bytes(),
         ],
         bump = domain.bump,
-        constraint = domain.active == true,
+        constraint = domain.active,
         constraint = domain.owner == *signer.key
     )]
     pub domain: Account<'info, state::Domain>,

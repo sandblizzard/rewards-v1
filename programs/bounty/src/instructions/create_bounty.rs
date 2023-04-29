@@ -1,5 +1,5 @@
 use crate::state::Bounty;
-use crate::utils::{BONK_MINT, BOUNTY_SEED};
+use crate::utils::{BOUNTY_SEED};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 use std::mem::size_of;
@@ -18,7 +18,7 @@ pub struct CreateBounty<'info> {
         init,
         payer = creator,
         seeds = [
-            BOUNTY_SEED.as_bytes().as_ref(),
+            BOUNTY_SEED.as_bytes(),
             domain.as_bytes(),
             sub_domain.as_bytes(),
             id.as_bytes(),
@@ -89,7 +89,7 @@ pub fn handler(
             &id,
             bounty_amount,
             &ctx.accounts.mint.key(),
-            &ctx.bumps.get("escrow").unwrap(),
+            ctx.bumps.get("escrow").unwrap(),
         )
         .unwrap();
 

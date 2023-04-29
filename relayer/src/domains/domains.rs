@@ -28,24 +28,24 @@ pub trait DomainHandler {
 
 impl Domain {
     pub fn new(name: &str, owner: &str, _sub_domain_name: &str, bounty_type: &str) -> Domain {
-        return Domain {
+        Domain {
             name: name.to_string(),
             owner: owner.to_string(),
             repos: Vec::new(),
             access_token_url: "".to_string(),
             bounty_type: bounty_type.to_string(),
             num_fails: 0,
-        };
+        }
     }
 
     pub async fn get_type(&self) -> Result<Box<dyn DomainHandler>, SBError> {
         match self.bounty_type.as_str() {
             "issue" => {
-                let github = Github::new(&self).await?;
+                let github = Github::new(self).await?;
                 Ok(Box::new(github))
             }
             "pull_request" => {
-                let github = Github::new(&self).await?;
+                let github = Github::new(self).await?;
                 Ok(Box::new(github))
             }
             _ => Err(SBError::UndefinedBountyType(format!(

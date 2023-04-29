@@ -15,7 +15,7 @@ pub fn get_octocrab_instance() -> Result<Octocrab, SBError> {
     match Octocrab::builder().app(app_id, key).build() {
         Ok(gh) => Ok(gh),
         Err(err) => {
-            return Err(SBError::FailedOctocrabRequest(
+            Err(SBError::FailedOctocrabRequest(
                 "get_octocrab_instance".to_string(),
                 err.to_string(),
             ))

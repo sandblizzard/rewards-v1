@@ -2,13 +2,12 @@ use std::{result::Result, thread};
 pub mod issues;
 pub mod utils;
 use super::{
-    utils::{get_key_from_env, SBError},
+    utils::{SBError},
     Domain, DomainHandler,
 };
 use crate::{
-    bounty_proto::{get_solvers, BountyProto},
     domains::utils::get_unix_time,
-    external::{get_connection, is_relayer_login},
+    external::{get_connection},
 };
 use issues::SBIssue;
 
@@ -16,7 +15,7 @@ use async_trait::async_trait;
 use futures::future::join_all;
 use log::{error, info};
 use octocrab::{
-    models::issues::{Comment, Issue},
+    models::issues::{Issue},
     *,
 };
 
@@ -39,7 +38,7 @@ impl DomainHandler for Github {
     }
 
     fn name(&self) -> String {
-        return "github".to_string();
+        "github".to_string()
     }
 }
 
@@ -92,7 +91,7 @@ impl Github {
                     }
                 };
 
-                return issues.take_items();
+                issues.take_items()
             }))
             .await;
 
@@ -116,7 +115,7 @@ impl Github {
                 let repo = issue
                     .repository_url
                     .path()
-                    .split("/")
+                    .split('/')
                     .collect::<Vec<&str>>();
                 return SBIssue {
                     id: issue.id.0,

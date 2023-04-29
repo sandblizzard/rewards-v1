@@ -17,10 +17,10 @@ use tokio::{self};
 pub fn load_keypair() -> Result<Keypair, SBError> {
     let key = get_key_from_env("KEY").unwrap();
     let keypair_bytes = key
-        .split(",")
+        .split(',')
         .into_iter()
         .map(|val| {
-            return val.parse::<u8>().unwrap();
+            val.parse::<u8>().unwrap()
         })
         .collect::<Vec<u8>>();
     let keypair = Keypair::from_bytes(&keypair_bytes).unwrap();

@@ -59,7 +59,7 @@ pub fn get_bounty(
     let (program, cluster) = get_bounty_connection()?;
     let bounty_pda = anchor_client::solana_sdk::pubkey::Pubkey::find_program_address(
         &[
-            bounty::utils::BOUNTY_SEED.as_bytes().as_ref(),
+            bounty::utils::BOUNTY_SEED.as_bytes(),
             domain.as_bytes(),
             sub_domain.as_bytes(),
             issue_id.to_string().as_bytes(),
@@ -82,9 +82,9 @@ pub fn get_bounty(
             bounty_pda.0.to_string(),
             format!(
             "Id of bounty with address {} on cluster={} by program_id={} is empty. Bounty: {:?}",
-            bounty_pda.0.to_string(),
-            cluster.clone().url().to_string(),
-            bounty::id().to_string(),
+            bounty_pda.0,
+            cluster.url(),
+            bounty::id(),
             bounty
         ),
         ));
@@ -168,7 +168,7 @@ impl BountySdk {
         );
         let bounty_pda = anchor_client::solana_sdk::pubkey::Pubkey::find_program_address(
             &[
-                bounty::utils::BOUNTY_SEED.as_bytes().as_ref(),
+                bounty::utils::BOUNTY_SEED.as_bytes(),
                 domain.as_bytes(),
                 sub_domain.as_bytes(),
                 issue_id.to_string().as_bytes(),
@@ -191,9 +191,9 @@ impl BountySdk {
                 bounty_pda.0.to_string(),
                 format!(
                 "Id of bounty with address {} on cluster={} by program_id={} is empty. Bounty: {:?}",
-                bounty_pda.0.to_string(),
-                self.cluster.clone().url().to_string(),
-                bounty::id().to_string(),
+                bounty_pda.0,
+                self.cluster.clone().url(),
+                bounty::id(),
                 bounty
             ),
             ));
@@ -218,7 +218,7 @@ impl BountySdk {
     pub fn get_bounty_pda(&self, domain: &str, sub_domain: &str, issue_id: &u64) -> (Pubkey, u8) {
         anchor_client::solana_sdk::pubkey::Pubkey::find_program_address(
             &[
-                bounty::utils::BOUNTY_SEED.as_bytes().as_ref(),
+                bounty::utils::BOUNTY_SEED.as_bytes(),
                 domain.as_bytes(),
                 sub_domain.as_bytes(),
                 issue_id.to_string().as_bytes(),
@@ -255,12 +255,12 @@ impl BountySdk {
     }
 
     pub fn get_ata_instruction(&self, owner: &Pubkey, mint: &Pubkey) -> Instruction {
-        return create_associated_token_account(
+        create_associated_token_account(
             &self.payer.pubkey(),
             owner,
             mint,
             &anchor_spl::token::ID,
-        );
+        )
     }
 
     pub fn get_ata(
@@ -281,8 +281,8 @@ impl BountySdk {
     ) -> Result<Vec<Instruction>, SBError> {
         return Ok(solvers
             .iter()
-            .filter(|solver| !self.does_ata_exist(&solver, mint))
-            .map(|solver_wo_ata| self.get_ata_instruction(&solver_wo_ata, mint))
+            .filter(|solver| !self.does_ata_exist(solver, mint))
+            .map(|solver_wo_ata| self.get_ata_instruction(solver_wo_ata, mint))
             .collect::<Vec<Instruction>>());
     }
 
@@ -299,7 +299,7 @@ impl BountySdk {
         let relayer = self.get_relayer_pda();
         let bounty_pda = self.get_bounty_pda(domain, sub_domain, issue_id);
         let escrow_pda = self.get_escrow_pda(&bounty_pda.0);
-        let fee_collector = self.get_fee_collector(&bounty_mint);
+        let fee_collector = self.get_fee_collector(bounty_mint);
 
         let ata_ixs = self.get_ata_ixs(solvers, bounty_mint)?;
         let atas = self.get_ata(solvers, bounty_mint)?;

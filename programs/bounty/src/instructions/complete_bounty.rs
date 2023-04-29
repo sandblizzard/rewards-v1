@@ -1,8 +1,7 @@
 use anchor_lang::{
     prelude::*,
-    solana_program::system_instruction::{transfer, transfer_many},
 };
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
     state::Bounty,
@@ -36,7 +35,7 @@ pub struct CompleteBounty<'info> {
     #[account(
         seeds=[BOUNTY_SEED.as_bytes(), relayer.owner.key().to_bytes().as_ref()],
         bump = relayer.bump,
-        constraint = relayer.active == true
+        constraint = relayer.active
     )]
     pub relayer: Box<Account<'info, Relayer>>,
 

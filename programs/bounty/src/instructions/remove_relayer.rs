@@ -20,7 +20,7 @@ pub struct RemoveRelayer<'info> {
         mut,
         seeds=[BOUNTY_SEED.as_bytes(), relayer.owner.key().to_bytes().as_ref()],
         bump = relayer.bump,
-        constraint = relayer.active == true
+        constraint = relayer.active
     )]
     pub relayer: Account<'info, Relayer>,
 

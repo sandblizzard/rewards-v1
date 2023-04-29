@@ -18,7 +18,7 @@ impl StatusManager {
 
     pub fn post_status<F>(&self, emitter: F) -> Result<(), SBError>
     where
-        F: Fn(&str) -> (),
+        F: Fn(&str),
     {
         emitter(&self.status);
         Ok(())

@@ -49,8 +49,8 @@ impl BountyProto {
             }
         };
 
-        let inner_capture: String = first_capture.as_str().replace("$", "");
-        let captured_items: Vec<&str> = inner_capture.split(":").collect();
+        let inner_capture: String = first_capture.as_str().replace('$', "");
+        let captured_items: Vec<&str> = inner_capture.split(':').collect();
         if captured_items.len() != 2 {
             return Err(SBError::CouldNotFindInnerCapture(format!(
                 "expected to capture 2 entitites. Instead captured {:?}",
@@ -75,7 +75,7 @@ impl BountyProto {
                 Err(err) => {
                     return Err(SBError::FailedToConvertStringToNumber(format!(
                         "string={}. Cause: {}",
-                        captured_items[0].to_string(),
+                        captured_items[0],
                         err
                     )))
                 }
@@ -111,7 +111,7 @@ pub async fn get_solvers(text: &str) -> Result<Vec<Pubkey>, SBError> {
     let usernames: Vec<String> = captures
         .iter()
         .filter(|x| x.is_some())
-        .map(|username| username.unwrap().as_str().replace("@", ""))
+        .map(|username| username.unwrap().as_str().replace('@', ""))
         .collect();
 
     let mut solvers = Vec::new();

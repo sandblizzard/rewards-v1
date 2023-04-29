@@ -34,6 +34,6 @@ pub struct AddRelayer<'info> {
 
 pub fn handler(ctx: Context<AddRelayer>, relayer_address: Pubkey) -> Result<()> {
     let relayer = &mut ctx.accounts.relayer;
-    relayer.initialize(&relayer_address, &ctx.bumps.get("relayer").unwrap())?;
+    relayer.initialize(&relayer_address, ctx.bumps.get("relayer").unwrap())?;
     Ok(())
 }

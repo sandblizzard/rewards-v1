@@ -125,11 +125,11 @@ pub enum SBError {
 /// tries to find `key` in the local .env file and returns it
 pub fn get_key_from_env(key: &str) -> Result<String, SBError> {
     // assumes .env
-    let path = match env::current_dir().and_then(|a| Ok(a.as_path().join(".env"))) {
+    let path = match env::current_dir().map(|a| a.as_path().join(".env")) {
         Ok(res) => res,
         Err(err) => return Err(SBError::CouldNotGetPath(err.to_string())),
     };
-    match dotenv::from_path(&path) {
+    match dotenv::from_path(path) {
         Ok(_) => (),
         Err(_err) => {
             log::debug!(
@@ -140,8 +140,8 @@ pub fn get_key_from_env(key: &str) -> Result<String, SBError> {
     }
 
     match env::var(key) {
-        Ok(token) => return Ok(token.replace("\n", "")),
-        Err(_err) => return Err(SBError::KeyNotFound(key.to_string())),
+        Ok(token) => Ok(token.replace('\n', "")),
+        Err(_err) => Err(SBError::KeyNotFound(key.to_string())),
     }
 }
 

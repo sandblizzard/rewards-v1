@@ -37,7 +37,7 @@ impl SBIssue {
             }
         };
         // index the bounty information
-        let bounty = match BountyProto::new_bounty_proto(&self.creator, &issue_body, &self.id).await
+        let bounty = match BountyProto::new_bounty_proto(&self.creator, issue_body, &self.id).await
         {
             Ok(bounty) => bounty,
             Err(err) => return Err(SBError::FailedToFindBounty(err.to_string())),
@@ -53,9 +53,9 @@ impl SBIssue {
     ) -> Result<(), SBError> {
         if comments
             .iter()
-            .any(|comment| contains_bounty_status(comment, &status))
+            .any(|comment| contains_bounty_status(comment, status))
         {
-            return Ok(());
+            Ok(())
         } else {
             self.post_bounty_status(status).await
         }
@@ -222,7 +222,7 @@ impl SBIssue {
                 // get the top 150 comments on the issue
 
                 let has_posted_signing_link = &relayer_comments_iter
-                    .any(|comment| comment_contains_signing_link(&comment).unwrap());
+                    .any(|comment| comment_contains_signing_link(comment).unwrap());
                 log::info!(
                     "Has posted signing link for {}: {}",
                     self.url,
@@ -284,7 +284,7 @@ impl SBIssue {
         if self.state.eq("open") {
             // -> If open -> try to complete bounty
             match self.open_issue().await {
-                Ok(res) => return Ok(self.url.clone()),
+                Ok(_res) => return Ok(self.url.clone()),
                 Err(err) => {
                     log::warn!(
                         "Could not handle open issue for {}. Cause {}",
@@ -297,7 +297,7 @@ impl SBIssue {
         } else {
             // -> If closed -> try to complete bounty
             match self.close_issue().await {
-                Ok(res) => return Ok(self.url.clone()),
+                Ok(_res) => return Ok(self.url.clone()),
                 Err(err) => {
                     log::warn!(
                         "Could not handle closed issue for {}. Cause {}",

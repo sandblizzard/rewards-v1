@@ -121,7 +121,7 @@ impl UnderdogCollection {
 
         let url = format!(
             "https://api.underdogprotocol.com/v1/collections/{}?limit={}",
-            collection_address.to_string(),
+            collection_address,
             10,
         );
         let collection_response = client
@@ -160,7 +160,7 @@ impl UnderdogCollection {
             name: name.to_string(),
             description: description.to_string(),
             image: image_url.to_string(),
-            attributes: attributes,
+            attributes,
         };
         let collection_response = client
             .post("https://api.underdogprotocol.com/v1/collections")
@@ -194,7 +194,7 @@ impl UnderdogCollection {
                 return Err(SBError::SandblizzardUserAlreadyExists(
                     "mint_nft. Will not mint a new NFT".to_string(),
                     res.name.to_string(),
-                    res.owner_address.to_string(),
+                    res.owner_address,
                 ))
             }
             Err(err) => {
@@ -272,7 +272,7 @@ impl UnderdogCollection {
             let nfts_response_raw = client
                 .get(format!(
                     "https://api.underdogprotocol.com/v1/nfts?collectionAddress={}",
-                    collection_address.to_string()
+                    collection_address
                 ))
                 .form(&params)
                 .bearer_auth(&auth_token)

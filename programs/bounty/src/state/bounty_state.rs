@@ -38,7 +38,7 @@ impl Bounty {
     /// bounty seeds used to sign transactions
     pub fn seeds(&self) -> [&[u8]; 5] {
         [
-            BOUNTY_SEED.as_bytes().as_ref(),
+            BOUNTY_SEED.as_bytes(),
             self.domain.as_bytes(),
             self.sub_domain.as_bytes(),
             self.id.as_bytes(),
@@ -111,9 +111,9 @@ impl Bounty {
 #[cfg(test)]
 mod tests {
 
-    use std::{cell::RefCell, rc::Rc, str::FromStr};
+    use std::{str::FromStr};
 
-    use anchor_lang::solana_program::program_option::COption;
+    
 
     use super::*;
     #[test]
@@ -126,7 +126,7 @@ mod tests {
             domain: "".to_string(),
             sub_domain: "".to_string(),
             id: "".to_string(),
-            owner: owner,
+            owner,
             mint: Pubkey::new_unique(),
             state: "".to_string(),
             escrow: Pubkey::new_unique(),
