@@ -121,8 +121,7 @@ impl UnderdogCollection {
 
         let url = format!(
             "https://api.underdogprotocol.com/v1/collections/{}?limit={}",
-            collection_address,
-            10,
+            collection_address, 10,
         );
         let collection_response = client
             .get(url)
@@ -289,15 +288,12 @@ impl UnderdogCollection {
                     SBError::FailedToDeserializeData("nfts".to_string(), err.to_string())
                 })?;
 
-            match nfts_response.results.iter().find(|nft| nft.name == name) {
-                Some(nft) => {
-                    log::debug!(
-                        "[find_nft_from_username] found user {}",
-                        nft.name.to_string()
-                    );
-                    return Ok(nft.clone());
-                }
-                None => (),
+            if let Some(nft) = nfts_response.results.iter().find(|nft| nft.name == name) {
+                log::debug!(
+                    "[find_nft_from_username] found user {}",
+                    nft.name.to_string()
+                );
+                return Ok(nft.clone());
             }
 
             // move cursor
