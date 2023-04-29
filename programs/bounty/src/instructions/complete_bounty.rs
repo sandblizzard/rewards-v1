@@ -1,12 +1,11 @@
-use anchor_lang::{
-    prelude::*,
-};
+use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
     state::Bounty,
+    state::Denomination,
     state::{Protocol, Relayer},
-    utils::{BlizzardError, BOUNTY_SEED},
+    utils::{BlizzardError, BOUNTY_SEED, DENOMINATION_SEED},
 };
 
 #[derive(Accounts)]
@@ -25,10 +24,24 @@ pub struct CompleteBounty<'info> {
 
     #[account(
         mut,
-        constraint = protocol.fee_collector.eq(&fee_collector.owner.key()) @ BlizzardError::WrongProtocolFeeCollector,
+        constraint = protocol.owner.eq(&fee_collector.owner.key()) @ BlizzardError::WrongProtocolFeeCollector,
         constraint = fee_collector.mint.eq(&bounty.mint.key())  @ BlizzardError::WrongFeeCollectorMint
     )]
     pub fee_collector: Box<Account<'info, TokenAccount>>,
+
+    /// bounty denomination is the allowed denomination of a bounty
+    /// it needs to be checked against the fee collector and the mint
+    #[account(
+        seeds = [
+            BOUNTY_SEED.as_bytes(),
+            DENOMINATION_SEED.as_bytes(),
+            bounty.mint.key().to_bytes().as_ref()
+        ],
+        bump = bounty_denomination.bump,
+        constraint = bounty_denomination.fee_collector.eq(&fee_collector.key()) @ BlizzardError::WrongDenominationFeeCollector,
+        constraint = bounty_denomination.mint.eq(&bounty.mint.key()) @ BlizzardError::WrongDenominationMint
+    )]
+    pub bounty_denomination: Box<Account<'info, Denomination>>,
 
     /// relayer that wants to complete the transaction
     /// validate the seeds

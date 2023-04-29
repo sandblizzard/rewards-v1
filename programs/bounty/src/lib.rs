@@ -19,6 +19,18 @@ pub mod bounty {
         initialize::handler(ctx)
     }
 
+    /// add bounty denomination
+    pub fn add_bounty_denomination(ctx: Context<AddBountyDenomination>) -> Result<()> {
+        add_bounty_denomination::handler(ctx)
+    }
+
+    /// deactivate bounty denomination
+    pub fn deactivate_bounty_denomination(
+        ctx: Context<DeactivateBountyDenomination>,
+    ) -> Result<()> {
+        deactivate_bounty_denomination::handler(ctx)
+    }
+
     /// create_bounty
     ///
     /// creates a bounty

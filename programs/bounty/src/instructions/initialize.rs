@@ -24,10 +24,6 @@ pub struct Initialize<'info> {
     )]
     pub protocol: Account<'info, protocol::Protocol>,
 
-    /// CHECK: Fee collector is an account that controls fees
-    #[account()]
-    pub fee_collector: AccountInfo<'info>,
-
     pub sand_token_mint: Account<'info, Mint>,
 
     // tokenAccount for the sandtoken
@@ -63,7 +59,6 @@ pub fn handler(ctx: Context<Initialize>) -> Result<()> {
     protocol
         .initialize(
             ctx.bumps.get("protocol").unwrap(),
-            &ctx.accounts.fee_collector.key(),
             &ctx.accounts.creator.key(),
             &collection.key(),
             &ctx.accounts.sand_token_account.key(),

@@ -1,5 +1,5 @@
-use crate::state::Bounty;
-use crate::utils::{BOUNTY_SEED};
+use crate::state::*;
+use crate::utils::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 use std::mem::size_of;
@@ -31,6 +31,14 @@ pub struct CreateBounty<'info> {
     /// Account to credit the user
     #[account(mut)]
     pub creator_account: Account<'info, TokenAccount>,
+
+    pub protocol: Account<'info, Protocol>,
+
+    #[account(
+        constraint = bounty_denomination.mint.eq(&mint.key()),
+        constraint = bounty_denomination.active 
+    )]
+    pub bounty_denomination: Account<'info, Denomination>,
 
     /// mint to use
     /// Only bonk

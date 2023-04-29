@@ -20,4 +20,10 @@ pub enum BlizzardError {
 
     #[msg("fee collector does not match protocol fee collector")]
     WrongProtocolFeeCollector,
+
+    #[msg("invalid denomination fee collector")]
+    WrongDenominationFeeCollector,
+
+    #[msg("invalid denomination mint")]
+    WrongDenominationMint,
 }

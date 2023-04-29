@@ -8,3 +8,5 @@ Native token: A3LTRAn8fvZW5kuGRAXB7Xr1VGqVuCQUn1RxWSAtsJFH
 ## TODO:
 
 - [ ] Allow for Sand mining by solving bounties
+- [ ] Create denomination account to keep track of allowed tokens
+- [ ] Make sure deployer is the only one that can initialize contract
