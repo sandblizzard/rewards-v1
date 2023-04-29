@@ -6,28 +6,19 @@ use crate::{
 use anchor_client::{
     anchor_lang::{system_program, InstructionData, ToAccountMetas},
     solana_sdk::{
-        commitment_config::CommitmentConfig,
-        instruction::Instruction,
-        pubkey::*,
-        signature::{Keypair},
-        signer::Signer,
+        commitment_config::CommitmentConfig, instruction::Instruction, pubkey::*,
+        signature::Keypair, signer::Signer,
     },
     *,
 };
 use anchor_spl::{token::TokenAccount, *};
 
-use spl_associated_token_account::{instruction::create_associated_token_account};
+use spl_associated_token_account::instruction::create_associated_token_account;
 
 use bounty::{self, state::Bounty};
 use spl_associated_token_account::get_associated_token_address;
 /// Bounty is the SDK for the bounty program
-use std::{
-    rc::{Rc},
-    result::Result,
-    str::FromStr,
-    sync::Arc,
-};
-
+use std::{rc::Rc, result::Result, str::FromStr, sync::Arc};
 
 pub struct BountySdk {
     pub program: Program,

@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-
 use reqwest::header::HeaderMap;
 
 use crate::domains::utils::{get_key_from_env, SBError};

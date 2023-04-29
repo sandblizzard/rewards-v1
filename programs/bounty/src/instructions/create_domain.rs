@@ -20,7 +20,6 @@ pub struct CreateDomain<'info> {
         sub_domain.as_bytes(),
         domain_type.as_bytes(),
         repo.as_bytes(),
-       
     ],
     bump,
     space =8+size_of::<domain::Domain>(),
