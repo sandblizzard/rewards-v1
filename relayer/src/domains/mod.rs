@@ -1,6 +1,6 @@
-pub mod domains;
+pub mod domain;
 pub mod github;
 pub mod utils;
 
-pub use domains::*;
+pub use domain::*;
 pub use github::*;

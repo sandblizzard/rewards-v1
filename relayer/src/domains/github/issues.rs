@@ -87,49 +87,6 @@ impl SBIssue {
     /// when an issue is closed and the app has completed the
     /// bounty then a message is emitted
 
-    /// try_get_closing_comment
-    ///
-    /// will try to get the comments associated with the closing of
-    /// an issue
-    async fn try_get_closing_comment<'a>(
-        &self,
-        comments: &Vec<Comment>,
-    ) -> Result<String, SBError> {
-        // get comments on issue
-
-        let issue_closed_at = match self.closed_at {
-            Some(timestamp) => timestamp,
-            None => return Err(SBError::IssueNotClosed),
-        };
-        // filter comments at closing
-        let comments: Vec<&Comment> = comments
-            .iter()
-            .filter(|comment| comment.created_at.eq(&issue_closed_at))
-            .collect();
-
-        // take first closed comment
-        let first_close_issue_comment = match comments.first() {
-            Some(comment) => comment,
-            None => {
-                return Err(SBError::CommentNotFound(
-                    "closed issue".to_string(),
-                    "".to_string(),
-                ))
-            }
-        };
-
-        let comment_body = match first_close_issue_comment.body.as_ref() {
-            Some(comment) => comment,
-            None => {
-                return Err(SBError::CommentNotFound(
-                    "closed body issue".to_string(),
-                    "Comment body not found".to_string(),
-                ))
-            }
-        };
-        Ok(comment_body.clone())
-    }
-
     /// create_signing_link
     ///
     /// creates a link with enough query params to create a `create_bounty` tx
@@ -308,7 +265,5 @@ impl SBIssue {
                 }
             }
         }
-
-        Ok(self.url)
     }
 }

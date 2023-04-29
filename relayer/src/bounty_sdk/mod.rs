@@ -255,19 +255,10 @@ impl BountySdk {
     }
 
     pub fn get_ata_instruction(&self, owner: &Pubkey, mint: &Pubkey) -> Instruction {
-        create_associated_token_account(
-            &self.payer.pubkey(),
-            owner,
-            mint,
-            &anchor_spl::token::ID,
-        )
+        create_associated_token_account(&self.payer.pubkey(), owner, mint, &anchor_spl::token::ID)
     }
 
-    pub fn get_ata(
-        &self,
-        owners: &Vec<Pubkey>,
-        token_mint: &Pubkey,
-    ) -> Result<Vec<Pubkey>, SBError> {
+    pub fn get_ata(&self, owners: &[Pubkey], token_mint: &Pubkey) -> Result<Vec<Pubkey>, SBError> {
         return Ok(owners
             .iter()
             .map(|owner| get_associated_token_address(owner, token_mint))
@@ -276,7 +267,7 @@ impl BountySdk {
 
     pub fn get_ata_ixs(
         &self,
-        solvers: &Vec<Pubkey>,
+        solvers: &[Pubkey],
         mint: &Pubkey,
     ) -> Result<Vec<Instruction>, SBError> {
         return Ok(solvers

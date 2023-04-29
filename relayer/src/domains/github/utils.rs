@@ -49,7 +49,7 @@ pub async fn try_fetch_github_indexable_domains() -> Result<Vec<Domain>, SBError
             name: "github".to_string(),
             owner: domain.account.login.clone(),
             repos,
-            access_token_url: domain.access_tokens_url.unwrap_or("".to_string()),
+            access_token_url: domain.access_tokens_url.unwrap_or_else(|| "".to_string()),
             bounty_type: "issue".to_string(),
             num_fails: 0,
         }]

@@ -8,7 +8,6 @@ use anchor_client::solana_sdk::signature::Keypair;
 use domains::{
     github::utils::try_fetch_github_indexable_domains,
     utils::{get_key_from_env, SBError},
-    *,
 };
 
 use std::result::Result;
@@ -19,9 +18,7 @@ pub fn load_keypair() -> Result<Keypair, SBError> {
     let keypair_bytes = key
         .split(',')
         .into_iter()
-        .map(|val| {
-            val.parse::<u8>().unwrap()
-        })
+        .map(|val| val.parse::<u8>().unwrap())
         .collect::<Vec<u8>>();
     let keypair = Keypair::from_bytes(&keypair_bytes).unwrap();
     Ok(keypair)

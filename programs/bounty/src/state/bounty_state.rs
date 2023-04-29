@@ -56,6 +56,7 @@ impl Bounty {
         self.owner.eq(user)
     }
 
+    #[warn(clippy::too_many_arguments)]
     pub fn create_bounty(
         &mut self,
         bump: &u8,
@@ -111,9 +112,7 @@ impl Bounty {
 #[cfg(test)]
 mod tests {
 
-    use std::{str::FromStr};
-
-    
+    use std::str::FromStr;
 
     use super::*;
     #[test]
