@@ -12,7 +12,10 @@ use anchor_client::{
     },
     *,
 };
-use anchor_spl::{self, associated_token};
+use anchor_spl::{
+    self, associated_token,
+    token::{self, Token},
+};
 use clap::{Parser, Subcommand};
 use home;
 use log;
@@ -55,20 +58,28 @@ pub fn load_keypair() -> Result<Keypair, Error> {
 /// sets up the fee collector, the nft mint
 pub fn initialize_bounty_contract() {
     // get keypair from config.id
+    let sand_token_mint = Pubkey::from_str("A3LTRAn8fvZW5kuGRAXB7Xr1VGqVuCQUn1RxWSAtsJFH").unwrap();
     let fee_collector = Pubkey::from_str("CNY467c6XURCPjiXiKRLCvxdRf3bpunagYTJpr685gPv").unwrap();
     let nft_collection = Pubkey::from_str("BXKro6nDX9y86rtGn6uh6K1rZUqENzsUHP6gAbdJj1NS").unwrap();
     let bounty_program_id = bounty::id();
     let payer = load_keypair().unwrap();
 
+    let sand_token_account = Pubkey::find_program_address(
+        &[utils::BOUNTY_SEED.as_bytes(), sand_token_mint.as_ref()],
+        &bounty_program_id,
+    );
     let protocol =
         Pubkey::find_program_address(&[utils::BOUNTY_SEED.as_bytes()], &bounty_program_id);
     log::debug!("[CLI] protocol pubkey {}", protocol.0.to_string());
     let accounts = accounts::Initialize {
+        sand_token_mint,
+        sand_token_account: sand_token_account.0,
         creator: payer.pubkey(),
         protocol: protocol.0,
         fee_collector,
         collection: nft_collection,
         system_program: system_program::ID,
+        token_program: token::ID,
     };
     let data = instruction::Initialize {};
 

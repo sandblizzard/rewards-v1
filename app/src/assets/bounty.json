@@ -33,9 +33,7 @@
           "name": "collection",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "mint used for the collection"
-          ]
+          "docs": ["mint used for the collection"]
         },
         {
           "name": "systemProgram",
@@ -47,11 +45,7 @@
     },
     {
       "name": "createBounty",
-      "docs": [
-        "create_bounty",
-        "",
-        "creates a bounty"
-      ],
+      "docs": ["create_bounty", "", "creates a bounty"],
       "accounts": [
         {
           "name": "creator",
@@ -67,26 +61,19 @@
           "name": "creatorAccount",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "Account to credit the user"
-          ]
+          "docs": ["Account to credit the user"]
         },
         {
           "name": "mint",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "mint to use",
-            "Only bonk"
-          ]
+          "docs": ["mint to use", "Only bonk"]
         },
         {
           "name": "escrow",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "Bounty escrow to transfer funds to"
-          ]
+          "docs": ["Bounty escrow to transfer funds to"]
         },
         {
           "name": "systemProgram",
@@ -125,19 +112,13 @@
     },
     {
       "name": "completeBounty",
-      "docs": [
-        "complete_bounty",
-        "",
-        "Try to complete bounty"
-      ],
+      "docs": ["complete_bounty", "", "Try to complete bounty"],
       "accounts": [
         {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
-          "docs": [
-            "only owners or relayers can complete bounties"
-          ]
+          "docs": ["only owners or relayers can complete bounties"]
         },
         {
           "name": "protocol",
@@ -162,10 +143,7 @@
           "name": "bounty",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "bounty to be completed",
-            "FIXME"
-          ]
+          "docs": ["bounty to be completed", "FIXME"]
         },
         {
           "name": "escrow",
@@ -176,9 +154,7 @@
           "name": "solver1",
           "isMut": true,
           "isSigner": false,
-          "docs": [
-            "up to 4 receivers"
-          ]
+          "docs": ["up to 4 receivers"]
         },
         {
           "name": "solver2",
@@ -255,14 +231,9 @@
           },
           {
             "name": "bumpArray",
-            "docs": [
-              "for the seeds"
-            ],
+            "docs": ["for the seeds"],
             "type": {
-              "array": [
-                "u8",
-                1
-              ]
+              "array": ["u8", 1]
             }
           },
           {
@@ -283,9 +254,7 @@
           },
           {
             "name": "owner",
-            "docs": [
-              "Owner of bounty"
-            ],
+            "docs": ["Owner of bounty"],
             "type": "publicKey"
           },
           {
@@ -294,16 +263,12 @@
           },
           {
             "name": "state",
-            "docs": [
-              "State - created, closed"
-            ],
+            "docs": ["State - created, closed"],
             "type": "string"
           },
           {
             "name": "escrow",
-            "docs": [
-              "escrow of the bounty"
-            ],
+            "docs": ["escrow of the bounty"],
             "type": "publicKey"
           },
           {
@@ -321,31 +286,23 @@
     },
     {
       "name": "Domain",
-      "docs": [
-        "Domain is the identifier"
-      ],
+      "docs": ["Domain is the identifier"],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "id",
-            "docs": [
-              "id is the identifier within the domain"
-            ],
+            "docs": ["id is the identifier within the domain"],
             "type": "string"
           },
           {
             "name": "name",
-            "docs": [
-              "name is the name of the domain"
-            ],
+            "docs": ["name is the name of the domain"],
             "type": "string"
           },
           {
             "name": "owner",
-            "docs": [
-              "owner of the domain, could be an individual or dao"
-            ],
+            "docs": ["owner of the domain, could be an individual or dao"],
             "type": "publicKey"
           }
         ]
@@ -363,10 +320,7 @@
           {
             "name": "bumpSeed",
             "type": {
-              "array": [
-                "u8",
-                1
-              ]
+              "array": ["u8", 1]
             }
           },
           {
@@ -400,10 +354,7 @@
           {
             "name": "bumpSeed",
             "type": {
-              "array": [
-                "u8",
-                1
-              ]
+              "array": ["u8", 1]
             }
           },
           {
@@ -461,6 +412,6 @@
     }
   ],
   "metadata": {
-    "address": "HELsfudvMchbrYGCFiBPwGp5eXt2kwoPLKDVByy4cLzd"
+    "address": "SANdemMWicpWGcrX9HiNn33dqGGktwA7q2fnbp9aWpo"
   }
 }
