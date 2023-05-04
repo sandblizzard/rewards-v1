@@ -1,54 +1,26 @@
-use crate::{
-    domains::utils::{get_key_from_env, SBError},
-    load_keypair,
-};
-
+use anchor_client::anchor_lang::InstructionData;
+use anchor_client::anchor_lang::ToAccountMetas;
 use anchor_client::{
-    anchor_lang::{system_program, InstructionData, ToAccountMetas},
+    anchor_lang::system_program,
     solana_sdk::{
         commitment_config::CommitmentConfig, instruction::Instruction, pubkey::*,
         signature::Keypair, signer::Signer,
     },
     *,
 };
-use anchor_spl::{token::TokenAccount, *};
-
-use spl_associated_token_account::instruction::create_associated_token_account;
+use anchor_spl::{associated_token::get_associated_token_address, token::TokenAccount, *};
 
 use bounty::{self, state::Bounty};
-use spl_associated_token_account::get_associated_token_address;
+use spl_associated_token_account::instruction::create_associated_token_account;
 /// Bounty is the SDK for the bounty program
 use std::{rc::Rc, result::Result, str::FromStr, sync::Arc};
 
+use crate::utils::{get_bounty_connection, get_key_from_env, load_keypair, SBError};
+
 pub struct BountySdk {
-    pub program: Program,
+    pub program: Program<Arc<Keypair>>,
     pub cluster: Cluster,
     pub payer: Keypair,
-}
-
-pub fn get_bounty_connection() -> Result<(Program, Cluster), SBError> {
-    let cluster_name = get_key_from_env("CLUSTER").unwrap();
-
-    let payer = load_keypair().unwrap();
-    let payer_rc = Rc::new(payer);
-    let cluster = match Cluster::from_str(&cluster_name) {
-        Ok(res) => res,
-        Err(err) => {
-            return Err(SBError::CouldNotGetEnvKey(
-                "get_program_client".to_string(),
-                "CLUSTER".to_string(),
-                err.to_string(),
-            ))
-        }
-    };
-
-    let client = anchor_client::Client::new_with_options(
-        cluster.clone(),
-        payer_rc,
-        CommitmentConfig::processed(),
-    );
-    let program = client.program(bounty::id());
-    Ok((program, cluster))
 }
 
 pub fn get_bounty(
@@ -97,7 +69,7 @@ impl BountySdk {
         let cluster_name = get_key_from_env("CLUSTER").unwrap();
 
         let payer = load_keypair().unwrap();
-        let payer_rc = Rc::new(payer);
+        let payer_rc = Arc::new(payer);
         let cluster = match Cluster::from_str(&cluster_name) {
             Ok(res) => res,
             Err(err) => {
@@ -156,23 +128,22 @@ impl BountySdk {
 
     pub fn get_bounty(
         &self,
-        domain: &str,
-        sub_domain: &str,
+        domain: &Pubkey,
         issue_id: &u64,
     ) -> Result<bounty::state::Bounty, SBError> {
         log::debug!(
-            "[bounty_sdk] get_bounty for domain={} sub_domain={} issue_id={}",
+            "[bounty_sdk] get_bounty for domain={} issue_id={}",
             domain,
-            sub_domain,
             issue_id
         );
+
+        let bounty_seeds = &[
+            bounty::utils::BOUNTY_SEED.as_bytes(),
+            domain.to_bytes().as_ref(),
+            issue_id.to_string().as_bytes(),
+        ];
         let bounty_pda = anchor_client::solana_sdk::pubkey::Pubkey::find_program_address(
-            &[
-                bounty::utils::BOUNTY_SEED.as_bytes(),
-                domain.as_bytes(),
-                sub_domain.as_bytes(),
-                issue_id.to_string().as_bytes(),
-            ],
+            bounty_seeds,
             &bounty::ID,
         );
 
@@ -201,6 +172,26 @@ impl BountySdk {
         Ok(bounty)
     }
 
+    /// get_domain_pda
+    pub fn get_domain_pda(
+        &self,
+        platform: &str,
+        domain_name: &str,
+        sub_domain: &str,
+        domain_type: &str,
+    ) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[
+                bounty::utils::BOUNTY_SEED.as_bytes(),
+                platform.as_bytes(),
+                domain_name.as_bytes(),
+                sub_domain.as_bytes(),
+                domain_type.as_bytes(),
+            ],
+            &bounty::id(),
+        )
+    }
+
     pub fn get_protocol_pda(&self) -> (Pubkey, u8) {
         Pubkey::find_program_address(&[bounty::utils::BOUNTY_SEED.as_bytes()], &bounty::id())
     }
@@ -215,12 +206,11 @@ impl BountySdk {
         )
     }
 
-    pub fn get_bounty_pda(&self, domain: &str, sub_domain: &str, issue_id: &u64) -> (Pubkey, u8) {
+    pub fn get_bounty_pda(&self, domain: &Pubkey, sub_domain: &str, issue_id: &u64) -> (Pubkey, u8) {
         anchor_client::solana_sdk::pubkey::Pubkey::find_program_address(
             &[
                 bounty::utils::BOUNTY_SEED.as_bytes(),
-                domain.as_bytes(),
-                sub_domain.as_bytes(),
+                domain.to_bytes().as_ref(),
                 issue_id.to_string().as_bytes(),
             ],
             &bounty::ID,
@@ -287,10 +277,19 @@ impl BountySdk {
         bounty_mint: &Pubkey,
     ) -> Result<(Bounty, String), SBError> {
         let protocol = self.get_protocol_pda();
+        let cluster = Cluster::Devnet;
         let relayer = self.get_relayer_pda();
         let bounty_pda = self.get_bounty_pda(domain, sub_domain, issue_id);
         let escrow_pda = self.get_escrow_pda(&bounty_pda.0);
         let fee_collector = self.get_fee_collector(bounty_mint);
+        let denomination_pda = Pubkey::find_program_address(
+            &[
+                bounty::utils::BOUNTY_SEED.as_bytes(),
+                bounty::utils::DENOMINATION_SEED.as_bytes(),
+                bounty_mint.as_ref(),
+            ],
+            &bounty::id(),
+        );
 
         let ata_ixs = self.get_ata_ixs(solvers, bounty_mint)?;
         let atas = self.get_ata(solvers, bounty_mint)?;
@@ -298,6 +297,7 @@ impl BountySdk {
             payer: self.payer.pubkey(),
             protocol: protocol.0,
             fee_collector,
+            bounty_denomination: denomination_pda.0,
             relayer: relayer.0,
             bounty: bounty_pda.0,
             escrow: escrow_pda.0,
@@ -316,27 +316,23 @@ impl BountySdk {
             data: complete_bounty_data.data(),
         };
 
-        let mut request = self.program.request();
+        let mut request = RequestBuilder::from(bounty::id(), cluster.url(), &self.payer, None);
 
         // build ata instructions
         for ix in ata_ixs {
             request = request.instruction(ix);
         }
-
+        let domain_pda = self.get_domain_pda(platform, domain_name, sub_domain, domain_type)
         let (bounty, sig) = match request.instruction(complete_bounty_ix).send() {
-            Ok(sig) => (
-                self.get_bounty(domain, sub_domain, issue_id).unwrap(),
-                sig.to_string(),
-            ),
+            Ok(sig) => (self.get_bounty(domain, issue_id).unwrap(), sig.to_string()),
             Err(err) => {
                 let protocol_data = self.get_protocol().unwrap();
                 let escrow = self.get_escrow(&bounty_pda.0).unwrap();
                 log::info!(
-                    "Failed to complete bounty: {:?}, protocol: {}, fee collector: {}, protocol.fee_collector {}, bounty: {}, mint: {}, escrow balance {}",
+                    "Failed to complete bounty: {:?}, protocol: {}, fee collector: {}, bounty: {}, mint: {}, escrow balance {}",
                     err,
                     protocol.0.to_string(),
                     fee_collector.to_string(),
-                    protocol_data.fee_collector.to_string(),
                     bounty_pda.0.to_string(),
                     bounty_mint.to_string(),
                     escrow.amount,

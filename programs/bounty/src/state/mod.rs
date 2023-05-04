@@ -1,6 +1,7 @@
 pub mod bounty_state;
 pub mod denomination;
 pub mod domain;
+pub mod domain_identifier;
 pub mod protocol;
 pub mod relayer;
 

@@ -1,4 +1,4 @@
-use crate::domains::utils::SBError;
+use bounty_sdk::utils::SBError;
 
 /// status_manager is responsible for posting status
 /// to domain

@@ -1,9 +1,7 @@
-use crate::{
-    domains::utils::{get_key_from_env, SBError},
-    external::{tokens, UnderdogCollection},
-};
+use crate::external::{tokens, UnderdogCollection};
 use anchor_client::solana_sdk::pubkey::*;
 
+use bounty_sdk::utils::{get_key_from_env, SBError};
 use regex::Regex;
 
 /// Bounty is the SDK for the bounty program
@@ -75,8 +73,7 @@ impl BountyProto {
                 Err(err) => {
                     return Err(SBError::FailedToConvertStringToNumber(format!(
                         "string={}. Cause: {}",
-                        captured_items[0],
-                        err
+                        captured_items[0], err
                     )))
                 }
             };

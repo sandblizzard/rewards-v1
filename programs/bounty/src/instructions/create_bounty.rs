@@ -14,13 +14,14 @@ pub struct CreateBounty<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
 
+    pub protocol: Account<'info, Protocol>,
+
     #[account(
         init,
         payer = creator,
         seeds = [
             BOUNTY_SEED.as_bytes(),
-            domain.as_bytes(),
-            sub_domain.as_bytes(),
+            domain.key().to_bytes().as_ref(),
             id.as_bytes(),
         ],
         bump,
@@ -28,12 +29,15 @@ pub struct CreateBounty<'info> {
     )]
     pub bounty: Account<'info, Bounty>,
 
+    /// domain to attach the bounty to
+    pub domain: Account<'info, Domain>,
+
     /// Account to credit the user
     #[account(mut)]
     pub creator_account: Account<'info, TokenAccount>,
 
-    pub protocol: Account<'info, Protocol>,
 
+    // todo: check seeds 
     #[account(
         constraint = bounty_denomination.mint.eq(&mint.key()),
         constraint = bounty_denomination.active 
@@ -76,13 +80,12 @@ pub struct CreateBounty<'info> {
 /// * id: e.g. 453423
 pub fn handler(
     ctx: Context<CreateBounty>,
-    domain: String,
-    sub_domain: String,
     id: String,
     bounty_amount: u64,
 ) -> Result<()> {
     let creator = &ctx.accounts.creator;
     let creator_account = &ctx.accounts.creator_account;
+    let domain = &ctx.accounts.domain;
     let escrow = &ctx.accounts.escrow;
     let token_program = &ctx.accounts.token_program;
     // initialize the bounty
@@ -90,11 +93,10 @@ pub fn handler(
         .bounty
         .create_bounty(
             ctx.bumps.get("bounty").unwrap(),
+            &id,     
             &creator.key(),
             &escrow.key(),
-            &domain,
-            &sub_domain,
-            &id,
+            &domain.key(),
             bounty_amount,
             &ctx.accounts.mint.key(),
             ctx.bumps.get("escrow").unwrap(),

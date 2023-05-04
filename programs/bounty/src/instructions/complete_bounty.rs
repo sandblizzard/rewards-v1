@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
+    state::bounty_state::BountyState,
     state::Bounty,
     state::Denomination,
     state::{Protocol, Relayer},
@@ -55,7 +56,7 @@ pub struct CompleteBounty<'info> {
     /// bounty to be completed
     /// FIXME
     #[account(mut,
-        constraint=bounty.state.eq("started"))
+        constraint=bounty.state.eq(&BountyState::Created))
     ]
     pub bounty: Box<Account<'info, Bounty>>,
 

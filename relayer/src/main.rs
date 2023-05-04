@@ -1,28 +1,10 @@
 pub mod bounty_proto;
-pub mod bounty_sdk;
 pub mod domains;
 pub mod external;
 
-use anchor_client::solana_sdk::signature::Keypair;
+use domains::github::utils::try_fetch_github_indexable_domains;
 
-use domains::{
-    github::utils::try_fetch_github_indexable_domains,
-    utils::{get_key_from_env, SBError},
-};
-
-use std::result::Result;
 use tokio::{self};
-
-pub fn load_keypair() -> Result<Keypair, SBError> {
-    let key = get_key_from_env("KEY").unwrap();
-    let keypair_bytes = key
-        .split(',')
-        .into_iter()
-        .map(|val| val.parse::<u8>().unwrap())
-        .collect::<Vec<u8>>();
-    let keypair = Keypair::from_bytes(&keypair_bytes).unwrap();
-    Ok(keypair)
-}
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
@@ -33,9 +15,8 @@ async fn main() -> std::io::Result<()> {
         let search_domains = try_fetch_github_indexable_domains().await.unwrap();
         for domain in &search_domains {
             log::info!(
-                "[relayer] try index: {} with num repos {:?}",
-                domain.name,
-                domain.repos.len()
+                "[relayer] try index: {}",
+                domain.domain_state.domain.sub_domain
             );
             let domain_type = domain.get_type().await.unwrap();
             match domain_type.handle().await {

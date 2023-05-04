@@ -2,12 +2,12 @@ use octocrab::models::issues::Comment;
 
 use crate::{
     bounty_proto::{get_solvers, BountyProto},
-    bounty_sdk::BountySdk,
-    domains::{
-        github::utils::{comment_contains_signing_link, create_bounty_status_text},
-        utils::{get_key_from_env, SBError},
-    },
+    domains::github::utils::{comment_contains_signing_link, create_bounty_status_text},
     external::{get_connection, is_relayer_login},
+};
+use bounty_sdk::{
+    utils::{get_key_from_env, SBError},
+    *,
 };
 
 use super::utils::contains_bounty_status;
@@ -17,7 +17,9 @@ pub struct SBIssue {
     pub id: u64,
     pub creator: String,
     pub access_token_url: String,
-    pub owner: String,
+    pub domain: String,
+    pub sub_domain: String,
+    pub domain_type: String,
     pub repo: String,
     pub number: i64,
     pub url: String,
@@ -64,7 +66,7 @@ impl SBIssue {
     pub async fn post_bounty_status(&self, status: &str) -> Result<(), SBError> {
         let gh = get_connection(&self.access_token_url).await?;
         return match gh
-            .issues(&self.owner, &self.repo)
+            .issues(&self.domain, &self.repo)
             .create_comment(self.number as u64, status)
             .await
         {
@@ -102,7 +104,7 @@ impl SBIssue {
         );
         let gh = get_connection(&self.access_token_url).await?;
         return match gh
-            .issues(&self.owner, &self.repo)
+            .issues(&self.domain, &self.repo)
             .create_comment(
                 self.number.try_into().unwrap(),
                 self.get_signing_link(bounty_amount, mint, token_name)?,
@@ -136,21 +138,25 @@ impl SBIssue {
 
         let referrer = format!(
             "https://github.com/{}/{}/issues/{}",
-            self.owner, self.repo, self.number
+            self.domain, self.repo, self.number
         );
         Ok(format!(
             "Create bounty by signing: [Transaction]({}/create_bounty?referrer={}&domain={}&subDomain={}&id={}&bountyAmount={}&mint={}&token={})",
-            sb_bounty_domain,referrer, self.owner, self.repo, self.id,bounty_amount,mint,token_name
+            sb_bounty_domain,referrer, self.domain, self.repo, self.id,bounty_amount,mint,token_name
         ))
     }
 
     async fn open_issue(&self) -> Result<(), SBError> {
         log::info!("[issue] Open issue for {}", self.number);
-        let bounty = BountySdk::new()?.get_bounty(&self.owner, &self.repo, &self.id);
+        let bounty = bounty_sdk::program::BountySdk::new()?.get_bounty(
+            &self.domain_type,
+            &self.sub_domain,
+            &self.id,
+        );
 
         let gh = get_connection(&self.access_token_url).await?;
         let comments: Vec<Comment> = gh
-            .issues(&self.owner, &self.repo)
+            .issues(&self.creator, &self.repo)
             .list_comments(self.number as u64)
             .per_page(150)
             .send()
@@ -203,12 +209,13 @@ impl SBIssue {
 
     pub async fn close_issue(&self) -> Result<(), SBError> {
         log::info!("[issue] Close issue for {}", self.number);
-        let bounty = BountySdk::new()?.get_bounty(&self.owner, &self.repo, &self.id)?;
+        let bounty_client = bounty_sdk::program::BountySdk::new()?;
+        let bounty = bounty_client.get_bounty(&self.creator, &self.repo, &self.id)?;
 
         // get the top 150 comments on the issue
         let page_comments = get_connection(&self.access_token_url)
             .await?
-            .issues(&self.owner, &self.repo)
+            .issues(&self.creator, &self.repo)
             .list_comments(self.number as u64)
             .per_page(150)
             .send()
@@ -219,8 +226,8 @@ impl SBIssue {
         // try to get the comment body. If no closing comment -> return
         let solvers = get_solvers(&self.creator.to_string()).await?;
 
-        let (bounty, sig) = BountySdk::new()?.complete_bounty(
-            &self.owner,
+        let (bounty, sig) = bounty_client.complete_bounty(
+            &self.creator,
             &self.repo,
             &self.id,
             &solvers,

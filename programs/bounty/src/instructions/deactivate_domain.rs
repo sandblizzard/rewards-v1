@@ -12,10 +12,9 @@ pub struct DeactivateDomain<'info> {
         mut,
         seeds = [
             BOUNTY_SEED.as_bytes(),
-            domain.platform.as_bytes(),
-            domain.sub_domain.as_bytes(),
-            domain.domain_type.as_bytes(),
-            domain.repo.as_bytes(),
+            domain.domain.platform.as_bytes(),
+            domain.domain.sub_domain.as_bytes(),
+            domain.domain.domain_type.as_bytes(),
         ],
         bump = domain.bump,
         constraint = domain.active,

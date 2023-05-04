@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
+use bounty_sdk::utils::{get_key_from_env, SBError};
 use reqwest::header::HeaderMap;
-
-use crate::domains::utils::{get_key_from_env, SBError};
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct SandblizzardAttributes {
