@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use super::domain_identifier::DomainIdentifier;
+use super::domain_data::DomainData;
 
 /// Domain is the domain to be indexed
 /// ex: if the domain is github/sandblizzard/rewards_v1 then
@@ -20,26 +20,27 @@ pub struct Domain {
     /// it's the user who manage the domain
     pub owner: Pubkey,
 
-    pub domain: DomainIdentifier,
+    /// FIXME: Rename
+    pub data: DomainData,
 }
 
 impl Domain {
     pub fn initialize(
         &mut self,
         domain_type: &str,
-        domain: &str,
-        sub_domain: &str,
+        organization: &str,
+        team: &str,
         platform: &str,
         repo: &str,
         owner: &Pubkey,
     ) -> Result<()> {
-        self.domain.domain_type = domain_type.to_string();
-        self.domain.domain = domain.to_string();
-        self.domain.platform = platform.to_string();
+        self.data.domain_type = domain_type.to_string();
+        self.data.organization = organization.to_string();
+        self.data.platform = platform.to_string();
         self.owner = *owner;
         self.active = true;
-        self.domain.sub_domain = sub_domain.to_string();
-        self.domain.url = Some(repo.to_string());
+        self.data.team = team.to_string();
+        self.data.url = Some(repo.to_string());
         Ok(())
     }
 
@@ -49,6 +50,6 @@ impl Domain {
     }
 
     pub fn get_type(&self) -> String {
-        self.domain.domain_type.clone()
+        self.data.domain_type.clone()
     }
 }

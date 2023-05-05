@@ -4,7 +4,10 @@ use anchor_lang::prelude::*;
 use std::mem::size_of;
 
 #[derive(Accounts)]
-#[instruction(domain_type: String,platform: String,domain_name: String,sub_domain: String)]
+#[instruction( domain_type: String,
+    platform: String,
+    organization: String,
+    team: String)]
 pub struct CreateDomain<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
@@ -17,8 +20,8 @@ pub struct CreateDomain<'info> {
     seeds=[
         BOUNTY_SEED.as_bytes(),
         platform.as_bytes(),
-        domain_name.as_bytes(),
-        sub_domain.as_bytes(),
+        organization.as_bytes(),
+        team.as_bytes(),
         domain_type.as_bytes(),
     ],
     bump,
@@ -36,8 +39,8 @@ pub fn handler(
     ctx: Context<CreateDomain>,
     domain_type: String,
     platform: String,
-    domain_name: String,
-    sub_domain: String,
+    organization: String,
+    team: String,
     repo: String,
 ) -> Result<()> {
     let domain_account = &mut ctx.accounts.domain;
@@ -47,8 +50,8 @@ pub fn handler(
     domain_account
         .initialize(
             &domain_type,
-            &domain_name,
-            &sub_domain,
+            &organization,
+            &team,
             &platform,
             &repo,
             creator,

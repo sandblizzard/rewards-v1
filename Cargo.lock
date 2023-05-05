@@ -878,6 +878,7 @@ dependencies = [
  "anchor-client",
  "anchor-spl",
  "bounty",
+ "bounty-sdk",
  "clap 4.1.4",
  "env_logger",
  "home",

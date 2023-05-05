@@ -15,6 +15,13 @@ use spl_associated_token_account::instruction::create_associated_token_account;
 /// Bounty is the SDK for the bounty program
 use std::{rc::Rc, result::Result, str::FromStr, sync::Arc};
 
+use crate::accounts::get_bounty_denomination_pda;
+use crate::accounts::get_bounty_pda;
+use crate::accounts::get_escrow_pda;
+use crate::accounts::get_fee_collector_pda;
+use crate::accounts::get_protocol_pda;
+use crate::accounts::get_relayer_pda;
+use crate::accounts::get_sand_token_pda;
 use crate::utils::{get_bounty_connection, get_key_from_env, load_keypair, SBError};
 
 pub struct BountySdk {
@@ -29,15 +36,7 @@ pub fn get_bounty(
     issue_id: &u64,
 ) -> Result<bounty::state::Bounty, SBError> {
     let (program, cluster) = get_bounty_connection()?;
-    let bounty_pda = anchor_client::solana_sdk::pubkey::Pubkey::find_program_address(
-        &[
-            bounty::utils::BOUNTY_SEED.as_bytes(),
-            domain.as_bytes(),
-            sub_domain.as_bytes(),
-            issue_id.to_string().as_bytes(),
-        ],
-        &bounty::ID,
-    );
+    let bounty_pda = get_bounty_pda(issue_id);
 
     let bounty = match program.account::<bounty::state::Bounty>(bounty_pda.0) {
         Ok(bounty) => bounty,
@@ -65,12 +64,10 @@ pub fn get_bounty(
 }
 
 impl BountySdk {
-    pub fn new() -> Result<Arc<BountySdk>, SBError> {
-        let cluster_name = get_key_from_env("CLUSTER").unwrap();
-
+    pub fn new(cluster: Cluster) -> Result<Arc<BountySdk>, SBError> {
         let payer = load_keypair().unwrap();
         let payer_rc = Arc::new(payer);
-        let cluster = match Cluster::from_str(&cluster_name) {
+        let cluster = match Cluster::from_str(&cluster.to_string()) {
             Ok(res) => res,
             Err(err) => {
                 return Err(SBError::CouldNotGetEnvKey(
@@ -93,6 +90,72 @@ impl BountySdk {
             cluster,
             payer: load_keypair().unwrap(),
         }))
+    }
+
+    /// initialize_contract
+    ///
+    /// initialize the contract with the sand token mint and the nft collection
+    pub fn initialize_contract(&self, sand_token_mint: &Pubkey, nft_collection: &Pubkey) {
+        let protocol_pda = get_protocol_pda();
+        let sand_token_account_pda = get_sand_token_pda(sand_token_mint);
+        let accounts = bounty::accounts::Initialize {
+            creator: self.payer.pubkey(),
+            protocol: protocol_pda.0,
+            sand_token_mint: *sand_token_mint,
+            sand_token_account: sand_token_account_pda.0,
+            collection: *nft_collection,
+            system_program: system_program::ID,
+            token_program: token::ID,
+        };
+
+        let data = bounty::instruction::Initialize {};
+
+        let ix = Instruction {
+            program_id: bounty::id(),
+            accounts: accounts.to_account_metas(None),
+            data: data.data(),
+        };
+
+        match self.program.request().instruction(ix).send() {
+            Ok(res) => log::info!(
+                "Successfully initialized contract {}. {}",
+                bounty::id().to_string(),
+                res
+            ),
+            Err(err) => log::error!("Failure. cause: {}", err.to_string()),
+        };
+    }
+
+    pub fn add_bounty_denomination(&self, mint: &Pubkey) {
+        let protocol_pda = get_protocol_pda();
+        let denomination_pda = get_bounty_denomination_pda(mint);
+        let sand_token_account_pda = get_sand_token_pda(sand_token_mint);
+        let accounts = bounty::accounts::AddBountyDenomination {
+            creator: self.payer.pubkey(),
+            protocol: protocol_pda.0,
+            mint: *mint,
+            denomination: denomination_pda.0,
+            fee_collector: get_fee_collector_pda(mint).0,
+            token_program: token::ID,
+            system_program: system_program::ID,
+        };
+
+        let data = bounty::instruction::Initialize {};
+
+        let ix = Instruction {
+            program_id: bounty::id(),
+            accounts: accounts.to_account_metas(None),
+            data: data.data(),
+        };
+
+        match self.program.request().instruction(ix).send() {
+            Ok(res) => log::info!(
+                "Successfully added bounty denomination contract {}. {}",
+                bounty::id().to_string(),
+                res
+            ),
+            Err(err) => log::error!("Failure. cause: {}", err.to_string()),
+        };
     }
 
     pub fn get_protocol(&self) -> Result<bounty::state::Protocol, SBError> {
@@ -126,24 +189,14 @@ impl BountySdk {
         Ok(escrow)
     }
 
-    pub fn get_bounty(
-        &self,
-        domain: &Pubkey,
-        issue_id: &u64,
-    ) -> Result<bounty::state::Bounty, SBError> {
-        log::debug!(
-            "[bounty_sdk] get_bounty for domain={} issue_id={}",
-            domain,
-            issue_id
-        );
+    pub fn get_bounty(&self, issue_id: &u64) -> Result<bounty::state::Bounty, SBError> {
+        log::debug!("[bounty_sdk] get_bounty for issue_id={}", &issue_id);
 
-        let bounty_seeds = &[
-            bounty::utils::BOUNTY_SEED.as_bytes(),
-            domain.to_bytes().as_ref(),
-            issue_id.to_string().as_bytes(),
-        ];
         let bounty_pda = anchor_client::solana_sdk::pubkey::Pubkey::find_program_address(
-            bounty_seeds,
+            &[
+                bounty::utils::BOUNTY_SEED.as_bytes(),
+                issue_id.to_le_bytes().as_ref(),
+            ],
             &bounty::ID,
         );
 
@@ -170,65 +223,6 @@ impl BountySdk {
             ));
         }
         Ok(bounty)
-    }
-
-    /// get_domain_pda
-    pub fn get_domain_pda(
-        &self,
-        platform: &str,
-        domain_name: &str,
-        sub_domain: &str,
-        domain_type: &str,
-    ) -> (Pubkey, u8) {
-        Pubkey::find_program_address(
-            &[
-                bounty::utils::BOUNTY_SEED.as_bytes(),
-                platform.as_bytes(),
-                domain_name.as_bytes(),
-                sub_domain.as_bytes(),
-                domain_type.as_bytes(),
-            ],
-            &bounty::id(),
-        )
-    }
-
-    pub fn get_protocol_pda(&self) -> (Pubkey, u8) {
-        Pubkey::find_program_address(&[bounty::utils::BOUNTY_SEED.as_bytes()], &bounty::id())
-    }
-
-    pub fn get_relayer_pda(&self) -> (Pubkey, u8) {
-        Pubkey::find_program_address(
-            &[
-                bounty::utils::BOUNTY_SEED.as_bytes(),
-                self.payer.pubkey().to_bytes().as_ref(),
-            ],
-            &bounty::id(),
-        )
-    }
-
-    pub fn get_bounty_pda(&self, domain: &Pubkey, sub_domain: &str, issue_id: &u64) -> (Pubkey, u8) {
-        anchor_client::solana_sdk::pubkey::Pubkey::find_program_address(
-            &[
-                bounty::utils::BOUNTY_SEED.as_bytes(),
-                domain.to_bytes().as_ref(),
-                issue_id.to_string().as_bytes(),
-            ],
-            &bounty::ID,
-        )
-    }
-
-    pub fn get_escrow_pda(&self, bounty_pda: &Pubkey) -> (Pubkey, u8) {
-        anchor_client::solana_sdk::pubkey::Pubkey::find_program_address(
-            &[bounty_pda.to_bytes().as_ref()],
-            &bounty::id(),
-        )
-    }
-
-    pub fn get_fee_collector(&self, bounty_mint: &Pubkey) -> Pubkey {
-        associated_token::get_associated_token_address(
-            &Pubkey::from_str("CNY467c6XURCPjiXiKRLCvxdRf3bpunagYTJpr685gPv").unwrap(),
-            bounty_mint,
-        )
     }
 
     pub fn does_ata_exist(&self, owner: &Pubkey, mint: &Pubkey) -> bool {
@@ -267,36 +261,31 @@ impl BountySdk {
             .collect::<Vec<Instruction>>());
     }
 
-    /// Complete bounty
+    /// complete_bounty
+    ///
+    /// try to complete a bounty
     pub fn complete_bounty(
         &self,
-        domain: &str,
-        sub_domain: &str,
+        relayer_address: &Pubkey,
         issue_id: &u64,
         solvers: &Vec<Pubkey>,
         bounty_mint: &Pubkey,
     ) -> Result<(Bounty, String), SBError> {
-        let protocol = self.get_protocol_pda();
+        // get pdas
+        let protocol = get_protocol_pda();
         let cluster = Cluster::Devnet;
-        let relayer = self.get_relayer_pda();
-        let bounty_pda = self.get_bounty_pda(domain, sub_domain, issue_id);
-        let escrow_pda = self.get_escrow_pda(&bounty_pda.0);
-        let fee_collector = self.get_fee_collector(bounty_mint);
-        let denomination_pda = Pubkey::find_program_address(
-            &[
-                bounty::utils::BOUNTY_SEED.as_bytes(),
-                bounty::utils::DENOMINATION_SEED.as_bytes(),
-                bounty_mint.as_ref(),
-            ],
-            &bounty::id(),
-        );
+        let relayer = get_relayer_pda(relayer_address);
+        let bounty_pda = get_bounty_pda(issue_id);
+        let escrow_pda = get_escrow_pda(&bounty_pda.0);
+        let fee_collector = get_fee_collector_pda(bounty_mint);
+        let denomination_pda = get_bounty_denomination_pda(bounty_mint);
 
         let ata_ixs = self.get_ata_ixs(solvers, bounty_mint)?;
         let atas = self.get_ata(solvers, bounty_mint)?;
         let compelete_bounty_accounts = bounty::accounts::CompleteBounty {
             payer: self.payer.pubkey(),
             protocol: protocol.0,
-            fee_collector,
+            fee_collector: fee_collector.0,
             bounty_denomination: denomination_pda.0,
             relayer: relayer.0,
             bounty: bounty_pda.0,
@@ -322,17 +311,15 @@ impl BountySdk {
         for ix in ata_ixs {
             request = request.instruction(ix);
         }
-        let domain_pda = self.get_domain_pda(platform, domain_name, sub_domain, domain_type)
         let (bounty, sig) = match request.instruction(complete_bounty_ix).send() {
-            Ok(sig) => (self.get_bounty(domain, issue_id).unwrap(), sig.to_string()),
+            Ok(sig) => (self.get_bounty(issue_id).unwrap(), sig.to_string()),
             Err(err) => {
-                let protocol_data = self.get_protocol().unwrap();
                 let escrow = self.get_escrow(&bounty_pda.0).unwrap();
                 log::info!(
                     "Failed to complete bounty: {:?}, protocol: {}, fee collector: {}, bounty: {}, mint: {}, escrow balance {}",
                     err,
                     protocol.0.to_string(),
-                    fee_collector.to_string(),
+                    fee_collector.0.to_string(),
                     bounty_pda.0.to_string(),
                     bounty_mint.to_string(),
                     escrow.amount,

@@ -14,3 +14,4 @@ log = "^0.4.17"
 home = "0.5.4"
 clap = {version="~4",features=["derive"]}
 bounty = {path="./../programs/bounty"}
+bounty-sdk = {path="./../sdk"}

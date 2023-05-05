@@ -5,10 +5,7 @@ use anchor_spl::token::TokenAccount;
 
 use crate::utils::{BlizzardError, BOUNTY_SEED, FEE_REC};
 
-use super::{
-    domain_identifier::{self, DomainIdentifier},
-    Relayer,
-};
+use super::Relayer;
 use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, PartialEq)]
@@ -49,10 +46,9 @@ pub struct Bounty {
 
 impl Bounty {
     /// bounty seeds used to sign transactions
-    pub fn signing_seeds(&self) -> [&[u8]; 4] {
+    pub fn signing_seeds(&self) -> [&[u8]; 3] {
         [
             BOUNTY_SEED.as_bytes(),
-            &self.domain_bytes,
             self.id.as_bytes(),
             self.bump_array.as_ref(),
         ]
