@@ -1,21 +1,18 @@
 use std::rc::Rc;
 
+use bounty::state::{domain_data::DomainData, Domain};
+use bounty_sdk::utils::{get_key_from_env, SBError};
 use futures::future::join_all;
 use octocrab::models::issues::Comment;
+use spl_associated_token_account::solana_program::pubkey::Pubkey;
 
-use crate::{
-    domains::{
-        utils::{get_key_from_env, SBError},
-        Domain,
-    },
-    external::get_octocrab_instance,
-};
+use crate::{domains::RelayerDomain, external::get_octocrab_instance};
 
 /// try_fetch_indexable_domains
 ///
 /// get all domains that are to be indexed
 /// FIXME: get the domains from the bounty contract
-pub async fn try_fetch_github_indexable_domains() -> Result<Vec<Domain>, SBError> {
+pub async fn try_fetch_github_indexable_domains() -> Result<Vec<RelayerDomain>, SBError> {
     let gh = Rc::new(get_octocrab_instance()?);
     let domains = match gh.apps().installations().send().await {
         Ok(res) => res,
@@ -45,14 +42,25 @@ pub async fn try_fetch_github_indexable_domains() -> Result<Vec<Domain>, SBError
                 Vec::new()
             }
         };
-        vec![Domain {
-            name: "github".to_string(),
-            owner: domain.account.login.clone(),
-            repos,
-            access_token_url: domain.access_tokens_url.unwrap_or_else(|| "".to_string()),
-            bounty_type: "issue".to_string(),
-            num_fails: 0,
-        }]
+        let domains = repos.into_iter().map(|repo| RelayerDomain {
+            domain_state: Domain {
+                bump: 0,
+                active: true,
+                data: DomainData {
+                    organization: domain.account.login.to_string(),
+                    domain_type: "issue".to_string(),
+                    platform: "github".to_string(),
+                    team: domain.account.id.to_string(),
+                },
+
+                owner: Pubkey::new_from_array([0; 32]),
+            },
+            access_token_url: domain
+                .access_tokens_url
+                .clone()
+                .unwrap_or_else(|| "".to_string()),
+        });
+        domains.collect::<Vec<RelayerDomain>>()
     }))
     .await;
 
@@ -88,7 +96,7 @@ pub fn create_bounty_status_text(
     bounty: &bounty::state::Bounty,
     sig: Option<&str>,
 ) -> Result<String, SBError> {
-    let mut status = format!("Bounty status: **{}** ", bounty.state.to_uppercase());
+    let mut status = format!("Bounty status: **{:?}** ", bounty.state);
     if sig.is_some() {
         status = format!(
             "{} \n

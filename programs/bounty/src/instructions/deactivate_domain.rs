@@ -12,10 +12,9 @@ pub struct DeactivateDomain<'info> {
         mut,
         seeds = [
             BOUNTY_SEED.as_bytes(),
-            domain.platform.as_bytes(),
-            domain.sub_domain.as_bytes(),
-            domain.domain_type.as_bytes(),
-            domain.repo.as_bytes(),
+            domain.data.platform.as_bytes(),
+            domain.data.team.as_bytes(),
+            domain.data.domain_type.as_bytes(),
         ],
         bump = domain.bump,
         constraint = domain.active,
@@ -26,7 +25,7 @@ pub struct DeactivateDomain<'info> {
     pub system_program: Program<'info, System>,
 }
 
-/// deactivate domain
+/// deactivate dom
 pub fn handler(ctx: Context<DeactivateDomain>) -> Result<()> {
     let domain = &mut ctx.accounts.domain;
     domain.deactivate()?;

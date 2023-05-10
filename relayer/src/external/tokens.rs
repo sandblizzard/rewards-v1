@@ -1,5 +1,4 @@
-use crate::domains::utils::SBError;
-
+use bounty_sdk::utils::SBError;
 use coingecko;
 use std::result::Result;
 

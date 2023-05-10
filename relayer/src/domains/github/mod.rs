@@ -1,38 +1,31 @@
 use std::{result::Result, thread};
 pub mod issues;
 pub mod utils;
-use super::{
-    utils::{SBError},
-    Domain, DomainHandler,
-};
-use crate::{
-    domains::utils::get_unix_time,
-    external::{get_connection},
-};
+use crate::external::get_connection;
+use bounty_sdk::utils::{get_unix_time, SBError};
 use issues::SBIssue;
 
 use async_trait::async_trait;
 use futures::future::join_all;
 use log::{error, info};
-use octocrab::{
-    models::issues::{Issue},
-    *,
-};
+use octocrab::{models::issues::Issue, *};
+
+use super::{DomainHandler, RelayerDomain};
 
 pub struct Github {
-    pub domain: Domain,
+    pub domain: RelayerDomain,
     pub gh: Option<Octocrab>,
 }
 
 #[async_trait]
 impl DomainHandler for Github {
     async fn handle(&self) -> Result<(), SBError> {
-        match self.domain.bounty_type.as_str() {
+        match self.domain.domain_state.data.domain_type.as_str() {
             "issue" => self.issues().await,
             "pull_request" => self.pull_requests().await,
             _ => Err(SBError::UndefinedBountyType(format!(
                 "could not find {} type",
-                self.domain.bounty_type.as_str()
+                self.domain.domain_state.data.domain_type.as_str()
             ))),
         }
     }
@@ -44,7 +37,7 @@ impl DomainHandler for Github {
 
 impl Github {
     /// Create new Github interface
-    pub async fn new(domain: &Domain) -> Result<Github, SBError> {
+    pub async fn new(domain: &RelayerDomain) -> Result<Github, SBError> {
         let github_client = get_connection(&domain.access_token_url).await?;
         Ok(Github {
             domain: domain.clone(),
@@ -63,43 +56,47 @@ impl Github {
     pub async fn issues(&self) -> Result<(), SBError> {
         log::info!(
             "[relayer] Index github issue for domain={}",
-            self.domain.owner,
+            self.domain.domain_state.owner,
         );
 
         // get all issues for a given domain over different repositories
-        let issues: Vec<Vec<Issue>> =
-            join_all(self.domain.repos.clone().iter().map(|repo| async move {
-                let issue_handler = self
-                    .gh
-                    .as_ref()
-                    .unwrap()
-                    .issues(&self.domain.owner, &repo.name);
+        let issues: Vec<Vec<Issue>> = join_all(
+            [self.domain.domain_state.data.generate_gh_url()]
+                .iter()
+                .map(|repo| async move {
+                    let issue_handler = self
+                        .gh
+                        .as_ref()
+                        .unwrap()
+                        // FIXME: should not unwrap
+                        .issues(&self.domain.domain_state.data.team, repo);
 
-                // get top 100 issues
-                let mut issues = match issue_handler
-                    .list()
-                    .sort(params::issues::Sort::Created)
-                    .state(params::State::All)
-                    .per_page(100)
-                    .send()
-                    .await
-                {
-                    Ok(issues) => issues,
-                    Err(_) => {
-                        log::warn!("[relayer] Could not get issues for {}", repo.name);
-                        return Vec::new();
-                    }
-                };
+                    // get top 100 issues
+                    let mut issues = match issue_handler
+                        .list()
+                        .sort(params::issues::Sort::Created)
+                        .state(params::State::All)
+                        .per_page(100)
+                        .send()
+                        .await
+                    {
+                        Ok(issues) => issues,
+                        Err(_) => {
+                            log::warn!("[relayer] Could not get issues for {}", repo);
+                            return Vec::new();
+                        }
+                    };
 
-                issues.take_items()
-            }))
-            .await;
+                    issues.take_items()
+                }),
+        )
+        .await;
 
         log::info!(
             "[relayer] {} issues for name: {}, owner: {}",
             issues.len(),
-            self.domain.name,
-            self.domain.owner,
+            self.domain.domain_state.data.platform,
+            self.domain.domain_state.owner,
         );
 
         let issues_flat: Vec<SBIssue> = issues
@@ -119,15 +116,12 @@ impl Github {
                     .collect::<Vec<&str>>();
                 return SBIssue {
                     id: issue.id.0,
-                    creator: issue.user.id.0.to_string(),
                     access_token_url: self.domain.access_token_url.clone(),
-                    owner: self.domain.owner.clone(),
-                    repo: repo.last().unwrap_or(&"").to_string(),
                     number: issue.number,
-                    url: issue.url.to_string(),
                     state: issue.state.to_string(),
                     body: issue.body.clone(),
                     closed_at: issue.closed_at,
+                    domain: self.domain.domain_state.data.clone(),
                 };
             })
             .collect();
@@ -140,7 +134,7 @@ impl Github {
             //  - pay out bounty if mentioned users
             //  - close bounty if no one mentioned
             let handle = thread::spawn(|| async move {
-                info!("[Issues] handle issue {}", issue.url);
+                info!("[Issues] handle issue {}", issue.domain.generate_gh_url());
                 issue.handle().await
             });
             handles.push(handle)

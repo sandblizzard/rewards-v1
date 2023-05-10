@@ -19,17 +19,23 @@ pub mod bounty {
         initialize::handler(ctx)
     }
 
+    /// add bounty denomination
+    pub fn add_bounty_denomination(ctx: Context<AddBountyDenomination>) -> Result<()> {
+        add_bounty_denomination::handler(ctx)
+    }
+
+    /// deactivate bounty denomination
+    pub fn deactivate_bounty_denomination(
+        ctx: Context<DeactivateBountyDenomination>,
+    ) -> Result<()> {
+        deactivate_bounty_denomination::handler(ctx)
+    }
+
     /// create_bounty
     ///
     /// creates a bounty
-    pub fn create_bounty(
-        ctx: Context<CreateBounty>,
-        domain: String,
-        sub_domain: String,
-        id: String,
-        bounty_amount: u64,
-    ) -> Result<()> {
-        create_bounty::handler(ctx, domain, sub_domain, id, bounty_amount)
+    pub fn create_bounty(ctx: Context<CreateBounty>, id: String, bounty_amount: u64) -> Result<()> {
+        create_bounty::handler(ctx, id, bounty_amount)
     }
 
     /// complete_bounty
@@ -49,12 +55,12 @@ pub mod bounty {
     /// create domain
     pub fn create_domain(
         ctx: Context<CreateDomain>,
-        bounty_type: String,
-        name: String,
-        repo: String,
-        sub_domain: String,
+        domain_type: String,
+        platform: String,
+        organization: String,
+        team: String,
     ) -> Result<()> {
-        create_domain::handler(ctx, bounty_type, name, repo, sub_domain)
+        create_domain::handler(ctx, domain_type, platform, organization, team)
     }
 
     /// deactivate domain

@@ -6,28 +6,38 @@ use anchor_spl::token::TokenAccount;
 use crate::utils::{BlizzardError, BOUNTY_SEED, FEE_REC};
 
 use super::Relayer;
+use borsh::{BorshDeserialize, BorshSerialize};
+
+#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, PartialEq)]
+pub enum BountyState {
+    Created,
+    Completed,
+}
 
 #[account]
 #[derive(Debug)]
 pub struct Bounty {
+    pub id: String,
+
     pub bump: u8,
     /// for the seeds
     pub bump_array: [u8; 1],
-
     pub escrow_bump: u8,
-    pub domain: String,
-    pub sub_domain: String,
-    pub id: String,
 
     /// Owner of bounty
     pub owner: Pubkey,
     pub mint: Pubkey,
 
     /// State - created, closed
-    pub state: String,
+    pub state: BountyState,
 
     /// escrow of the bounty
     pub escrow: Pubkey,
+
+    /// domain information
+    pub domain: Pubkey,
+    /// domain as bytes
+    pub domain_bytes: Box<[u8]>,
 
     pub bounty_amount: u64,
 
@@ -36,13 +46,19 @@ pub struct Bounty {
 
 impl Bounty {
     /// bounty seeds used to sign transactions
-    pub fn seeds(&self) -> [&[u8]; 5] {
+    pub fn signing_seeds(&self) -> [&[u8]; 3] {
         [
             BOUNTY_SEED.as_bytes(),
-            self.domain.as_bytes(),
-            self.sub_domain.as_bytes(),
             self.id.as_bytes(),
             self.bump_array.as_ref(),
+        ]
+    }
+
+    pub fn seeds(&self) -> [&[u8]; 3] {
+        [
+            BOUNTY_SEED.as_bytes(),
+            &self.domain_bytes,
+            self.id.as_bytes(),
         ]
     }
 
@@ -60,28 +76,30 @@ impl Bounty {
     pub fn create_bounty(
         &mut self,
         bump: &u8,
+        id: &str,
         owner: &Pubkey,
         escrow: &Pubkey,
-        domain: &str,
-        sub_domain: &str,
-        id: &str,
+        domain: &Pubkey,
         bounty_amount: u64,
         mint: &Pubkey,
         escrow_bump: &u8,
     ) -> Result<()> {
-        if self.state == "completed" {
+        if self.state == BountyState::Completed {
             return Err(BlizzardError::CanNotReinitBounty.into());
         }
 
+        // init DomainIdentificator
+        self.domain = *domain;
+        self.domain_bytes = Box::new(domain.to_bytes());
+
+        // set remaining fields
         self.bump = *bump;
         self.bump_array = [*bump; 1];
-        self.domain = domain.to_string();
-        self.sub_domain = sub_domain.to_string();
-        self.id = id.to_string();
         self.owner = *owner;
-        self.state = "started".to_string();
+        self.state = BountyState::Created;
         self.escrow = *escrow;
         self.mint = *mint;
+        self.id = id.to_string();
         self.escrow_bump = *escrow_bump;
         self.bounty_amount = bounty_amount;
         self.completed_by = None;
@@ -93,7 +111,7 @@ impl Bounty {
         solvers: Vec<&Account<'info, TokenAccount>>,
         fee_collector: &Account<'info, TokenAccount>,
     ) -> Result<Vec<(AccountInfo<'info>, u64)>> {
-        self.state = "completed".to_string();
+        self.state = BountyState::Completed;
 
         let total_amount = self.bounty_amount;
         let num_solvers = solvers.len();
@@ -122,12 +140,12 @@ mod tests {
             bump: 0,
             bump_array: [0; 1],
             escrow_bump: 0,
-            domain: "".to_string(),
-            sub_domain: "".to_string(),
+            domain: Pubkey::new_unique(),
+            domain_bytes: Box::new([0; 32]),
             id: "".to_string(),
             owner,
             mint: Pubkey::new_unique(),
-            state: "".to_string(),
+            state: BountyState::Created,
             escrow: Pubkey::new_unique(),
             bounty_amount: 0,
             completed_by: None,

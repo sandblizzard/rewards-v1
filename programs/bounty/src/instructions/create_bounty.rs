@@ -1,5 +1,5 @@
-use crate::state::Bounty;
-use crate::utils::{BOUNTY_SEED};
+use crate::state::*;
+use crate::utils::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{transfer, Mint, Token, TokenAccount, Transfer};
 use std::mem::size_of;
@@ -9,30 +9,14 @@ use std::mem::size_of;
 /// If comes from a users <-> nft then the creator needs to be the signer not the
 /// owner of the NFT
 #[derive(Accounts)]
-#[instruction(domain: String,sub_domain: String,id: String)]
+#[instruction( id: String)]
 pub struct CreateBounty<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
 
-    #[account(
-        init,
-        payer = creator,
-        seeds = [
-            BOUNTY_SEED.as_bytes(),
-            domain.as_bytes(),
-            sub_domain.as_bytes(),
-            id.as_bytes(),
-        ],
-        bump,
-        space=8 + size_of::<Bounty>()
-    )]
-    pub bounty: Account<'info, Bounty>,
-
-    /// Account to credit the user
-    #[account(mut)]
-    pub creator_account: Account<'info, TokenAccount>,
-
-    /// mint to use
+    pub protocol: Account<'info, Protocol>,
+    
+     /// mint to use
     /// Only bonk
     #[account(
         //constraint = mint.key().to_string().eq(BONK_MINT),
@@ -41,6 +25,35 @@ pub struct CreateBounty<'info> {
     )]
     pub mint: Account<'info, Mint>,
 
+
+    #[account(
+        init,
+        payer = creator,
+        seeds = [
+            BOUNTY_SEED.as_bytes(),
+            id.as_bytes(),
+        ],
+        bump,
+        space=8 + size_of::<Bounty>()
+    )]
+    pub bounty: Account<'info, Bounty>,
+
+    /// domain to attach the bounty to
+    pub domain: Account<'info, Domain>,
+
+    /// Account to credit the user
+    #[account(mut)]
+    pub creator_account: Account<'info, TokenAccount>,
+
+
+    // todo: check seeds 
+    #[account(
+        constraint = bounty_denomination.mint.eq(&mint.key()),
+        constraint = bounty_denomination.active 
+    )]
+    pub bounty_denomination: Account<'info, Denomination>,
+
+   
     /// Bounty escrow to transfer funds to
     #[account(
         init,
@@ -68,13 +81,12 @@ pub struct CreateBounty<'info> {
 /// * id: e.g. 453423
 pub fn handler(
     ctx: Context<CreateBounty>,
-    domain: String,
-    sub_domain: String,
     id: String,
     bounty_amount: u64,
 ) -> Result<()> {
     let creator = &ctx.accounts.creator;
     let creator_account = &ctx.accounts.creator_account;
+    let domain = &ctx.accounts.domain;
     let escrow = &ctx.accounts.escrow;
     let token_program = &ctx.accounts.token_program;
     // initialize the bounty
@@ -82,11 +94,10 @@ pub fn handler(
         .bounty
         .create_bounty(
             ctx.bumps.get("bounty").unwrap(),
+            &id,     
             &creator.key(),
             &escrow.key(),
-            &domain,
-            &sub_domain,
-            &id,
+            &domain.key(),
             bounty_amount,
             &ctx.accounts.mint.key(),
             ctx.bumps.get("escrow").unwrap(),

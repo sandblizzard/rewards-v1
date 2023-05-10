@@ -1,6 +1,5 @@
+use bounty_sdk::utils::{get_key_from_env, SBError};
 use octocrab::{models, params::apps::CreateInstallationAccessToken, Octocrab};
-
-use crate::domains::utils::{get_key_from_env, SBError};
 
 pub fn is_relayer_login(login: &str) -> Result<bool, SBError> {
     let app_login = get_key_from_env("GITHUB_APP_LOGIN")?;
@@ -14,12 +13,10 @@ pub fn get_octocrab_instance() -> Result<Octocrab, SBError> {
     let key = jsonwebtoken::EncodingKey::from_rsa_pem(github_key.as_bytes()).unwrap();
     match Octocrab::builder().app(app_id, key).build() {
         Ok(gh) => Ok(gh),
-        Err(err) => {
-            Err(SBError::FailedOctocrabRequest(
-                "get_octocrab_instance".to_string(),
-                err.to_string(),
-            ))
-        }
+        Err(err) => Err(SBError::FailedOctocrabRequest(
+            "get_octocrab_instance".to_string(),
+            err.to_string(),
+        )),
     }
 }
 
