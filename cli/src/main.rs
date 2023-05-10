@@ -16,7 +16,7 @@ use anchor_spl::{
     self,
     token::{self},
 };
-use bounty_sdk::{utils::get_key_from_env, *};
+use bounty_sdk::{accounts::get_relayer_pda, utils::get_key_from_env, *};
 use clap::{Parser, Subcommand};
 use home;
 use log;
@@ -76,19 +76,13 @@ pub fn initialize_bounty_contract() {
         _ => Cluster::Devnet,
     };
 
-    let client = bounty_sdk::program::BountySdk::new(cluster).unwrap();
+    let client = bounty_sdk::program::BountySdk::new(Some(cluster)).unwrap();
 
     client.initialize_contract(&sand_token_mint, &nft_collection)
 }
 
 /// add_bounty_denomination
 pub fn add_bounty_denomination(mint: &Option<Pubkey>) {
-    let cluster = Cluster::Devnet;
-    let bounty_program_id = bounty::id();
-    let client = anchor_client::Client::new(cluster, &payer);
-
-    let program = client.program(bounty_program_id);
-
     let mint = match mint {
         Some(mint) => mint,
         None => {
@@ -103,7 +97,7 @@ pub fn add_bounty_denomination(mint: &Option<Pubkey>) {
         _ => Cluster::Devnet,
     };
 
-    let client = bounty_sdk::program::BountySdk::new(cluster).unwrap();
+    let client = bounty_sdk::program::BountySdk::new(Some(cluster)).unwrap();
 
     client.add_bounty_denomination(mint)
 }
@@ -112,9 +106,6 @@ pub fn add_bounty_denomination(mint: &Option<Pubkey>) {
 ///
 /// deactivates a bounty denomination by setting the active flag to false
 pub fn deactivate_bounty_denomination(mint: &Option<Pubkey>) {
-    let cluster = Cluster::Devnet;
-    let bounty_program_id = bounty::id();
-    let payer = load_keypair().unwrap();
     let mint = match mint {
         Some(mint) => mint,
         None => {
@@ -122,47 +113,19 @@ pub fn deactivate_bounty_denomination(mint: &Option<Pubkey>) {
             return;
         }
     };
-
-    let denomination_pda = Pubkey::find_program_address(
-        &[
-            utils::BOUNTY_SEED.as_bytes(),
-            utils::DENOMINATION_SEED.as_bytes(),
-            mint.as_ref(),
-        ],
-        &bounty_program_id,
-    );
-
-    let accounts = accounts::DeactivateBountyDenomination {
-        creator: payer.pubkey(),
-        denomination: denomination_pda.0,
-        mint: *mint,
-        system_program: system_program::ID,
+    let cluster = match get_key_from_env("CLUSTER").unwrap().as_str() {
+        "devnet" => Cluster::Devnet,
+        "mainnet-beta" => Cluster::Mainnet,
+        "testnet" => Cluster::Testnet,
+        _ => Cluster::Devnet,
     };
 
-    let data = instruction::DeactivateBountyDenomination {};
+    let client = bounty_sdk::program::BountySdk::new(Some(cluster)).unwrap();
 
-    let ix = anchor_client::solana_sdk::instruction::Instruction {
-        program_id: bounty_program_id,
-        accounts: accounts.to_account_metas(None),
-        data: data.data(),
-    };
-
-    let payer_rc = Rc::new(payer);
-    let client = anchor_client::Client::new(cluster, payer_rc);
-    let program = client.program(bounty_program_id);
-
-    match program.request().instruction(ix).send() {
-        Ok(res) => log::info!(
-            "Successfully deactivated bounty denomination {}. {}",
-            mint.to_string(),
-            res
-        ),
-        Err(err) => log::error!("Failure. cause: {}", err.to_string()),
-    };
+    client.deactivate_bounty_denomination(mint)
 }
 
 pub fn add_relayer(relayer_address: &Option<String>) {
-    let cluster = Cluster::Devnet;
     let relayer_address = match relayer_address {
         Some(rec) => Pubkey::from_str(rec).unwrap(),
         None => {
@@ -170,47 +133,12 @@ pub fn add_relayer(relayer_address: &Option<String>) {
             return;
         }
     };
-    let payer = load_keypair().unwrap();
-    let bounty_program_id = bounty::id();
-    let protocol =
-        Pubkey::find_program_address(&[utils::BOUNTY_SEED.as_bytes()], &bounty_program_id);
-    let relayer = Pubkey::find_program_address(
-        &[
-            utils::BOUNTY_SEED.as_bytes(),
-            relayer_address.to_bytes().as_ref(),
-        ],
-        &bounty_program_id,
-    );
 
-    let accounts = accounts::AddRelayer {
-        signer: payer.pubkey(),
-        protocol: protocol.0,
-        relayer: relayer.0,
-        system_program: system_program::ID,
-    };
+    let relayer_pda = get_relayer_pda(&relayer_address);
 
-    let data = instruction::AddRelayer {
-        relayer_address: relayer_address,
-    };
+    let client = bounty_sdk::program::BountySdk::new(None).unwrap();
 
-    let add_relayer_ix = anchor_client::solana_sdk::instruction::Instruction {
-        program_id: bounty_program_id,
-        accounts: accounts.to_account_metas(None),
-        data: data.data(),
-    };
-
-    let payer_rc = Rc::new(payer);
-    let client = anchor_client::Client::new(cluster, payer_rc);
-    let program = client.program(bounty_program_id);
-
-    match program.request().instruction(add_relayer_ix).send() {
-        Ok(res) => log::info!(
-            "Successfully added relayer {}. TxHash={}",
-            relayer_address.to_string(),
-            res
-        ),
-        Err(err) => log::error!("Failure. cause: {:?}", err),
-    };
+    client.add_relayer(&relayer_pda.0)
 }
 
 pub fn create_mint(receiver: &Option<String>) {

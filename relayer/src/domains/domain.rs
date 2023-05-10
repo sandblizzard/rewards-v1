@@ -20,7 +20,7 @@ impl RelayerDomain {
     }
 
     pub async fn get_type(&self) -> Result<Box<dyn DomainHandler>, SBError> {
-        match self.domain_state.domain.domain_type.as_str() {
+        match self.domain_state.data.domain_type.as_str() {
             "issue" => {
                 let github = Github::new(&self).await?;
                 Ok(Box::new(github))
@@ -31,7 +31,7 @@ impl RelayerDomain {
             }
             _ => Err(SBError::UndefinedBountyType(format!(
                 "bounty_type = {} not defined",
-                self.domain_state.domain.domain_type.as_str()
+                self.domain_state.data.domain_type.as_str()
             ))),
         }
     }

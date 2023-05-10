@@ -41,21 +41,13 @@ pub fn handler(
     platform: String,
     organization: String,
     team: String,
-    repo: String,
 ) -> Result<()> {
     let domain_account = &mut ctx.accounts.domain;
     let creator = &ctx.accounts.creator.key();
 
     // initialize the domain
     domain_account
-        .initialize(
-            &domain_type,
-            &organization,
-            &team,
-            &platform,
-            &repo,
-            creator,
-        )
+        .initialize(&domain_type, &organization, &team, &platform, creator)
         .unwrap();
     Ok(())
 }

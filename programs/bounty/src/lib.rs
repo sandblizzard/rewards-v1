@@ -55,13 +55,12 @@ pub mod bounty {
     /// create domain
     pub fn create_domain(
         ctx: Context<CreateDomain>,
-        bounty_type: String,
-        name: String,
-        domain_name: String,
-        sub_domain: String,
-        repo: String,
+        domain_type: String,
+        platform: String,
+        organization: String,
+        team: String,
     ) -> Result<()> {
-        create_domain::handler(ctx, bounty_type, name, domain_name, sub_domain, repo)
+        create_domain::handler(ctx, domain_type, platform, organization, team)
     }
 
     /// deactivate domain

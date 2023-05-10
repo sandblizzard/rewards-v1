@@ -25,7 +25,7 @@ pub struct DeactivateDomain<'info> {
     pub system_program: Program<'info, System>,
 }
 
-/// deactivate domain
+/// deactivate dom
 pub fn handler(ctx: Context<DeactivateDomain>) -> Result<()> {
     let domain = &mut ctx.accounts.domain;
     domain.deactivate()?;

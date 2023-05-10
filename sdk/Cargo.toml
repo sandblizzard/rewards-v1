@@ -13,4 +13,5 @@ bounty = {path="../programs/bounty"}
 dotenv = "^0.15.0"
 log = "^0.4.17"
 spl-associated-token-account = "^1.1.1"
-
+rand = "0.8.5"
+nano-id = "0.3.1"

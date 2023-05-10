@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use bounty::state::{domain_identifier::DomainIdentifier, Domain};
+use bounty::state::{domain_data::DomainData, Domain};
 use bounty_sdk::utils::{get_key_from_env, SBError};
 use futures::future::join_all;
 use octocrab::models::issues::Comment;
@@ -46,12 +46,11 @@ pub async fn try_fetch_github_indexable_domains() -> Result<Vec<RelayerDomain>, 
             domain_state: Domain {
                 bump: 0,
                 active: true,
-                domain: DomainIdentifier {
-                    domain: domain.account.login.to_string(),
+                data: DomainData {
+                    organization: domain.account.login.to_string(),
                     domain_type: "issue".to_string(),
                     platform: "github".to_string(),
-                    sub_domain: domain.account.id.to_string(),
-                    url: Some(repo.name),
+                    team: domain.account.id.to_string(),
                 },
 
                 owner: Pubkey::new_from_array([0; 32]),

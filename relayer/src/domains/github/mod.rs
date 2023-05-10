@@ -2,7 +2,6 @@ use std::{result::Result, thread};
 pub mod issues;
 pub mod utils;
 use crate::external::get_connection;
-use bounty::state::Domain;
 use bounty_sdk::utils::{get_unix_time, SBError};
 use issues::SBIssue;
 
@@ -21,12 +20,12 @@ pub struct Github {
 #[async_trait]
 impl DomainHandler for Github {
     async fn handle(&self) -> Result<(), SBError> {
-        match self.domain.domain_state.domain.domain_type.as_str() {
+        match self.domain.domain_state.data.domain_type.as_str() {
             "issue" => self.issues().await,
             "pull_request" => self.pull_requests().await,
             _ => Err(SBError::UndefinedBountyType(format!(
                 "could not find {} type",
-                self.domain.domain_state.domain.domain_type.as_str()
+                self.domain.domain_state.data.domain_type.as_str()
             ))),
         }
     }
@@ -62,7 +61,7 @@ impl Github {
 
         // get all issues for a given domain over different repositories
         let issues: Vec<Vec<Issue>> = join_all(
-            [self.domain.domain_state.domain.url.clone()]
+            [self.domain.domain_state.data.generate_gh_url()]
                 .iter()
                 .map(|repo| async move {
                     let issue_handler = self
@@ -70,10 +69,7 @@ impl Github {
                         .as_ref()
                         .unwrap()
                         // FIXME: should not unwrap
-                        .issues(
-                            &self.domain.domain_state.domain.sub_domain,
-                            repo.as_ref().unwrap(),
-                        );
+                        .issues(&self.domain.domain_state.data.team, repo);
 
                     // get top 100 issues
                     let mut issues = match issue_handler
@@ -86,10 +82,7 @@ impl Github {
                     {
                         Ok(issues) => issues,
                         Err(_) => {
-                            log::warn!(
-                                "[relayer] Could not get issues for {}",
-                                repo.as_ref().unwrap()
-                            );
+                            log::warn!("[relayer] Could not get issues for {}", repo);
                             return Vec::new();
                         }
                     };
@@ -102,7 +95,7 @@ impl Github {
         log::info!(
             "[relayer] {} issues for name: {}, owner: {}",
             issues.len(),
-            self.domain.domain_state.domain.platform,
+            self.domain.domain_state.data.platform,
             self.domain.domain_state.owner,
         );
 
@@ -123,17 +116,12 @@ impl Github {
                     .collect::<Vec<&str>>();
                 return SBIssue {
                     id: issue.id.0,
-                    creator: issue.user.id.0.to_string(),
                     access_token_url: self.domain.access_token_url.clone(),
-                    domain: self.domain.domain_state.domain.domain.clone(),
-                    domain_type: self.domain.domain_state.domain.domain_type.clone(),
-                    sub_domain: self.domain.domain_state.domain.sub_domain.clone(),
-                    repo: repo.last().unwrap_or(&"").to_string(),
                     number: issue.number,
-                    url: issue.url.to_string(),
                     state: issue.state.to_string(),
                     body: issue.body.clone(),
                     closed_at: issue.closed_at,
+                    domain: self.domain.domain_state.data.clone(),
                 };
             })
             .collect();
@@ -146,7 +134,7 @@ impl Github {
             //  - pay out bounty if mentioned users
             //  - close bounty if no one mentioned
             let handle = thread::spawn(|| async move {
-                info!("[Issues] handle issue {}", issue.url);
+                info!("[Issues] handle issue {}", issue.domain.generate_gh_url());
                 issue.handle().await
             });
             handles.push(handle)

@@ -16,7 +16,7 @@ async fn main() -> std::io::Result<()> {
         for domain in &search_domains {
             log::info!(
                 "[relayer] try index: {}",
-                domain.domain_state.domain.sub_domain
+                domain.domain_state.data.domain_type
             );
             let domain_type = domain.get_type().await.unwrap();
             match domain_type.handle().await {

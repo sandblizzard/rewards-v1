@@ -1,4 +1,8 @@
+use std::str::FromStr;
+
+use bounty::state::domain_data::DomainData;
 use octocrab::models::issues::Comment;
+use spl_associated_token_account::solana_program::pubkey::Pubkey;
 
 use crate::{
     bounty_proto::{get_solvers, BountyProto},
@@ -6,7 +10,7 @@ use crate::{
     external::{get_connection, is_relayer_login},
 };
 use bounty_sdk::{
-    utils::{get_key_from_env, SBError},
+    utils::{get_key_from_env, load_keypair, SBError},
     *,
 };
 
@@ -14,18 +18,14 @@ use super::utils::contains_bounty_status;
 
 #[derive(Debug)]
 pub struct SBIssue {
+    // github issue id
     pub id: u64,
-    pub creator: String,
     pub access_token_url: String,
-    pub domain: String,
-    pub sub_domain: String,
-    pub domain_type: String,
-    pub repo: String,
     pub number: i64,
-    pub url: String,
     pub state: String,
     pub body: Option<String>,
     pub closed_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub domain: DomainData,
 }
 
 impl SBIssue {
@@ -39,11 +39,13 @@ impl SBIssue {
             }
         };
         // index the bounty information
-        let bounty = match BountyProto::new_bounty_proto(&self.creator, issue_body, &self.id).await
-        {
-            Ok(bounty) => bounty,
-            Err(err) => return Err(SBError::FailedToFindBounty(err.to_string())),
-        };
+        let bounty =
+            match BountyProto::new_bounty_proto(&self.domain.organization, issue_body, &self.id)
+                .await
+            {
+                Ok(bounty) => bounty,
+                Err(err) => return Err(SBError::FailedToFindBounty(err.to_string())),
+            };
 
         Ok(bounty)
     }
@@ -66,7 +68,7 @@ impl SBIssue {
     pub async fn post_bounty_status(&self, status: &str) -> Result<(), SBError> {
         let gh = get_connection(&self.access_token_url).await?;
         return match gh
-            .issues(&self.domain, &self.repo)
+            .issues(&self.domain.organization, &self.domain.team)
             .create_comment(self.number as u64, status)
             .await
         {
@@ -104,7 +106,7 @@ impl SBIssue {
         );
         let gh = get_connection(&self.access_token_url).await?;
         return match gh
-            .issues(&self.domain, &self.repo)
+            .issues(&self.domain.organization, &self.domain.team)
             .create_comment(
                 self.number.try_into().unwrap(),
                 self.get_signing_link(bounty_amount, mint, token_name)?,
@@ -138,25 +140,21 @@ impl SBIssue {
 
         let referrer = format!(
             "https://github.com/{}/{}/issues/{}",
-            self.domain, self.repo, self.number
+            self.domain.organization, self.domain.team, self.number
         );
         Ok(format!(
-            "Create bounty by signing: [Transaction]({}/create_bounty?referrer={}&domain={}&subDomain={}&id={}&bountyAmount={}&mint={}&token={})",
-            sb_bounty_domain,referrer, self.domain, self.repo, self.id,bounty_amount,mint,token_name
+            "Create bounty by signing: [Transaction]({}/create_bounty?referrer={}&organization={}&team={}&id={}&bountyAmount={}&mint={}&token={})",
+            sb_bounty_domain,referrer, self.domain.organization, self.domain.team, self.id,bounty_amount,mint,token_name
         ))
     }
 
     async fn open_issue(&self) -> Result<(), SBError> {
         log::info!("[issue] Open issue for {}", self.number);
-        let bounty = bounty_sdk::program::BountySdk::new()?.get_bounty(
-            &self.domain_type,
-            &self.sub_domain,
-            &self.id,
-        );
+        let bounty = bounty_sdk::program::BountySdk::new(None)?.get_bounty(&self.id.to_string());
 
         let gh = get_connection(&self.access_token_url).await?;
         let comments: Vec<Comment> = gh
-            .issues(&self.creator, &self.repo)
+            .issues(&self.domain.organization, &self.domain.team)
             .list_comments(self.number as u64)
             .per_page(150)
             .send()
@@ -188,7 +186,7 @@ impl SBIssue {
                     .any(|comment| comment_contains_signing_link(comment).unwrap());
                 log::info!(
                     "Has posted signing link for {}: {}",
-                    self.url,
+                    self.domain.generate_gh_url(),
                     has_posted_signing_link
                 );
                 // bounty don't exist
@@ -209,13 +207,13 @@ impl SBIssue {
 
     pub async fn close_issue(&self) -> Result<(), SBError> {
         log::info!("[issue] Close issue for {}", self.number);
-        let bounty_client = bounty_sdk::program::BountySdk::new()?;
-        let bounty = bounty_client.get_bounty(&self.creator, &self.repo, &self.id)?;
+        let bounty_client = bounty_sdk::program::BountySdk::new(None)?;
+        let bounty = bounty_client.get_bounty(&self.id.to_string())?;
 
         // get the top 150 comments on the issue
         let page_comments = get_connection(&self.access_token_url)
             .await?
-            .issues(&self.creator, &self.repo)
+            .issues(&self.domain.organization, &self.domain.team)
             .list_comments(self.number as u64)
             .per_page(150)
             .send()
@@ -224,12 +222,11 @@ impl SBIssue {
             .take_items();
 
         // try to get the comment body. If no closing comment -> return
-        let solvers = get_solvers(&self.creator.to_string()).await?;
-
+        let relayer_address = Pubkey::from_str(&get_key_from_env("PUBLIC_KEY").unwrap()).unwrap();
+        let solvers = get_solvers(&&self.domain.organization.to_string()).await?;
         let (bounty, sig) = bounty_client.complete_bounty(
-            &self.creator,
-            &self.repo,
-            &self.id,
+            &relayer_address,
+            &self.id.to_string(),
             &solvers,
             &bounty.mint,
         )?;
@@ -248,11 +245,11 @@ impl SBIssue {
         if self.state.eq("open") {
             // -> If open -> try to complete bounty
             match self.open_issue().await {
-                Ok(_res) => return Ok(self.url.clone()),
+                Ok(_res) => return Ok(self.domain.generate_gh_url().clone()),
                 Err(err) => {
                     log::warn!(
                         "Could not handle open issue for {}. Cause {}",
-                        self.url,
+                        self.domain.generate_gh_url(),
                         err
                     );
                     return Err(err);
@@ -261,11 +258,11 @@ impl SBIssue {
         } else {
             // -> If closed -> try to complete bounty
             match self.close_issue().await {
-                Ok(_res) => return Ok(self.url.clone()),
+                Ok(_res) => return Ok(self.domain.generate_gh_url().clone()),
                 Err(err) => {
                     log::warn!(
                         "Could not handle closed issue for {}. Cause {}",
-                        self.url,
+                        self.domain.generate_gh_url(),
                         err
                     );
                     return Err(err);

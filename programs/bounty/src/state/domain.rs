@@ -31,7 +31,6 @@ impl Domain {
         organization: &str,
         team: &str,
         platform: &str,
-        repo: &str,
         owner: &Pubkey,
     ) -> Result<()> {
         self.data.domain_type = domain_type.to_string();
@@ -40,7 +39,6 @@ impl Domain {
         self.owner = *owner;
         self.active = true;
         self.data.team = team.to_string();
-        self.data.url = Some(repo.to_string());
         Ok(())
     }
 

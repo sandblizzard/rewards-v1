@@ -4,12 +4,9 @@ use spl_associated_token_account::solana_program::pubkey::Pubkey;
 ///
 
 /// get_bounty_pda
-pub fn get_bounty_pda(issue_id: &u64) -> (Pubkey, u8) {
+pub fn get_bounty_pda(issue_id: &str) -> (Pubkey, u8) {
     let bounty_pda = Pubkey::find_program_address(
-        &[
-            bounty::utils::BOUNTY_SEED.as_bytes(),
-            issue_id.to_string().as_bytes(),
-        ],
+        &[bounty::utils::BOUNTY_SEED.as_bytes(), issue_id.as_bytes()],
         &bounty::ID,
     );
     bounty_pda

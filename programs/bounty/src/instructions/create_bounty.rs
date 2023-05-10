@@ -15,6 +15,16 @@ pub struct CreateBounty<'info> {
     pub creator: Signer<'info>,
 
     pub protocol: Account<'info, Protocol>,
+    
+     /// mint to use
+    /// Only bonk
+    #[account(
+        //constraint = mint.key().to_string().eq(BONK_MINT),
+        constraint = creator_account.mint.eq(&mint.key()),
+        constraint = escrow.mint.eq(&mint.key())
+    )]
+    pub mint: Account<'info, Mint>,
+
 
     #[account(
         init,
@@ -43,15 +53,7 @@ pub struct CreateBounty<'info> {
     )]
     pub bounty_denomination: Account<'info, Denomination>,
 
-    /// mint to use
-    /// Only bonk
-    #[account(
-        //constraint = mint.key().to_string().eq(BONK_MINT),
-        constraint = creator_account.mint.eq(&mint.key()),
-        constraint = escrow.mint.eq(&mint.key())
-    )]
-    pub mint: Account<'info, Mint>,
-
+   
     /// Bounty escrow to transfer funds to
     #[account(
         init,
