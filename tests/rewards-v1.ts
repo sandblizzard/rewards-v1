@@ -132,7 +132,6 @@ describe('bounty', () => {
         .initialize()
         .accounts({
           protocol: protocolPDA[0],
-          feeCollector: feeCollector,
           collection: collection_mint,
           sandTokenMint: sandMint,
           sandTokenAccount: sandTokenAccount[0],

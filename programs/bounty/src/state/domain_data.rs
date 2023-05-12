@@ -1,8 +1,7 @@
 use anchor_lang::prelude::*;
-use borsh::{BorshDeserialize, BorshSerialize};
 
 /// DomainIdentifier
-#[derive(BorshDeserialize, BorshSerialize, Clone, Debug)]
+#[derive(AnchorDeserialize, AnchorSerialize, Debug, Clone, PartialEq)]
 pub struct DomainData {
     /// platform is the domain such as GitHub
     pub platform: String,

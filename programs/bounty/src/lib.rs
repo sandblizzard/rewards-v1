@@ -4,7 +4,7 @@ pub mod state;
 pub mod utils;
 
 pub use instructions::*;
-
+pub use state::*;
 declare_id!("SANdemMWicpWGcrX9HiNn33dqGGktwA7q2fnbp9aWpo");
 
 #[program]

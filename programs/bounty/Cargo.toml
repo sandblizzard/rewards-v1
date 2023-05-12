@@ -20,3 +20,4 @@ default = []
 anchor-lang = {version="^0.27.0",feature=["init_if_needed"]}
 anchor-spl = "^0.27.0"
 solana-program = "~1.14.16"
+bytemuck = "1.13.1"

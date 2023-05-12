@@ -118,7 +118,7 @@ export const createBounty = async (
 
   try {
     await program.methods
-      .createBounty(domain, subDomain, id, bountyAmount)
+      .createBounty(id, bountyAmount)
       .accounts({
         bounty: bountyPDA[0],
         creatorAccount: creatorBountyTokenAccount,
