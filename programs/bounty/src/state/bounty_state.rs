@@ -54,12 +54,8 @@ impl Bounty {
         ]
     }
 
-    pub fn seeds(&self) -> [&[u8]; 3] {
-        [
-            BOUNTY_SEED.as_bytes(),
-            &self.domain_bytes,
-            self.id.as_bytes(),
-        ]
+    pub fn seeds(&self) -> [&[u8]; 2] {
+        [BOUNTY_SEED.as_bytes(), self.id.as_bytes()]
     }
 
     /// can_complete
