@@ -90,8 +90,8 @@ export const createDomain = async (
 export const createBounty = async (
   wallet: Wallet,
   program: anchor.Program<Bounty>,
-  domain: string,
-  subDomain: string,
+  organization: string,
+  team: string,
   id: string,
   bountyAmount: anchor.BN,
   bountyMint: PublicKey
@@ -99,10 +99,13 @@ export const createBounty = async (
   const bountyPDA = findProgramAddressSync(
     [
       anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD'),
-      anchor.utils.bytes.utf8.encode(domain),
-      anchor.utils.bytes.utf8.encode(subDomain),
       anchor.utils.bytes.utf8.encode(id),
     ],
+    program.programId
+  );
+
+  const protocolPDA = findProgramAddressSync(
+    [anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD')],
     program.programId
   );
 
@@ -116,12 +119,35 @@ export const createBounty = async (
     wallet.publicKey
   );
 
+  const domainPDA = await findProgramAddressSync(
+    [
+      anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD'),
+      anchor.utils.bytes.utf8.encode('github'),
+      anchor.utils.bytes.utf8.encode(organization),
+      anchor.utils.bytes.utf8.encode(team),
+      anchor.utils.bytes.utf8.encode('issues'),
+    ],
+    program.programId
+  );
+
+  const bountyDenominationPDA = await findProgramAddressSync(
+    [
+      anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD'),
+      anchor.utils.bytes.utf8.encode('DENOMINATION'),
+      bountyMint.toBytes(),
+    ],
+    program.programId
+  );
+
   try {
     await program.methods
       .createBounty(id, bountyAmount)
       .accounts({
         bounty: bountyPDA[0],
         creatorAccount: creatorBountyTokenAccount,
+        protocol: protocolPDA[0],
+        domain: domainPDA[0],
+        bountyDenomination: bountyDenominationPDA[0],
         mint: bountyMint,
         escrow: escrowPDA[0],
       })
