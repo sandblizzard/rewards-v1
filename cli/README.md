@@ -3,6 +3,6 @@
 Simple tool for initializing a bounty contract
 
 ```
-> cargo run --program-id SANdemMWicpWGcrX9HiNn33dqGGktwA7q2fnbp9aWpo
+> cargo run --program-id SAndfwdpvFKuxmzX7MAfgifvjmWZFs1deZJ9mQzfsM4
 
 ```

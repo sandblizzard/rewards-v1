@@ -1,9 +1,16 @@
 # Bounty program
 
-testnet address: SANdemMWicpWGcrX9HiNn33dqGGktwA7q2fnbp9aWpo
+testnet address: SAndfwdpvFKuxmzX7MAfgifvjmWZFs1deZJ9mQzfsM4
 mainnet address: TBD
 
+SAndfwdpvFKuxmzX7MAfgifvjmWZFs1deZJ9mQzfsM4
 Native token: A3LTRAn8fvZW5kuGRAXB7Xr1VGqVuCQUn1RxWSAtsJFH
+
+## Deploy
+
+### Devnet
+
+> anchor deploy --provider.cluster devnet
 
 ## TODO:
 
