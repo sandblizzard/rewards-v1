@@ -25,7 +25,7 @@ pub struct CompleteBounty<'info> {
 
     #[account(
         mut,
-        constraint = protocol.owner.eq(&fee_collector.owner.key()) @ BlizzardError::WrongProtocolFeeCollector,
+        constraint = protocol.key().eq(&fee_collector.owner.key()) @ BlizzardError::WrongProtocolFeeCollector,
         constraint = fee_collector.mint.eq(&bounty.mint.key())  @ BlizzardError::WrongFeeCollectorMint
     )]
     pub fee_collector: Box<Account<'info, TokenAccount>>,
@@ -135,7 +135,7 @@ pub fn handler(ctx: Context<CompleteBounty>) -> Result<()> {
                         to: solver.clone(),
                         authority: bounty.to_account_info(),
                     },
-                    &[&bounty.seeds()],
+                    &[&bounty.signing_seeds()],
                 ),
                 *amount,
             )

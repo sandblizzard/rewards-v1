@@ -6,6 +6,7 @@ import NodeWallet from '@project-serum/anchor/dist/cjs/nodewallet';
 import * as spl from '@solana/spl-token';
 import { Wallet } from '@project-serum/anchor/dist/cjs/provider';
 import { getOrCreateAssociatedTokenAccountIx } from '../app/src/helper';
+import { getDenominationPDA, getDomainPDA, getFeeCollectorPDA } from './pdas';
 /**
  *
  * @param program
@@ -52,25 +53,21 @@ export const createRelayer = async (
 export const createDomain = async (
   program: anchor.Program<Bounty>,
   protocolPDA: PublicKey,
-  domainType: string,
   platform: string,
-  repo: string,
-  subDomain: string
+  organization: string,
+  team: string,
+  domainType: string
 ) => {
-  const domainPDA = findProgramAddressSync(
-    [
-      anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD'),
-      anchor.utils.bytes.utf8.encode(platform),
-      anchor.utils.bytes.utf8.encode(subDomain),
-      anchor.utils.bytes.utf8.encode(domainType),
-      anchor.utils.bytes.utf8.encode(repo),
-    ],
-    program.programId
+  const domainPDA = await getDomainPDA(
+    program,
+    platform,
+    organization,
+    team,
+    domainType
   );
-
   try {
     await program.methods
-      .createDomain(domainType, platform, repo, subDomain)
+      .createDomain(domainType, platform, organization, team)
       .accounts({
         protocol: protocolPDA,
         domain: domainPDA[0],
@@ -85,13 +82,50 @@ export const createDomain = async (
 };
 
 /**
+ * addDenomination creates a denonination that can be
+ * used for the various bounties
+ * @param program
+ * @param protocolPDA
+ * @param mint
+ * @returns
+ */
+export const addDenomination = async (
+  program: anchor.Program<Bounty>,
+  protocolPDA: PublicKey,
+  mint: PublicKey
+) => {
+  const denominationPDA = getDenominationPDA(program, mint);
+
+  const feeCollectorPda = getFeeCollectorPDA(program, mint);
+
+  try {
+    await program.methods
+      .addBountyDenomination()
+      .accounts({
+        protocol: protocolPDA,
+        mint: mint,
+        feeCollector: feeCollectorPda[0],
+        denomination: denominationPDA[0],
+      })
+      .rpc();
+    console.log('Successfully created denomination!');
+    return denominationPDA;
+  } catch (err) {
+    console.log('Failed to create denomination ', err);
+    throw new Error(err);
+  }
+};
+
+/**
  * createBounty
  */
 export const createBounty = async (
   wallet: Wallet,
   program: anchor.Program<Bounty>,
-  domain: string,
-  subDomain: string,
+  platform: string,
+  organization: string,
+  team: string,
+  domainType: string,
   id: string,
   bountyAmount: anchor.BN,
   bountyMint: PublicKey
@@ -99,10 +133,13 @@ export const createBounty = async (
   const bountyPDA = findProgramAddressSync(
     [
       anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD'),
-      anchor.utils.bytes.utf8.encode(domain),
-      anchor.utils.bytes.utf8.encode(subDomain),
       anchor.utils.bytes.utf8.encode(id),
     ],
+    program.programId
+  );
+
+  const protocolPDA = findProgramAddressSync(
+    [anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD')],
     program.programId
   );
 
@@ -116,12 +153,25 @@ export const createBounty = async (
     wallet.publicKey
   );
 
+  const domainPDA = await getDomainPDA(
+    program,
+    platform,
+    organization,
+    team,
+    domainType
+  );
+
+  const bountyDenominationPDA = getDenominationPDA(program, bountyMint);
+
   try {
     await program.methods
       .createBounty(id, bountyAmount)
       .accounts({
         bounty: bountyPDA[0],
         creatorAccount: creatorBountyTokenAccount,
+        protocol: protocolPDA[0],
+        domain: domainPDA[0],
+        bountyDenomination: bountyDenominationPDA[0],
         mint: bountyMint,
         escrow: escrowPDA[0],
       })
