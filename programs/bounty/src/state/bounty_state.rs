@@ -37,11 +37,11 @@ pub struct Bounty {
     /// domain information
     pub domain: Pubkey,
     /// domain as bytes
-    pub domain_bytes: Box<[u8]>,
+    pub domain_bytes: Vec<u8>,
 
     pub bounty_amount: u64,
 
-    pub completed_by: Option<Vec<Pubkey>>,
+    pub completed_by: Option<Pubkey>,
 }
 
 impl Bounty {
@@ -90,7 +90,7 @@ impl Bounty {
 
         // init DomainIdentificator
         self.domain = *domain;
-        self.domain_bytes = Box::new(domain.to_bytes());
+        self.domain_bytes = domain.to_bytes().to_vec();
 
         // set remaining fields
         self.bump = *bump;
@@ -141,7 +141,7 @@ mod tests {
             bump_array: [0; 1],
             escrow_bump: 0,
             domain: Pubkey::new_unique(),
-            domain_bytes: Box::new([0; 32]),
+            domain_bytes: [0; 32].to_vec(),
             id: "".to_string(),
             owner,
             mint: Pubkey::new_unique(),

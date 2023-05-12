@@ -36,10 +36,10 @@ pub struct CreateBounty<'info> {
         bump,
         space=8 + size_of::<Bounty>()
     )]
-    pub bounty: Account<'info, Bounty>,
+    pub bounty: Box<Account<'info, Bounty>>,
 
     /// domain to attach the bounty to
-    pub domain: Account<'info, Domain>,
+    pub domain: Box<Account<'info, Domain>>,
 
     /// Account to credit the user
     #[account(mut)]
@@ -51,7 +51,7 @@ pub struct CreateBounty<'info> {
         constraint = bounty_denomination.mint.eq(&mint.key()),
         constraint = bounty_denomination.active 
     )]
-    pub bounty_denomination: Account<'info, Denomination>,
+    pub bounty_denomination: Box<Account<'info, Denomination>>,
 
    
     /// Bounty escrow to transfer funds to

@@ -11,8 +11,6 @@ pub struct Denomination {
 
     pub bump_array: [u8; 1],
 
-    pub mint_bytes: Box<[u8]>,
-
     pub mint: Pubkey,
 
     pub active: bool,
@@ -21,11 +19,11 @@ pub struct Denomination {
 }
 
 impl Denomination {
-    pub fn seeds(&self) -> [&[u8]; 4] {
+    pub fn seeds(&self) -> [&[u8]; 3] {
         [
             BOUNTY_SEED.as_bytes(),
             DENOMINATION_SEED.as_bytes(),
-            &self.mint_bytes,
+            //&self.mint_bytes,
             self.bump_array.as_ref(),
         ]
     }
@@ -34,7 +32,7 @@ impl Denomination {
         self.bump = *bump;
         self.bump_array = [*bump; 1];
         self.mint = *mint;
-        self.mint_bytes = Box::new(mint.to_bytes());
+        //self.mint_bytes = Box::new(mint.to_bytes());
         self.active = true;
         self.fee_collector = *fee_collector;
         Ok(())
