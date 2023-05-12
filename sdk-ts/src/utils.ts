@@ -1,5 +1,4 @@
 import * as spl from '@solana/spl-token';
-import * as anchor from '@project-serum/anchor';
 import type { Connection, PublicKey, Commitment } from '@solana/web3.js';
 import { TransactionInstruction } from '@solana/web3.js';
 

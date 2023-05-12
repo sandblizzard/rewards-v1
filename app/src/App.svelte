@@ -2,6 +2,7 @@
   import { walletStore } from '@svelte-on-solana/wallet-adapter-core';
   import { css } from '@emotion/css';
   import * as anchor from '@project-serum/anchor';
+  import * as bountySdk from '../../sdk-ts/src/index';
   import {
     WalletProvider,
     WalletMultiButton,
@@ -23,7 +24,6 @@
   } from '@solana/wallet-adapter-wallets';
   import { onMount } from 'svelte';
   import { findProgramAddressSync } from '@project-serum/anchor/dist/cjs/utils/pubkey';
-  import { getOrCreateAssociatedTokenAccountIx } from './helper';
 
   const localStorageKey = 'walletAdapter';
   const network = clusterApiUrl('devnet'); // localhost or mainnet
@@ -83,15 +83,7 @@
       new anchor.BN(createBountyInput.bountyAmount)
     );
 
-    const bountyPDA = findProgramAddressSync(
-      [
-        anchor.utils.bytes.utf8.encode('BOUNTY_SANDBLIZZARD'),
-        anchor.utils.bytes.utf8.encode(domain),
-        anchor.utils.bytes.utf8.encode(subDomain),
-        anchor.utils.bytes.utf8.encode(id),
-      ],
-      $workSpace.program.programId
-    );
+    const bountyPDA = bountySdk.pdas.getBountyPDA($workSpace.program, id);
 
     const escrowPDA = findProgramAddressSync(
       [bountyPDA[0].toBytes()],
@@ -100,20 +92,35 @@
 
     try {
       const ixs: TransactionInstruction[] = [];
-      const creatorAccount = await getOrCreateAssociatedTokenAccountIx(
-        $workSpace.connection,
-        $walletStore.publicKey,
-        mint,
-        $walletStore.publicKey
-      );
+      const creatorAccount =
+        await bountySdk.utils.getOrCreateAssociatedTokenAccountIx(
+          $workSpace.connection,
+          $walletStore.publicKey,
+          mint,
+          $walletStore.publicKey
+        );
       if (creatorAccount.instruction) ixs.push(creatorAccount.instruction);
 
-      console.log('>>> AMount: ', amount);
+      const protocolPDA = bountySdk.pdas.getProtocolPDA($workSpace.program);
+      const domainPDA = bountySdk.pdas.getDomainPDA(
+        $workSpace.program,
+        'github',
+        domain,
+        subDomain,
+        'issues'
+      );
+      const bountyDenominationPDA = bountySdk.pdas.getDenominationPDA(
+        $workSpace.program,
+        mint
+      );
       const createBountyIx = await $workSpace.program.methods
-        .createBounty(domain, subDomain, id, amount)
+        .createBounty(id, amount)
         .accounts({
           bounty: bountyPDA[0],
+          protocol: protocolPDA[0],
           creatorAccount: creatorAccount.address,
+          domain: domainPDA[0],
+          bountyDenomination: bountyDenominationPDA[0],
           mint,
           escrow: escrowPDA[0],
         })

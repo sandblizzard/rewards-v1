@@ -25,15 +25,119 @@
           "isSigner": false
         },
         {
-          "name": "feeCollector",
+          "name": "sandTokenMint",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sandTokenAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
           "name": "collection",
           "isMut": false,
           "isSigner": false,
-          "docs": ["mint used for the collection"]
+          "docs": [
+            "mint used for the collection"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "addBountyDenomination",
+      "docs": [
+        "add bounty denomination"
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "protocol config"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "mint to be used for denomination"
+          ]
+        },
+        {
+          "name": "denomination",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bounty denoination to be created"
+          ]
+        },
+        {
+          "name": "feeCollector",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Fee collector is owned by the protocol and",
+            "collects fees from the bounty"
+          ]
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "deactivateBountyDenomination",
+      "docs": [
+        "deactivate bounty denomination"
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "mint to be used for denomination"
+          ]
+        },
+        {
+          "name": "denomination",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bounty denoination to be created"
+          ]
         },
         {
           "name": "systemProgram",
@@ -45,7 +149,11 @@
     },
     {
       "name": "createBounty",
-      "docs": ["create_bounty", "", "creates a bounty"],
+      "docs": [
+        "create_bounty",
+        "",
+        "creates a bounty"
+      ],
       "accounts": [
         {
           "name": "creator",
@@ -53,27 +161,52 @@
           "isSigner": true
         },
         {
-          "name": "bounty",
-          "isMut": true,
+          "name": "protocol",
+          "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "creatorAccount",
-          "isMut": true,
-          "isSigner": false,
-          "docs": ["Account to credit the user"]
         },
         {
           "name": "mint",
           "isMut": false,
           "isSigner": false,
-          "docs": ["mint to use", "Only bonk"]
+          "docs": [
+            "mint to use",
+            "Only bonk"
+          ]
+        },
+        {
+          "name": "bounty",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "domain",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "domain to attach the bounty to"
+          ]
+        },
+        {
+          "name": "creatorAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Account to credit the user"
+          ]
+        },
+        {
+          "name": "bountyDenomination",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "escrow",
           "isMut": true,
           "isSigner": false,
-          "docs": ["Bounty escrow to transfer funds to"]
+          "docs": [
+            "Bounty escrow to transfer funds to"
+          ]
         },
         {
           "name": "systemProgram",
@@ -93,14 +226,6 @@
       ],
       "args": [
         {
-          "name": "domain",
-          "type": "string"
-        },
-        {
-          "name": "subDomain",
-          "type": "string"
-        },
-        {
           "name": "id",
           "type": "string"
         },
@@ -112,13 +237,19 @@
     },
     {
       "name": "completeBounty",
-      "docs": ["complete_bounty", "", "Try to complete bounty"],
+      "docs": [
+        "complete_bounty",
+        "",
+        "Try to complete bounty"
+      ],
       "accounts": [
         {
           "name": "payer",
           "isMut": true,
           "isSigner": true,
-          "docs": ["only owners or relayers can complete bounties"]
+          "docs": [
+            "only owners or relayers can complete bounties"
+          ]
         },
         {
           "name": "protocol",
@@ -129,6 +260,15 @@
           "name": "feeCollector",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "bountyDenomination",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "bounty denomination is the allowed denomination of a bounty",
+            "it needs to be checked against the fee collector and the mint"
+          ]
         },
         {
           "name": "relayer",
@@ -143,7 +283,10 @@
           "name": "bounty",
           "isMut": true,
           "isSigner": false,
-          "docs": ["bounty to be completed", "FIXME"]
+          "docs": [
+            "bounty to be completed",
+            "FIXME"
+          ]
         },
         {
           "name": "escrow",
@@ -154,7 +297,9 @@
           "name": "solver1",
           "isMut": true,
           "isSigner": false,
-          "docs": ["up to 4 receivers"]
+          "docs": [
+            "up to 4 receivers"
+          ]
         },
         {
           "name": "solver2",
@@ -217,6 +362,102 @@
           "type": "publicKey"
         }
       ]
+    },
+    {
+      "name": "removeRelayer",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "relayer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "createDomain",
+      "docs": [
+        "create domain"
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "protocol",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "domain",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "domainType",
+          "type": "string"
+        },
+        {
+          "name": "platform",
+          "type": "string"
+        },
+        {
+          "name": "organization",
+          "type": "string"
+        },
+        {
+          "name": "team",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "deactivateDomain",
+      "docs": [
+        "deactivate domain"
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "domain",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -226,14 +467,23 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "id",
+            "type": "string"
+          },
+          {
             "name": "bump",
             "type": "u8"
           },
           {
             "name": "bumpArray",
-            "docs": ["for the seeds"],
+            "docs": [
+              "for the seeds"
+            ],
             "type": {
-              "array": ["u8", 1]
+              "array": [
+                "u8",
+                1
+              ]
             }
           },
           {
@@ -241,20 +491,10 @@
             "type": "u8"
           },
           {
-            "name": "domain",
-            "type": "string"
-          },
-          {
-            "name": "subDomain",
-            "type": "string"
-          },
-          {
-            "name": "id",
-            "type": "string"
-          },
-          {
             "name": "owner",
-            "docs": ["Owner of bounty"],
+            "docs": [
+              "Owner of bounty"
+            ],
             "type": "publicKey"
           },
           {
@@ -263,13 +503,33 @@
           },
           {
             "name": "state",
-            "docs": ["State - created, closed"],
-            "type": "string"
+            "docs": [
+              "State - created, closed"
+            ],
+            "type": {
+              "defined": "BountyState"
+            }
           },
           {
             "name": "escrow",
-            "docs": ["escrow of the bounty"],
+            "docs": [
+              "escrow of the bounty"
+            ],
             "type": "publicKey"
+          },
+          {
+            "name": "domain",
+            "docs": [
+              "domain information"
+            ],
+            "type": "publicKey"
+          },
+          {
+            "name": "domainBytes",
+            "docs": [
+              "domain as bytes"
+            ],
+            "type": "bytes"
           },
           {
             "name": "bountyAmount",
@@ -278,32 +538,86 @@
           {
             "name": "completedBy",
             "type": {
-              "vec": "publicKey"
+              "option": "publicKey"
             }
           }
         ]
       }
     },
     {
-      "name": "Domain",
-      "docs": ["Domain is the identifier"],
+      "name": "Denomination",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "id",
-            "docs": ["id is the identifier within the domain"],
-            "type": "string"
+            "name": "bump",
+            "type": "u8"
           },
           {
-            "name": "name",
-            "docs": ["name is the name of the domain"],
-            "type": "string"
+            "name": "bumpArray",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "feeCollector",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Domain",
+      "docs": [
+        "Domain is the domain to be indexed",
+        "ex: if the domain is github/sandblizzard/rewards_v1 then",
+        "bounty_type = issues/pull_request",
+        "platform: github",
+        "owner: <user",
+        "sub_domain: sandblizzard",
+        "repo: rewards_v1"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "docs": [
+              "bump is used to sign transactions"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "active",
+            "type": "bool"
           },
           {
             "name": "owner",
-            "docs": ["owner of the domain, could be an individual or dao"],
+            "docs": [
+              "owner of the domain, could be an individual or dao",
+              "it's the user who manage the domain"
+            ],
             "type": "publicKey"
+          },
+          {
+            "name": "data",
+            "docs": [
+              "FIXME: Rename"
+            ],
+            "type": {
+              "defined": "DomainData"
+            }
           }
         ]
       }
@@ -320,15 +634,14 @@
           {
             "name": "bumpSeed",
             "type": {
-              "array": ["u8", 1]
+              "array": [
+                "u8",
+                1
+              ]
             }
           },
           {
             "name": "owner",
-            "type": "publicKey"
-          },
-          {
-            "name": "feeCollector",
             "type": "publicKey"
           },
           {
@@ -337,6 +650,10 @@
               "user collection is NFT collection used in the",
               "contract to reward users"
             ],
+            "type": "publicKey"
+          },
+          {
+            "name": "sandTokenAccount",
             "type": "publicKey"
           }
         ]
@@ -354,12 +671,19 @@
           {
             "name": "bumpSeed",
             "type": {
-              "array": ["u8", 1]
+              "array": [
+                "u8",
+                1
+              ]
             }
           },
           {
             "name": "owner",
             "type": "publicKey"
+          },
+          {
+            "name": "active",
+            "type": "bool"
           }
         ]
       }
@@ -374,6 +698,61 @@
             "type": {
               "vec": "publicKey"
             }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "DomainData",
+      "docs": [
+        "DomainIdentifier"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "platform",
+            "docs": [
+              "platform is the domain such as GitHub"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "organization",
+            "docs": [
+              "organization is the identifier within the domain",
+              "like sandblizzard",
+              "FIXME: rename"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "team",
+            "docs": [
+              "team is the identifier within the domain",
+              "like rewards_v1. This corresponds to the Bounty"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "domainType",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BountyState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Created"
+          },
+          {
+            "name": "Completed"
           }
         ]
       }
@@ -409,9 +788,19 @@
       "code": 6005,
       "name": "WrongProtocolFeeCollector",
       "msg": "fee collector does not match protocol fee collector"
+    },
+    {
+      "code": 6006,
+      "name": "WrongDenominationFeeCollector",
+      "msg": "invalid denomination fee collector"
+    },
+    {
+      "code": 6007,
+      "name": "WrongDenominationMint",
+      "msg": "invalid denomination mint"
     }
   ],
   "metadata": {
-    "address": "SANdemMWicpWGcrX9HiNn33dqGGktwA7q2fnbp9aWpo"
+    "address": "SAndfwdpvFKuxmzX7MAfgifvjmWZFs1deZJ9mQzfsM4"
   }
 }
