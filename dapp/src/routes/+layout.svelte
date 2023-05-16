@@ -35,6 +35,4 @@
 
 <WalletProvider {localStorageKey} {wallets} />
 <AnchorConnectionProvider {network} {idl} />
-<div>
-	<slot />
-</div>
+<slot />
