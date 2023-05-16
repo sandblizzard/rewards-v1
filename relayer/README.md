@@ -51,15 +51,8 @@ BOUNTY_CREATOR can always `cancel_bounty` to get the funds out.
 
 # TODO
 
-- [x] Create dummy issues
-- [x] Separate Bounty, User etc into module
-- [x] Use structs from Bounty program
 - [ ] Implement PR flow
-- [x] Implement account verification
 - [ ] Integrate with bounty program
-- [x] Post status about create_bounty to the issue/PR
-- [ ] Deploy executable with terraform or pulumi
 - [ ] Be able to change payer address
-- [ ] Add web server for hosting dapp
-- [ ] (Implement JPEG module for creation of new NFT JPEGS)
+- [x] (Implement JPEG module for creation of new NFT JPEGS)
 - [ ] Use bounties created in SC to get indexable domains

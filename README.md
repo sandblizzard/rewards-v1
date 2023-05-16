@@ -21,18 +21,23 @@ The repo contains
 - Remote transaction trigger - TBD
 - User profile with defi tools -TBD
 
-## TODO
+## Board
 
-### Prio
+### Todo
 
-- [ ] Move "create bounty" dapp to new dapp
+- [x] Move "create bounty" dapp to new dapp
+- [ ] Make sure relayer works as expected
 
 ### Backlog
 
 - [x] Create "Connect web2 <-> web3 dapp" - sveltekit
-- [ ] Write unit tests for relayer
-- [ ] Get bounties from contract rather than based on installations
-- [ ] Calculate mint price based on github profile.
-- [ ] Go through bounty contract and deploy to mainnet
-- [ ] Update status text on github
+- [ ] Relayer: Write unit tests for relayer
+- [ ] Relayer: Get bounties from contract rather than based on installations
+- [ ] Dapp: Calculate mint price based on github profile.
+- [ ] Program: Go through bounty contract and deploy to mainnet
+- [ ] Relayer: Improve status texts in relayer
+- [ ] Dapp: Use candy machine to mint NFTs instead as it's cheaper
+
+### NEXT
+
 - [ ] Bounties for PRs
