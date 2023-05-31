@@ -25,8 +25,8 @@ const config = {
 		// This makes @project-serum/anchor 's process error not happen since it replaces all instances of process.env.BROWSER with true
 		'process.env.BROWSER': true,
 		'process.env.NODE_DEBUG': JSON.stringify(''),
-		'process.env.GITHUB_CLIENT_ID': JSON.stringify(process.env.GITHUB_CLIENT_ID),
-		'process.env.GITHUB_CLIENT_SECRET': JSON.stringify(process.env.GITHUB_CLIENT_SECRET),
+		'process.env.GITHUB_CLIENT_ID': JSON.stringify(process.env.GITHUB_ID),
+		'process.env.GITHUB_CLIENT_SECRET': JSON.stringify(process.env.GITHUB_SECRET),
 		'process.env.UNDERDOG_PROJECT_ID': JSON.stringify(process.env.UNDERDOG_PROJECT_ID),
 		'process.env.UNDERDOG_API_KEY': JSON.stringify(process.env.UNDERDOG_API_KEY)
 	},

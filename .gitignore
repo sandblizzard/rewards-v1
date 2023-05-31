@@ -10,6 +10,9 @@ relayer.json
 */**/*.pem
 */**/kubeconfig*
 
+# env files
+.env.*
+
 # yarn
 .yarn/*
 !.yarn/patches

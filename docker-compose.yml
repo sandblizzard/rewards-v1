@@ -5,15 +5,8 @@ services:
     build: 
       context: "."
       dockerfile: dockerfile.relayer
-    environment:
-      - RUST_LOG=info
-      - GITHUB_KEY
-      - GITHUB_ID=282074
-      - UNDERDOG_KEY
-      - SANDBLIZZARD_COLLECTION_ADDRESS=2AHfNu6sWRMPWKKQJTffWMWjkYL8AnYY852Fd7ZrkrFw
-      - SANDBLIZZARD_URL=http://localhost:3000
-      - GITHUB_APP_LOGIN=sandblizzard-app[bot]
-      - CLUSTER=devnet
+    env_file:
+      - .env.local
     volumes: 
       - ./programs:/programs
   dapp:
@@ -21,5 +14,8 @@ services:
     build: 
       context: "."
       dockerfile: dockerfile.dapp
+      target: deploy-node
+    env_file:
+      - .env.local
     ports: 
-      - 3000:80 
+      - 3000:3000 

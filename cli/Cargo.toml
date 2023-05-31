@@ -6,8 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anchor-client = "^0.27.0"
-anchor-spl = "^0.27.0"
+anchor-client = {git = "https://github.com/coral-xyz/anchor"}
+anchor-spl = {git = "https://github.com/coral-xyz/anchor"}
+winnow="0.4.1"
 env_logger = "^0.9.3"
 spl-associated-token-account = "1.1.2"
 log = "^0.4.17"

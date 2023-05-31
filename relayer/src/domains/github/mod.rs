@@ -56,7 +56,7 @@ impl Github {
     pub async fn issues(&self) -> Result<(), SBError> {
         log::info!(
             "[relayer] Index github issue for domain={}",
-            self.domain.domain_state.owner,
+            self.domain.domain_state.data.domain_type,
         );
 
         // get all issues for a given domain over different repositories
@@ -69,7 +69,10 @@ impl Github {
                         .as_ref()
                         .unwrap()
                         // FIXME: should not unwrap
-                        .issues(&self.domain.domain_state.data.team, repo);
+                        .issues(
+                            &self.domain.domain_state.data.organization,
+                            &self.domain.domain_state.data.team,
+                        );
 
                     // get top 100 issues
                     let mut issues = match issue_handler
@@ -92,13 +95,6 @@ impl Github {
         )
         .await;
 
-        log::info!(
-            "[relayer] {} issues for name: {}, owner: {}",
-            issues.len(),
-            self.domain.domain_state.data.platform,
-            self.domain.domain_state.owner,
-        );
-
         let issues_flat: Vec<SBIssue> = issues
             .iter()
             .flatten()
@@ -109,11 +105,6 @@ impl Github {
                     .ge(&(get_unix_time(60 * 60 * 24 * 2) as i64)) // only consider <2d old issues
             })
             .map(|issue| {
-                let repo = issue
-                    .repository_url
-                    .path()
-                    .split('/')
-                    .collect::<Vec<&str>>();
                 return SBIssue {
                     id: issue.id.0,
                     access_token_url: self.domain.access_token_url.clone(),
@@ -125,6 +116,12 @@ impl Github {
                 };
             })
             .collect();
+        log::info!(
+            "[relayer] {} issues for name: {}, owner: {}",
+            issues_flat.len(),
+            self.domain.domain_state.data.team,
+            self.domain.domain_state.data.organization,
+        );
 
         let mut handles = vec![];
         for issue in issues_flat {
