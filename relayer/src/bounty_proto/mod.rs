@@ -68,12 +68,13 @@ impl BountyProto {
             let cluster = get_key_from_env("CLUSTER")?;
             let (token_mint, token_name) = tokens::get_token_address(&token, &cluster).await?;
             // convert amount in floating like 10.10 to 10.10x10^decimals u64
-            let amount = match captured_items[1].to_string().parse::<f64>() {
+            let amount = match captured_items[1].to_string().trim().parse::<f64>() {
                 Ok(amount) => amount,
                 Err(err) => {
                     return Err(SBError::FailedToConvertStringToNumber(format!(
                         "string={}. Cause: {}",
-                        captured_items[0], err
+                        captured_items[1].to_string(),
+                        err
                     )))
                 }
             };
