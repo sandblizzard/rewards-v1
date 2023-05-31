@@ -128,18 +128,21 @@ pub async fn get_solvers(text: &str) -> Result<Vec<Pubkey>, SBError> {
 #[cfg(test)]
 mod test {
 
-    // #[test]
-    // pub fn test_get_bounty() {
-    //     let text = "## About
-    //     A bounty contract is needed to reward users for their bounty completion
+    use super::*;
+    #[tokio::test]
+    pub async fn test_get_bounty() {
+        let text = "## About
+        A bounty contract is needed to reward users for their bounty completion
 
-    //     rewards
-    //     $bonk:10$";
+        rewards
+        $bonk:10$";
 
-    //     let owner = "123";
-    //     let id = 1;
-    //     let bounty = get_bounty_proto(owner, text, &id).unwrap();
-    //     assert_eq!(bounty.amount.unwrap(), 10.);
-    //     assert_eq!(bounty.creator, owner);
-    // }
+        let owner = "123";
+        let id = 1;
+        let bounty = BountyProto::new_bounty_proto(owner, text, &id)
+            .await
+            .unwrap();
+        assert_eq!(bounty.amount.unwrap(), 10.);
+        assert_eq!(bounty.creator, owner);
+    }
 }
