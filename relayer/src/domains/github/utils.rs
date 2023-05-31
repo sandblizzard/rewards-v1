@@ -50,7 +50,7 @@ pub async fn try_fetch_github_indexable_domains() -> Result<Vec<RelayerDomain>, 
                     organization: domain.account.login.to_string(),
                     domain_type: "issue".to_string(),
                     platform: "github".to_string(),
-                    team: domain.account.id.to_string(),
+                    team: repo.name,
                 },
 
                 owner: Pubkey::new_from_array([0; 32]),

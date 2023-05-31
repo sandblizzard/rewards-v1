@@ -1,25 +1,16 @@
 FROM rust:1.66.1 as build
 
-
+WORKDIR /rewards
+COPY Cargo.toml .
+COPY Anchor.toml .
 ADD programs programs
-# RUN USER=root cargo new --bin relayer
-WORKDIR /relayer
-
-# COPY ./relayer/Cargo.lock ./Cargo.lock
-# COPY ./relayer/Cargo.toml ./Cargo.toml
-
-# RUN cargo build --release
-# RUN rm src/*rs
-
-# COPY ./relayer/src ./src
-
-# RUN rm ./target/release/deps/relayer*
-COPY ./relayer/src  ./src
-COPY ./relayer/Cargo.lock ./Cargo.lock 
-COPY ./relayer/Cargo.toml ./Cargo.toml
-RUN cargo build --release
+ADD relayer relayer
+ADD cli cli
+ADD sdk sdk
+RUN cargo build --release --package relayer
 
 FROM rust:1.66.1-slim-buster
-COPY --from=build /relayer/target/release/relayer .
+WORKDIR /relayer
+COPY --from=build /rewards/target/ /relayer/target
 
-CMD ["./relayer"]
+CMD ["./target/release/relayer"]
