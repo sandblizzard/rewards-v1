@@ -12,7 +12,6 @@ relayer.json
 
 # env files
 .env.*
-.yarn
 
 # yarn
 .yarn/*

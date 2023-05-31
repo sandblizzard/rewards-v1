@@ -1,18 +1,14 @@
-
-.anchor
 .DS_Store
-target
-**/*.rs.bk
 node_modules
-test-ledger
+/build
+/.svelte-kit
+/package
 .env
-relayer.json
-*/**/*.pem
-*/**/kubeconfig*
-
-# env files
 .env.*
-.yarn
+!.env.example
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+.vercel
 
 # yarn
 .yarn/*
@@ -22,3 +18,4 @@ relayer.json
 !.yarn/sdks
 !.yarn/versions
 !.yarn/cache
+*/**/cache
