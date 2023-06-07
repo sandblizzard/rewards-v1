@@ -1,3 +1,4 @@
+use crate::domains::github::utils::NUMBER_OF_DAYS_OPEN;
 use std::{result::Result, thread};
 pub mod issues;
 pub mod utils;
@@ -64,21 +65,21 @@ impl Github {
             [self.domain.domain_state.data.generate_gh_url()]
                 .iter()
                 .map(|repo| async move {
-                    let issue_handler = self
-                        .gh
-                        .as_ref()
-                        .unwrap()
-                        // FIXME: should not unwrap
-                        .issues(
-                            &self.domain.domain_state.data.organization,
-                            &self.domain.domain_state.data.team,
-                        );
+                    log::info!(
+                        "[relayer] Get github issue for owner {} and repo {}",
+                        self.domain.domain_state.data.organization,
+                        self.domain.domain_state.data.team,
+                    );
+                    let issue_handler = self.gh.as_ref().unwrap().issues(
+                        &self.domain.domain_state.data.organization,
+                        &self.domain.domain_state.data.team,
+                    );
 
                     // get top 100 issues
                     let mut issues = match issue_handler
                         .list()
                         .sort(params::issues::Sort::Created)
-                        .state(params::State::All)
+                        .state(params::State::Open)
                         .per_page(100)
                         .send()
                         .await
@@ -102,7 +103,7 @@ impl Github {
                 issue
                     .created_at
                     .timestamp()
-                    .ge(&(get_unix_time(60 * 60 * 24 * 2) as i64)) // only consider <2d old issues
+                    .ge(&(get_unix_time(NUMBER_OF_DAYS_OPEN) as i64)) // only consider <2d old issues
             })
             .map(|issue| {
                 return SBIssue {

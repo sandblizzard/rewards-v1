@@ -72,6 +72,7 @@
 			const createBountyIx = await $workSpace.program.methods
 				.createBounty(id, amount)
 				.accounts({
+					creator: $walletStore.publicKey,
 					bounty: bountyPDA[0],
 					protocol: protocolPDA[0],
 					creatorAccount: creatorAccount.address,
@@ -83,9 +84,10 @@
 				.instruction();
 			ixs.push(createBountyIx);
 
+			const getLatestBlockhash = await $workSpace.connection.getLatestBlockhash();
 			const messageV0 = new anchor.web3.TransactionMessage({
 				payerKey: $walletStore.publicKey,
-				recentBlockhash: (await $workSpace.connection.getLatestBlockhash()).blockhash,
+				recentBlockhash: getLatestBlockhash.blockhash,
 				instructions: ixs
 			}).compileToV0Message();
 
@@ -95,7 +97,14 @@
 			const res = await $workSpace.connection.sendTransaction(versionedTx, {
 				skipPreflight: true
 			});
-			const confirm = await $workSpace.connection.confirmTransaction(res, 'confirmed');
+			const confirm = await $workSpace.connection.confirmTransaction(
+				{
+					signature: res,
+					blockhash: getLatestBlockhash.blockhash,
+					lastValidBlockHeight: getLatestBlockhash.lastValidBlockHeight
+				},
+				'confirmed'
+			);
 			success = true;
 			startedRedirect = Math.floor(Date.now() / 1000);
 			setTimeout(() => {
@@ -137,8 +146,8 @@
 						text-align: left;
 					`}
 				>
-					<li>Domain: {createBountyInput.domain}</li>
-					<li>Sub domain: {createBountyInput.subDomain}</li>
+					<li>Organization: {createBountyInput.domain}</li>
+					<li>Team: {createBountyInput.subDomain}</li>
 					<li>Id: {createBountyInput.id}</li>
 					<li>
 						Bounty: {createBountyInput.bountyAmount} ${createBountyInput.token}

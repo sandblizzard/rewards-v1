@@ -143,7 +143,7 @@ impl SBIssue {
             self.domain.organization, self.domain.team, self.number
         );
         Ok(format!(
-            "Create bounty by signing: [Transaction]({}/create_bounty?referrer={}&organization={}&team={}&id={}&bountyAmount={}&mint={}&token={})",
+            "Create bounty by signing: [Transaction]({}/create-bounty?referrer={}&organization={}&team={}&id={}&bountyAmount={}&mint={}&token={})",
             sb_bounty_domain,referrer, self.domain.organization, self.domain.team, self.id,bounty_amount,mint,token_name
         ))
     }

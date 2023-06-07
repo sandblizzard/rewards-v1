@@ -12,13 +12,14 @@ export function load(loadData): {
 } {
 	const referrer = loadData.url.searchParams.get('referrer');
 	const createBountyInput = {
-		domain: loadData.url.searchParams.get('domain') ?? null,
-		subDomain: loadData.url.searchParams.get('subDomain') ?? null,
+		domain: loadData.url.searchParams.get('organization') ?? null,
+		subDomain: loadData.url.searchParams.get('team') ?? null,
 		id: loadData.url.searchParams.get('id') ?? null,
 		bountyAmount: parseInt(loadData.url.searchParams.get('bountyAmount')) ?? null,
 		token: loadData.url.searchParams.get('token') ?? null,
 		mint: loadData.url.searchParams.get('mint') ?? null
 	};
+	console.log('createBountyInput', createBountyInput);
 
 	return {
 		referrer,

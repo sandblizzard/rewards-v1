@@ -8,6 +8,8 @@ use spl_associated_token_account::solana_program::pubkey::Pubkey;
 
 use crate::{domains::RelayerDomain, external::get_octocrab_instance};
 
+pub static NUMBER_OF_DAYS_OPEN: u64 = 60 * 60 * 24 * 10;
+
 /// try_fetch_indexable_domains
 ///
 /// get all domains that are to be indexed
