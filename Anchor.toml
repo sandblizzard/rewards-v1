@@ -7,13 +7,13 @@ skip-lint = false
 url = "https://api.apr.dev"
 
 [programs.devnet]
-bounty = "sAnDqRELfCjpWCTrV8f3yX5nT9bPzq81u5eP3KbvamY"
+bounty = "74cnoYJmzNmGLVwj1k88eGRXMZ6srVnNt32dn7qiivpU"
 
 [programs.mainnet]
-bounty = "sAnDqRELfCjpWCTrV8f3yX5nT9bPzq81u5eP3KbvamY"
+bounty = "74cnoYJmzNmGLVwj1k88eGRXMZ6srVnNt32dn7qiivpU"
 
 [programs.localnet]
-bounty = "sAnDqRELfCjpWCTrV8f3yX5nT9bPzq81u5eP3KbvamY"
+bounty = "74cnoYJmzNmGLVwj1k88eGRXMZ6srVnNt32dn7qiivpU"
 
 [provider]
 cluster = "localnet"
@@ -21,3 +21,5 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+build_sdk = "cd sdk-ts && yarn build"
+

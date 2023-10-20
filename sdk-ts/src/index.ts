@@ -201,7 +201,12 @@ export class BountySdk {
     }
 
 
-    createBountyVtx = async (id: string, bountyAmount: anchor.BN, bountyCreator: anchor.web3.PublicKey, mint: anchor.web3.PublicKey) => this.createVersionedTransaction([(await this.createBounty(id, bountyAmount, bountyCreator, mint)).ix])
+    createBountyVtx = async ({
+        id,
+        bountyAmount,
+        bountyCreator,
+        mint
+    }: { id: string, bountyAmount: anchor.BN, bountyCreator: anchor.web3.PublicKey, mint: anchor.web3.PublicKey }) => this.createVersionedTransaction([(await this.createBounty(id, bountyAmount, bountyCreator, mint)).ix])
 
     /**
      * 
