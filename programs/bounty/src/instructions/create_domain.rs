@@ -4,10 +4,12 @@ use anchor_lang::prelude::*;
 use std::mem::size_of;
 
 #[derive(Accounts)]
-#[instruction( domain_type: String,
+#[instruction( 
+    domain_type: String,
     platform: String,
     organization: String,
-    team: String)]
+    team: String
+)]
 pub struct CreateDomain<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,

@@ -8,14 +8,14 @@ use std::mem::size_of;
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
-    /// creator is the owner
+    /// creator is the owner of the protocol
     /// should become a smart wallet over time
     #[account(mut)]
-    pub creator: Signer<'info>,
+    pub protocol_owner: Signer<'info>,
 
     #[account(
         init,
-        payer=creator,
+        payer=protocol_owner,
         seeds=[
             BOUNTY_SEED.as_bytes(), // only one protocol config
         ],
@@ -24,25 +24,21 @@ pub struct Initialize<'info> {
     )]
     pub protocol: Account<'info, protocol::Protocol>,
 
-    pub sand_token_mint: Account<'info, Mint>,
-
-    // tokenAccount for the sandtoken
+    /// mint to be used to distribute rewards
     #[account(
         init,
-        payer = creator,
         seeds=[
             BOUNTY_SEED.as_bytes(),
-            sand_token_mint.key().as_ref(),
+            "sand_mint".as_bytes(),
         ],
         bump,
-        token::mint = sand_token_mint,
-        token::authority = creator,
+        payer=protocol_owner,
+        mint::decimals=9,
+        mint::authority=sand_mint,
+        mint::freeze_authority=sand_mint,
 
     )]
-    pub sand_token_account: Account<'info, TokenAccount>,
-
-    /// mint used for the collection
-    pub collection: Account<'info, Mint>,
+    pub sand_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -54,14 +50,13 @@ pub struct Initialize<'info> {
 /// control it
 pub fn handler(ctx: Context<Initialize>) -> Result<()> {
     let protocol = &mut ctx.accounts.protocol;
-    let collection = &mut ctx.accounts.collection;
+
     // Initialize collection
     protocol
         .initialize(
             ctx.bumps.get("protocol").unwrap(),
-            &ctx.accounts.creator.key(),
-            &collection.key(),
-            &ctx.accounts.sand_token_account.key(),
+            &ctx.accounts.protocol_owner.key(),
+            &mut ctx.accounts.sand_mint.key(),
         )
         .unwrap();
 

@@ -1,9 +1,20 @@
 {
   "name": "sdk-ts",
   "packageManager": "yarn@3.5.0",
+  "scripts": {
+    "idl": "cp ../target/types/bounty.ts ./src/idl/bounty.ts",
+    "build": "rm -rf dist && yarn idl && tsc --build --verbose tsconfig.json",
+    "release": "yarn build && standard-version"
+  },
   "devDependencies": {
-    "@project-serum/anchor": "^0.25.0",
+    "@types/node-fetch": "^2.6.7",
+    "standard-version": "^9.5.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.27.0",
     "@solana/spl-token": "^0.3.7",
-    "typescript": "^5.0.4"
+    "@types/node": "^20.8.7"
   }
 }

@@ -9,7 +9,7 @@
     "bounty-cli": "./target/debug/bounty-cli"
   },
   "dependencies": {
-    "@project-serum/anchor": "^0.25.0",
+    "@coral-xyz/anchor": "^0.27.0",
     "@solana/spl-token": "^0.3.7"
   },
   "devDependencies": {

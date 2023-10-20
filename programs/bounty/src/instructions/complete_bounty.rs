@@ -47,7 +47,10 @@ pub struct CompleteBounty<'info> {
     /// relayer that wants to complete the transaction
     /// validate the seeds
     #[account(
-        seeds=[BOUNTY_SEED.as_bytes(), relayer.owner.key().to_bytes().as_ref()],
+        seeds=[
+            BOUNTY_SEED.as_bytes(), 
+            relayer.owner.key().to_bytes().as_ref()
+        ],
         bump = relayer.bump,
         constraint = relayer.active
     )]

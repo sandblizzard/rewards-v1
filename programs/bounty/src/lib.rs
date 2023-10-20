@@ -5,7 +5,7 @@ pub mod utils;
 
 pub use instructions::*;
 pub use state::*;
-declare_id!("sAnDqRELfCjpWCTrV8f3yX5nT9bPzq81u5eP3KbvamY");
+declare_id!("74cnoYJmzNmGLVwj1k88eGRXMZ6srVnNt32dn7qiivpU");
 
 #[program]
 pub mod bounty {
@@ -14,12 +14,14 @@ pub mod bounty {
 
     /// initialize
     ///
-    /// Initializes the protocol and sets the config
+    /// - Initializes the protocol
+    /// - creates the bounty mint
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         initialize::handler(ctx)
     }
 
     /// add bounty denomination
+    /// it
     pub fn add_bounty_denomination(ctx: Context<AddBountyDenomination>) -> Result<()> {
         add_bounty_denomination::handler(ctx)
     }
