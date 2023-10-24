@@ -254,12 +254,91 @@ export type Bounty = {
           ]
         },
         {
-          "name": "relayer",
+          "name": "bounty",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bounty to be completed",
+            "FIXME"
+          ]
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solver1",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "up to 4 receivers"
+          ]
+        },
+        {
+          "name": "solver2",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "solver3",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "solver4",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "completeBountyAsRelayer",
+      "docs": [
+        "complete_bounty",
+        "",
+        "Try to complete bounty"
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "only owners or relayers can complete bounties"
+          ]
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeCollector",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bountyDenomination",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "relayer that wants to complete the transaction",
-            "validate the seeds"
+            "bounty denomination is the allowed denomination of a bounty",
+            "it needs to be checked against the fee collector and the mint"
           ]
         },
         {
@@ -311,6 +390,15 @@ export type Bounty = {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "relayer",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "relayer that wants to complete the transaction",
+            "validate the seeds"
+          ]
         }
       ],
       "args": []
@@ -773,6 +861,21 @@ export type Bounty = {
       "code": 6007,
       "name": "WrongDenominationMint",
       "msg": "invalid denomination mint"
+    },
+    {
+      "code": 6008,
+      "name": "AccountIsNotSigner",
+      "msg": "Account is not signer"
+    },
+    {
+      "code": 6009,
+      "name": "AccountNotActive",
+      "msg": "Account is not active"
+    },
+    {
+      "code": 6010,
+      "name": "DomainNotActive",
+      "msg": "Domain is not active"
     }
   ]
 };
@@ -1033,12 +1136,91 @@ export const IDL: Bounty = {
           ]
         },
         {
-          "name": "relayer",
+          "name": "bounty",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "bounty to be completed",
+            "FIXME"
+          ]
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solver1",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "up to 4 receivers"
+          ]
+        },
+        {
+          "name": "solver2",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "solver3",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "solver4",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "completeBountyAsRelayer",
+      "docs": [
+        "complete_bounty",
+        "",
+        "Try to complete bounty"
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "only owners or relayers can complete bounties"
+          ]
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeCollector",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bountyDenomination",
           "isMut": false,
           "isSigner": false,
           "docs": [
-            "relayer that wants to complete the transaction",
-            "validate the seeds"
+            "bounty denomination is the allowed denomination of a bounty",
+            "it needs to be checked against the fee collector and the mint"
           ]
         },
         {
@@ -1090,6 +1272,15 @@ export const IDL: Bounty = {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "relayer",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "relayer that wants to complete the transaction",
+            "validate the seeds"
+          ]
         }
       ],
       "args": []
@@ -1552,6 +1743,21 @@ export const IDL: Bounty = {
       "code": 6007,
       "name": "WrongDenominationMint",
       "msg": "invalid denomination mint"
+    },
+    {
+      "code": 6008,
+      "name": "AccountIsNotSigner",
+      "msg": "Account is not signer"
+    },
+    {
+      "code": 6009,
+      "name": "AccountNotActive",
+      "msg": "Account is not active"
+    },
+    {
+      "code": 6010,
+      "name": "DomainNotActive",
+      "msg": "Domain is not active"
     }
   ]
 };

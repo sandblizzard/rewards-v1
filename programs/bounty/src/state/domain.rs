@@ -32,13 +32,16 @@ impl Domain {
         team: &str,
         platform: &str,
         owner: &Pubkey,
+        bump: &u8,
     ) -> Result<()> {
         self.data.domain_type = domain_type.to_string();
         self.data.organization = organization.to_string();
         self.data.platform = platform.to_string();
+
         self.owner = *owner;
         self.active = true;
         self.data.team = team.to_string();
+        self.bump = *bump;
         Ok(())
     }
 

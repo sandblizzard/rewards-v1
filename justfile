@@ -1,12 +1,17 @@
-# Build Solstreams project
-build:
+# Build the bounty sdk 
+build_sdk:
+    @echo "Building Bounty SDK..."
+    anchor run build_sdk
+
+# Build the bounty program
+build_program:
     @echo "Building Bounty..."
     anchor build 
 
-# Build the Solstream sdk 
-build_sdk: build
-    @echo "Building Bounty SDK..."
-    anchor run build_sdk
+# Build Bounty project
+build: build_program build_sdk
+
+
 
 # Test project using the sdk
 test: build_sdk
@@ -18,7 +23,7 @@ deploy_devnet:
     @echo "Deploying Bounty to devnet ..."
     anchor deploy --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
 
-# Deploy Solstreams to a specific RPC_URL
+# Deploy Bounty to a specific RPC_URL
 deploy RPC_URL:
     @echo "Deploying Bounty to RPC..."
     anchor deploy --provider.cluster {{RPC_URL}} --provider.wallet ~/.config/solana/id.json
@@ -40,9 +45,18 @@ generate_keypair NAME:
     solana-keygen new -o ~/.config/solana/{{NAME}}.json --no-bip39-passphrase
 
 # Get program keypair address
-get_program_address:
+program_address:
     @echo "Checking program address..."
     solana address --keypair target/deploy/bounty-keypair.json
+
+airdrop: 
+    @echo "Airdropping..."
+    solana airdrop -u devnet -k ~/.config/solana/id.json 1
+
+
+balance: 
+    @echo "Checking balance..."
+    solana balance
 
 # Release SDK
 release_sdk:

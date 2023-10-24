@@ -583,6 +583,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bounty-sdk@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "bounty-sdk@workspace:."
+  dependencies:
+    "@coral-xyz/anchor": ^0.27.0
+    "@solana/spl-token": ^0.3.7
+    "@types/node": ^20.8.7
+    "@types/node-fetch": ^2.6.7
+    standard-version: ^9.5.0
+    ts-node: ^10.9.1
+    typescript: ^5.2.2
+  languageName: unknown
+  linkType: soft
+
 "brace-expansion@npm:^1.1.7":
   version: 1.1.11
   resolution: "brace-expansion@npm:1.1.11"
@@ -2657,20 +2671,6 @@ __metadata:
   checksum: cab8f25ae6f1434abee8d80023d7e72b598cf1327164ddab31003c51215526801e40b66c5e65d658a0af1e9d6478cadcb4c745f4bd6751f97d8644786c0978b0
   languageName: node
   linkType: hard
-
-"sdk-ts@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "sdk-ts@workspace:."
-  dependencies:
-    "@coral-xyz/anchor": ^0.27.0
-    "@solana/spl-token": ^0.3.7
-    "@types/node": ^20.8.7
-    "@types/node-fetch": ^2.6.7
-    standard-version: ^9.5.0
-    ts-node: ^10.9.1
-    typescript: ^5.2.2
-  languageName: unknown
-  linkType: soft
 
 "semver@npm:2 || 3 || 4 || 5":
   version: 5.7.2

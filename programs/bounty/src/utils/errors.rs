@@ -26,4 +26,13 @@ pub enum BlizzardError {
 
     #[msg("invalid denomination mint")]
     WrongDenominationMint,
+
+    #[msg("Account is not signer")]
+    AccountIsNotSigner,
+
+    #[msg("Account is not active")]
+    AccountNotActive,
+
+    #[msg("Domain is not active")]
+    DomainNotActive,
 }

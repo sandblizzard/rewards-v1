@@ -3,7 +3,7 @@ name = "bounty"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2021"
-rust="1.66.1"
+rust="1.69.1"
 
 [lib]
 crate-type = ["cdylib", "lib"]
@@ -17,8 +17,8 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = {git = "https://github.com/coral-xyz/anchor",feature=["init_if_needed"]}
-anchor-spl = {git = "https://github.com/coral-xyz/anchor"}
+anchor-lang = {version = "0.28.0",feature=["init_if_needed"]}
+anchor-spl = "0.28.0"
 winnow="0.4.1"
 solana-program = "~1.14.16"
 bytemuck = "1.13.1"

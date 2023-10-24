@@ -35,6 +35,9 @@ pub struct CreateBounty<'info> {
     pub bounty: Box<Account<'info, Bounty>>,
 
     /// domain to attach the bounty to
+    #[account(
+        constraint = domain.active @BlizzardError::DomainNotActive,
+    )]
     pub domain: Box<Account<'info, Domain>>,
 
     /// Account to credit the user

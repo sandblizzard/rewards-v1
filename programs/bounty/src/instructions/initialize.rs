@@ -3,7 +3,6 @@ use crate::utils::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 use anchor_spl::token::Token;
-use anchor_spl::token::TokenAccount;
 use std::mem::size_of;
 
 #[derive(Accounts)]
@@ -49,6 +48,7 @@ pub struct Initialize<'info> {
 /// creates a new protocol config and sets who gets to
 /// control it
 pub fn handler(ctx: Context<Initialize>) -> Result<()> {
+    msg!("initialize protocol");
     let protocol = &mut ctx.accounts.protocol;
 
     // Initialize collection

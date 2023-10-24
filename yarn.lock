@@ -219,6 +219,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/chai-as-promised@npm:^7.1.7":
+  version: 7.1.7
+  resolution: "@types/chai-as-promised@npm:7.1.7"
+  dependencies:
+    "@types/chai": "*"
+  checksum: 59199afbd91289588648e263d7f32f7d72fa9c0075f3c17b1e760e10fdc1a310c2170a392b0d17d96cfff2c51daca72839eed6d80142f9230c9784b8e08ba676
+  languageName: node
+  linkType: hard
+
+"@types/chai@npm:*":
+  version: 4.3.9
+  resolution: "@types/chai@npm:4.3.9"
+  checksum: 2300a2c7abd4cb590349927a759b3d0172211a69f363db06e585faf7874a47f125ef3b364cce4f6190e3668147587fc11164c791c9560cf9bce8478fb7019610
+  languageName: node
+  linkType: hard
+
 "@types/chai@npm:^4.3.0":
   version: 4.3.4
   resolution: "@types/chai@npm:4.3.4"
@@ -600,6 +616,17 @@ __metadata:
   version: 6.3.0
   resolution: "camelcase@npm:6.3.0"
   checksum: 8c96818a9076434998511251dcb2761a94817ea17dbdc37f47ac080bd088fc62c7369429a19e2178b993497132c8cbcf5cc1f44ba963e76782ba469c0474938d
+  languageName: node
+  linkType: hard
+
+"chai-as-promised@npm:^7.1.1":
+  version: 7.1.1
+  resolution: "chai-as-promised@npm:7.1.1"
+  dependencies:
+    check-error: ^1.0.2
+  peerDependencies:
+    chai: ">= 2.1.2 < 5"
+  checksum: 7262868a5b51a12af4e432838ddf97a893109266a505808e1868ba63a12de7ee1166e9d43b5c501a190c377c1b11ecb9ff8e093c89f097ad96c397e8ec0f8d6a
   languageName: node
   linkType: hard
 
@@ -1929,8 +1956,10 @@ __metadata:
     "@solana/spl-token": ^0.3.7
     "@types/bn.js": ^5.1.0
     "@types/chai": ^4.3.0
+    "@types/chai-as-promised": ^7.1.7
     "@types/mocha": ^9.0.0
     chai: ^4.3.4
+    chai-as-promised: ^7.1.1
     mocha: ^9.0.3
     prettier: ^2.6.2
     ts-mocha: ^10.0.0
