@@ -1,6 +1,7 @@
 {
-  "name": "sdk-ts",
+  "name": "bounty-sdk",
   "packageManager": "yarn@3.5.0",
+  "version": "0.0.2",
   "scripts": {
     "idl": "cp ../target/types/bounty.ts ./src/idl/bounty.ts",
     "build": "rm -rf dist && yarn idl && tsc --build --verbose tsconfig.json",
