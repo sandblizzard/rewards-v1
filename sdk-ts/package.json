@@ -1,7 +1,20 @@
 {
   "name": "bounty-sdk",
   "packageManager": "yarn@3.5.0",
-  "version": "0.0.2",
+  "version": "0.0.3",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    "types": "./dist/types/index.d.ts",
+    "require": "./dist/cjs/index.js",
+    "import": "./dist/esm/index.js"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "license": "MIT",
   "scripts": {
     "idl": "cp ../target/types/bounty.ts ./src/idl/bounty.ts",
     "build": "rm -rf dist && yarn idl && tsc --build --verbose tsconfig.json",
