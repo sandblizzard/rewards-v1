@@ -1,15 +1,10 @@
 {
   "name": "bounty-sdk",
   "packageManager": "yarn@3.5.0",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/types/index.d.ts",
-  "exports": {
-    "types": "./dist/types/index.d.ts",
-    "require": "./dist/cjs/index.js",
-    "import": "./dist/esm/index.js"
-  },
   "engines": {
     "node": ">=11"
   },
