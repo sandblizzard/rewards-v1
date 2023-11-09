@@ -5,11 +5,14 @@
     ],
     "compilerOptions": {
         "outDir": "dist/esm",
+        "moduleResolution": "node",
         "declarationDir": "dist/types",
-        "target": "ESNext",
-        "module": "ESNext",
+        "target": "es2019",
+        "module": "es2022",
         "sourceMap": true,
         "declaration": true,
-        "declarationMap": true
+        "declarationMap": true,
+        "strict": true,
+        "esModuleInterop": true,
     }
 }

@@ -126,7 +126,7 @@ impl BountySdk {
         let ix = Instruction {
             program_id: bounty::id(),
             accounts: accounts,
-            data: data,
+            data: data.into(),
         };
 
         match self.program.request().instruction(ix).send() {

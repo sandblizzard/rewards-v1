@@ -118,7 +118,7 @@ describe('bounty', () => {
 
     console.log("Initializes Protocol...")
     const initializeProtocol = await bountySdk.initializeProtocol();
-    await sendAndConfirmTransaction(provider.connection, await initializeProtocol.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await initializeProtocol.vtx, [wallet.payer])
 
     console.log("Initializes Fee Collector...")
     const initDenomination = await bountySdk.addBountyDenomination(
@@ -126,7 +126,7 @@ describe('bounty', () => {
         mint: bonkMint,
       }
     );
-    await sendAndConfirmTransaction(provider.connection, await initDenomination.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await initDenomination.vtx, [wallet.payer])
 
     // create domain 
     console.log("Creates Domain...")
@@ -138,7 +138,7 @@ describe('bounty', () => {
         domainType: 'issues'
       }
     );
-    await sendAndConfirmTransaction(provider.connection, await createDomain.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createDomain.vtx, [wallet.payer])
 
     console.log("Finished setting up the test environment..")
   });
@@ -158,7 +158,7 @@ describe('bounty', () => {
           domainType: 'issues'
         }
       );
-      await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, undefined, wallet.payer)
+      await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [wallet.payer])
 
       let createdBounty = await program.account.bounty.fetch(
         createBounty.bounty
@@ -181,7 +181,7 @@ describe('bounty', () => {
     const createRelayer = await bountySdk.addRelayer(
       relayerKeys.publicKey,
     );
-    await sendAndConfirmTransaction(provider.connection, await createRelayer.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createRelayer.vtx, [wallet.payer])
 
     console.log("Get relayer account from key", relayerKeys.publicKey.toString())
     const relayerAccount = await program.account.relayer.fetch(createRelayer.relayerPda);
@@ -192,7 +192,7 @@ describe('bounty', () => {
     const removeRelayer = await bountySdk.removeRelayer(
       relayerKeys.publicKey,
     );
-    await sendAndConfirmTransaction(provider.connection, await removeRelayer.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await removeRelayer.vtx, [wallet.payer])
 
     const deactivatedRelayer = await program.account.relayer.fetch(createRelayer.relayerPda);
     expect(deactivatedRelayer.active, `relayer is not deactivated`).eq(false);
@@ -209,7 +209,7 @@ describe('bounty', () => {
     const createRelayer = await bountySdk.addRelayer(
       relayerKeys.publicKey,
     );
-    await sendAndConfirmTransaction(provider.connection, await createRelayer.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createRelayer.vtx, [wallet.payer])
 
     console.log("Creating bounty with id", bountyId, "...")
     const createBounty = await bountySdk.createBounty({
@@ -220,7 +220,7 @@ describe('bounty', () => {
       organization, team, platform, domainType: 'issues'
     }
     );
-    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, undefined, userWallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [userWallet.payer])
 
     let createdBounty = await program.account.bounty.fetch(
       createBounty.bounty
@@ -238,7 +238,7 @@ describe('bounty', () => {
         solversWallets: [user.publicKey]
       }
     );
-    await sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, undefined, relayerWallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, [relayerWallet.payer])
     const bountyAccount = await program.account.bounty.fetch(
       createBounty.bounty
     );
@@ -257,7 +257,7 @@ describe('bounty', () => {
       organization, team, platform, domainType: 'issues'
     }
     );
-    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, undefined, userWallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [userWallet.payer])
 
     let createdBounty = await program.account.bounty.fetch(
       createBounty.bounty
@@ -275,7 +275,7 @@ describe('bounty', () => {
       }
     );
 
-    await sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, undefined, userWallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, [userWallet.payer])
     const bountyAccount = await program.account.bounty.fetch(
       createBounty.bounty
     );
@@ -293,7 +293,7 @@ describe('bounty', () => {
       mint: bonkMint,
       organization, team, platform, domainType: 'issues'
     });
-    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [wallet.payer])
 
     let createdBounty = await program.account.bounty.fetch(
       createBounty.bounty
@@ -310,7 +310,7 @@ describe('bounty', () => {
       }
     );
 
-    await expect(sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, undefined, userWallet.payer)).to.be.rejectedWith(Error)
+    await expect(sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, [userWallet.payer])).to.be.rejectedWith(Error)
   });
 
   it('Create bounty and complete it with no solver -> Should Succeed', async () => {
@@ -323,7 +323,7 @@ describe('bounty', () => {
       mint: bonkMint,
       organization, team, platform, domainType: 'issues'
     });
-    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [wallet.payer])
 
     let createdBounty = await program.account.bounty.fetch(
       createBounty.bounty
@@ -340,7 +340,7 @@ describe('bounty', () => {
       }
     );
 
-    await sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, [wallet.payer])
     const bountyAccount = await program.account.bounty.fetch(
       createBounty.bounty
     );
@@ -359,7 +359,7 @@ describe('bounty', () => {
       organization, team, platform, domainType: 'issues'
     }
     );
-    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [wallet.payer])
 
     let createdBounty = await program.account.bounty.fetch(
       createBounty.bounty
@@ -375,13 +375,13 @@ describe('bounty', () => {
     const createRelayer = await bountySdk.addRelayer(
       relayerKeys.publicKey,
     );
-    await sendAndConfirmTransaction(provider.connection, await createRelayer.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createRelayer.vtx, [wallet.payer])
 
     // deactivate relayer
     const deactivateRelayer = await bountySdk.removeRelayer(
       relayerKeys.publicKey,
     );
-    await sendAndConfirmTransaction(provider.connection, await deactivateRelayer.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await deactivateRelayer.vtx, [wallet.payer])
 
     // try to complete bounty as anyone
     const completeBounty = await bountySdk.completeBounty(
@@ -394,7 +394,7 @@ describe('bounty', () => {
       }
     );
 
-    await expect(sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, undefined, relayerWallet.payer)).to.be.rejectedWith(Error)
+    await expect(sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, [relayerWallet.payer])).to.be.rejectedWith(Error)
   })
 
   it('try to create same domain twice -> should fail', async () => {
@@ -409,7 +409,7 @@ describe('bounty', () => {
         domainType
       }
     );
-    await sendAndConfirmTransaction(provider.connection, await domain1.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await domain1.vtx, [wallet.payer])
     const domain1Account = await program.account.domain.fetch(
       domain1.domainPda
     );
@@ -426,7 +426,7 @@ describe('bounty', () => {
         domainType
       }
     );
-    await expect(sendAndConfirmTransaction(provider.connection, await domain2.vtx, undefined, wallet.payer)).to.be.rejectedWith(Error)
+    await expect(sendAndConfirmTransaction(provider.connection, await domain2.vtx, [wallet.payer])).to.be.rejectedWith(Error)
   });
 
   it("try to create a bounty with a domain that doesn't exist -> should succeed", async () => {
@@ -440,7 +440,7 @@ describe('bounty', () => {
       organization, team, platform, domainType: 'issues'
     }
     )
-    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [wallet.payer])
   });
 
   it('try to create a bounty with a domain that is not active -> should fail', async () => {
@@ -455,7 +455,7 @@ describe('bounty', () => {
         domainType: 'issues'
       }
     );
-    await sendAndConfirmTransaction(provider.connection, await createDomain.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await createDomain.vtx, [wallet.payer])
 
     // deactivate domain
     const deactivateDomain = await bountySdk.deactivateDomain(
@@ -466,7 +466,7 @@ describe('bounty', () => {
         domainType: 'issues'
       }
     );
-    await sendAndConfirmTransaction(provider.connection, await deactivateDomain.vtx, undefined, wallet.payer)
+    await sendAndConfirmTransaction(provider.connection, await deactivateDomain.vtx, [wallet.payer])
 
     // try to create bounty with inactive domain
     const createBounty = await bountySdk.createBounty({
@@ -477,7 +477,7 @@ describe('bounty', () => {
       organization, team, platform, domainType: 'issues'
     }
     );
-    await expect(sendAndConfirmTransaction(provider.connection, await createBounty.vtx, undefined, wallet.payer)).to.be.rejectedWith(Error)
+    await expect(sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [wallet.payer])).to.be.rejectedWith(Error)
   })
 
 });

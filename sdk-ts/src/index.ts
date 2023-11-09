@@ -1,11 +1,12 @@
-import * as anchor from "@coral-xyz/anchor"
+import { BN, web3, Program, AnchorProvider } from "@coral-xyz/anchor";
 import { Bounty, IDL } from "./idl/bounty"
 import { getAssociatedTokenAddress, getMint } from '@solana/spl-token';
+import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 
 export * as utils from './utils';
 export { Bounty }
 
-export const BOUNTY_PROGRAM_ID = new anchor.web3.PublicKey("BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e");
+export const BOUNTY_PROGRAM_ID = new web3.PublicKey("BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e");
 
 /**
  * getProtocolPDA 
@@ -13,29 +14,29 @@ export const BOUNTY_PROGRAM_ID = new anchor.web3.PublicKey("BoUNtye7MsbG3rWSXxgX
  * @returns 
  */
 const getProtocolPDA = () => {
-    return anchor.web3.PublicKey.findProgramAddressSync(
+    return web3.PublicKey.findProgramAddressSync(
         [Buffer.from("BOUNTY_SANDBLIZZARD")],
         BOUNTY_PROGRAM_ID
     )
 }
 
 const getSandMint = () => {
-    return anchor.web3.PublicKey.findProgramAddressSync(
+    return web3.PublicKey.findProgramAddressSync(
         [Buffer.from("BOUNTY_SANDBLIZZARD"), Buffer.from("sand_mint")],
         BOUNTY_PROGRAM_ID
     )
 }
 
 
-const getDenominationPDA = (mint: anchor.web3.PublicKey) => {
-    return anchor.web3.PublicKey.findProgramAddressSync(
+const getDenominationPDA = (mint: web3.PublicKey) => {
+    return web3.PublicKey.findProgramAddressSync(
         [Buffer.from("BOUNTY_SANDBLIZZARD"), Buffer.from("DENOMINATION"), mint.toBuffer()],
         BOUNTY_PROGRAM_ID
     )
 }
 
-const getFeeCollectorPDA = (mint: anchor.web3.PublicKey) => {
-    return anchor.web3.PublicKey.findProgramAddressSync(
+const getFeeCollectorPDA = (mint: web3.PublicKey) => {
+    return web3.PublicKey.findProgramAddressSync(
         [Buffer.from("BOUNTY_SANDBLIZZARD"), Buffer.from("FEE_COLLECTOR"), mint.toBuffer()],
         BOUNTY_PROGRAM_ID
     )
@@ -48,7 +49,7 @@ const getFeeCollectorPDA = (mint: anchor.web3.PublicKey) => {
  * @returns 
  */
 const getBountyPDA = (id: string) => {
-    return anchor.web3.PublicKey.findProgramAddressSync(
+    return web3.PublicKey.findProgramAddressSync(
         [Buffer.from("BOUNTY_SANDBLIZZARD"), Buffer.from(id)],
         BOUNTY_PROGRAM_ID
     )
@@ -60,7 +61,7 @@ const getDomainPDA = ({
     team,
     domainType
 }: { platform: string, organization: string, team: string, domainType: string }) => {
-    return anchor.web3.PublicKey.findProgramAddressSync(
+    return web3.PublicKey.findProgramAddressSync(
         [Buffer.from("BOUNTY_SANDBLIZZARD"),
         Buffer.from(platform),
         Buffer.from(organization),
@@ -71,8 +72,8 @@ const getDomainPDA = ({
     )
 }
 
-const getEscrowPDA = (bounty: anchor.web3.PublicKey) => {
-    return anchor.web3.PublicKey.findProgramAddressSync(
+const getEscrowPDA = (bounty: web3.PublicKey) => {
+    return web3.PublicKey.findProgramAddressSync(
         [Buffer.from("BOUNTY_SANDBLIZZARD"),
         bounty.toBuffer(),
         ],
@@ -80,8 +81,8 @@ const getEscrowPDA = (bounty: anchor.web3.PublicKey) => {
     )
 }
 
-const getRelayerPDA = (relayer: anchor.web3.PublicKey) => {
-    return anchor.web3.PublicKey.findProgramAddressSync(
+const getRelayerPDA = (relayer: web3.PublicKey) => {
+    return web3.PublicKey.findProgramAddressSync(
         [Buffer.from("BOUNTY_SANDBLIZZARD"),
         relayer.toBuffer(),
         ],
@@ -104,15 +105,18 @@ export {
  * and interact with the Bounty Protocol
  */
 export class BountySdk {
-    public program: anchor.Program<Bounty>;
+    public program: Program<Bounty>;
+    readonly connection: web3.Connection
     constructor(
-        readonly signer: anchor.web3.PublicKey,
-        readonly connection?: anchor.web3.Connection,
+        readonly signer: web3.PublicKey,
+        protoConnection?: web3.Connection,
     ) {
+        const connection = protoConnection ?? new web3.Connection("https://api.solana.com");
         this.program = BountySdk.setUpProgram({
-            keypair: anchor.web3.Keypair.generate(),
+            keypair: web3.Keypair.generate(),
             connection: connection
         });
+        this.connection = connection;
     }
 
     private static setUpProgram({
@@ -120,14 +124,14 @@ export class BountySdk {
         connection
     }:
         {
-            keypair: anchor.web3.Keypair,
-            connection?: anchor.web3.Connection
+            keypair: web3.Keypair,
+            connection?: web3.Connection
         }) {
-        const provider = new anchor.AnchorProvider(connection ?? new anchor.web3.Connection("https://api.solana.com"), new anchor.Wallet(keypair), {
+        const provider = new AnchorProvider(connection ?? new web3.Connection("https://api.solana.com"), new NodeWallet(keypair), {
             preflightCommitment: "recent",
             commitment: "confirmed",
         })
-        return new anchor.Program<Bounty>(IDL, BOUNTY_PROGRAM_ID, provider);
+        return new Program<Bounty>(IDL, BOUNTY_PROGRAM_ID, provider);
     }
 
     /**
@@ -137,9 +141,9 @@ export class BountySdk {
      * @returns
      */
     createVersionedTransaction = async (
-        ixs: anchor.web3.TransactionInstruction[], payer: anchor.web3.PublicKey = this.signer
+        ixs: web3.TransactionInstruction[], payer: web3.PublicKey = this.signer
     ) => {
-        const txMessage = await new anchor.web3.TransactionMessage({
+        const txMessage = await new web3.TransactionMessage({
             instructions: ixs,
             recentBlockhash: (
                 await this.program.provider.connection.getLatestBlockhash()
@@ -147,7 +151,7 @@ export class BountySdk {
             payerKey: payer,
         }).compileToV0Message();
 
-        return new anchor.web3.VersionedTransaction(txMessage);
+        return new web3.VersionedTransaction(txMessage);
     };
 
     initializeProtocol = async () => {
@@ -168,7 +172,7 @@ export class BountySdk {
     }
 
 
-    deactivateBountyDenomination = async (mint: anchor.web3.PublicKey) => {
+    deactivateBountyDenomination = async (mint: web3.PublicKey) => {
         const denominationPda = getDenominationPDA(mint);
         const deactivateBountyDenominationIx = await this.program.methods.deactivateBountyDenomination().accounts({
             mint,
@@ -183,7 +187,7 @@ export class BountySdk {
         }
     }
 
-    private accountExists(account: anchor.web3.PublicKey) {
+    private accountExists(account: web3.PublicKey) {
         return this.program.provider.connection.getAccountInfo(account);
     }
 
@@ -196,9 +200,9 @@ export class BountySdk {
         organization,
         team,
         domainType
-    }: { id: string, bountyAmount: anchor.BN, bountyCreator: anchor.web3.PublicKey, mint: anchor.web3.PublicKey, platform: string, organization: string, team: string, domainType: string }) => {
+    }: { id: string, bountyAmount: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string }) => {
         const denominationPda = getDenominationPDA(mint);
-        const transactionInstructions: anchor.web3.TransactionInstruction[] = [];
+        const transactionInstructions: web3.TransactionInstruction[] = [];
         if (!(await this.accountExists(denominationPda[0]))) {
             // create denomination 
             const createDenominationIx = (await this.addBountyDenomination({ mint })).ix;
@@ -260,7 +264,7 @@ export class BountySdk {
             completer,
             solversWallets
         }:
-            { id: string, relayer?: anchor.web3.PublicKey, mint: anchor.web3.PublicKey, completer: anchor.web3.PublicKey, solversWallets: anchor.web3.PublicKey[] }) => {
+            { id: string, relayer?: web3.PublicKey, mint: web3.PublicKey, completer: web3.PublicKey, solversWallets: web3.PublicKey[] }) => {
 
         // validate the solvers 
         if (solversWallets.length > 4) {
@@ -290,7 +294,7 @@ export class BountySdk {
         const bountyPda = getBountyPDA(id);
         const escrowPDA = getEscrowPDA(bountyPda[0]);
 
-        let completeBountyIx: anchor.web3.TransactionInstruction;
+        let completeBountyIx: web3.TransactionInstruction;
         if (relayer && (await this.accountExists(relayer))) {
             completeBountyIx = await this.program.methods.completeBountyAsRelayer().accounts({
                 payer: completer,
@@ -324,7 +328,7 @@ export class BountySdk {
 
 
 
-    addRelayer = async (relayerAddress: anchor.web3.PublicKey) => {
+    addRelayer = async (relayerAddress: web3.PublicKey) => {
         const protocolPda = getProtocolPDA();
         const relayerPda = getRelayerPDA(relayerAddress);
         const addRelayerIx = await this.program.methods.addRelayer(relayerAddress).accounts({
@@ -342,7 +346,7 @@ export class BountySdk {
     }
 
 
-    removeRelayer = async (relayerAddress: anchor.web3.PublicKey) => {
+    removeRelayer = async (relayerAddress: web3.PublicKey) => {
         const protocolPda = getProtocolPDA();
         const relayerPda = getRelayerPDA(relayerAddress);
         const removeRelayerIx = await this.program.methods.removeRelayer().accounts({
@@ -404,7 +408,7 @@ export class BountySdk {
     }
 
 
-    addBountyDenomination = async ({ mint }: { mint: anchor.web3.PublicKey }) => {
+    addBountyDenomination = async ({ mint }: { mint: web3.PublicKey }) => {
         const denominationPda = getDenominationPDA(mint);
         const protocolPda = getProtocolPDA();
         if (!(await this.accountExists(protocolPda[0]))) {

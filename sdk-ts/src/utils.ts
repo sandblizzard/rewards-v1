@@ -15,17 +15,18 @@ export const sendAndConfirmTransaction = async (
   connection: web3.Connection,
   transaction: web3.VersionedTransaction,
 
+  signers?: web3.Signer[],
   latestBlockhash?: {
     blockhash: string;
     lastValidBlockHeight: number;
   },
-  ...signers: web3.Signer[]
+
 ) => {
   try {
     if (!latestBlockhash) {
       latestBlockhash = await connection.getLatestBlockhash();
     }
-    if (signers.length !== 0) {
+    if (signers && signers.length !== 0) {
       transaction.sign(signers);
     }
     const signature = await connection.sendTransaction(transaction, {
