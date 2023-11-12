@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.11](https://github.com/sandblizzard/rewards-v1/compare/v0.0.10...v0.0.11) (2023-11-12)
+
+
+### Bug Fixes
+
+* versions to build program correctly. Disabled relayer and cli atm ([d41be1a](https://github.com/sandblizzard/rewards-v1/commit/d41be1a7a13b0d13f24880cad4a97f0fb99096a4))
+
 ### [0.0.10](https://github.com/sandblizzard/rewards-v1/compare/v0.0.9...v0.0.10) (2023-11-08)
 
 ### [0.0.9](https://github.com/sandblizzard/rewards-v1/compare/v0.0.8...v0.0.9) (2023-10-30)
