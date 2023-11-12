@@ -36,7 +36,10 @@ export const sendAndConfirmTransaction = async (
       signature: signature,
       ...latestBlockhash
     });
-    return confirmation
+    return {
+      confirmation,
+      signature
+    }
   } catch (err) {
     console.log("err", err)
     throw err

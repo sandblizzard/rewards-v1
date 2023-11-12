@@ -7,7 +7,8 @@
     "relayer": "solana address --keypair ./../relayer/relayer.json",
     "bounty": "solana address --keypair ./target/deploy/bounty-keypair.json",
     "bounty-cli": "./target/debug/bounty-cli",
-    "init_protocol": "ts-node ./scripts/initializeProtocol.ts"
+    "init_protocol": "ts-node ./scripts/initializeProtocol.ts",
+    "add-relayer": "ts-node ./scripts/addRelayer.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.27.0",
