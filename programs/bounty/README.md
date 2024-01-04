@@ -1,9 +1,9 @@
 # Bounty program
 
-testnet address: sAnDqRELfCjpWCTrV8f3yX5nT9bPzq81u5eP3KbvamY
+devnet address: BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e
 mainnet address: TBD
 
-sAnDqRELfCjpWCTrV8f3yX5nT9bPzq81u5eP3KbvamY
+BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e
 Native token: A3LTRAn8fvZW5kuGRAXB7Xr1VGqVuCQUn1RxWSAtsJFH
 
 ## Deploy

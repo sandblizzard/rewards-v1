@@ -13,11 +13,7 @@ use std::mem::size_of;
 pub struct CreateBounty<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
-
-    pub protocol: Account<'info, Protocol>,
     
-     /// mint to use
-    /// Only bonk
     #[account(
         //constraint = mint.key().to_string().eq(BONK_MINT),
         constraint = creator_account.mint.eq(&mint.key()),
@@ -39,6 +35,9 @@ pub struct CreateBounty<'info> {
     pub bounty: Box<Account<'info, Bounty>>,
 
     /// domain to attach the bounty to
+    #[account(
+        constraint = domain.active @BlizzardError::DomainNotActive,
+    )]
     pub domain: Box<Account<'info, Domain>>,
 
     /// Account to credit the user
@@ -59,6 +58,7 @@ pub struct CreateBounty<'info> {
         init,
         payer = creator,
         seeds = [
+            BOUNTY_SEED.as_bytes(),
             bounty.key().to_bytes().as_ref()
         ],
         bump,
@@ -87,7 +87,7 @@ pub fn handler(
     let creator = &ctx.accounts.creator;
     let creator_account = &ctx.accounts.creator_account;
     let domain = &ctx.accounts.domain;
-    let escrow = &ctx.accounts.escrow;
+    let escrow: &Account<'_, TokenAccount> = &ctx.accounts.escrow;
     let token_program = &ctx.accounts.token_program;
     // initialize the bounty
     ctx.accounts

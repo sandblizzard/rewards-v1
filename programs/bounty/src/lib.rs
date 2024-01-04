@@ -5,7 +5,7 @@ pub mod utils;
 
 pub use instructions::*;
 pub use state::*;
-declare_id!("sAnDqRELfCjpWCTrV8f3yX5nT9bPzq81u5eP3KbvamY");
+declare_id!("BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e");
 
 #[program]
 pub mod bounty {
@@ -14,12 +14,14 @@ pub mod bounty {
 
     /// initialize
     ///
-    /// Initializes the protocol and sets the config
+    /// - Initializes the protocol
+    /// - creates the bounty mint
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         initialize::handler(ctx)
     }
 
     /// add bounty denomination
+    /// it
     pub fn add_bounty_denomination(ctx: Context<AddBountyDenomination>) -> Result<()> {
         add_bounty_denomination::handler(ctx)
     }
@@ -41,8 +43,19 @@ pub mod bounty {
     /// complete_bounty
     ///
     /// Try to complete bounty
-    pub fn complete_bounty(ctx: Context<CompleteBounty>) -> Result<()> {
+    pub fn complete_bounty<'info>(
+        ctx: Context<'_, '_, '_, 'info, CompleteBounty<'info>>,
+    ) -> Result<()> {
         complete_bounty::handler(ctx)
+    }
+
+    /// complete_bounty
+    ///
+    /// Try to complete bounty
+    pub fn complete_bounty_as_relayer<'info>(
+        ctx: Context<'_, '_, '_, 'info, CompleteBountyAsRelayer<'info>>,
+    ) -> Result<()> {
+        complete_bounty_as_relayer::handler(ctx)
     }
 
     pub fn add_relayer(ctx: Context<AddRelayer>, relayer_address: Pubkey) -> Result<()> {

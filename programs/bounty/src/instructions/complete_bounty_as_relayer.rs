@@ -5,13 +5,16 @@ use crate::{
     state::bounty_state::BountyState,
     state::Bounty,
     state::Denomination,
-    state::Protocol,
-    utils::{BlizzardError, BOUNTY_SEED, DENOMINATION_SEED},
+    state::{Protocol, Relayer},
+    utils::{BlizzardError, BOUNTY_SEED, DENOMINATION_SEED}, CompleteBounty,
 };
 
-/// Complete bounty as a bounty creator
+
+
+
+/// complete bounty as a relayer. This means that the relayer will be paid
 #[derive(Accounts)]
-pub struct CompleteBounty<'info> {
+pub struct CompleteBountyAsRelayer<'info> {
     /// only owners or relayers can complete bounties
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -76,14 +79,30 @@ pub struct CompleteBounty<'info> {
 
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
+
+
+    /// relayer that wants to complete the transaction
+    /// validate the seeds
+    #[account(
+        seeds=[
+            BOUNTY_SEED.as_bytes(), 
+            relayer.owner.key().to_bytes().as_ref()
+        ],
+        bump = relayer.bump,
+        constraint = relayer.active @ BlizzardError::AccountNotActive,
+        constraint = relayer.owner.key() == payer.key() @ BlizzardError::AccountIsNotSigner
+    )]
+    pub relayer: Box<Account<'info, Relayer>>,
+
 }
 
-pub fn handler(ctx: Context<CompleteBounty>) -> Result<()> {
+pub fn handler(ctx: Context<CompleteBountyAsRelayer>) -> Result<()> {
     msg!("Complete bounty");
+    let relayer = &ctx.accounts.relayer;
     let payer = &ctx.accounts.payer;
     let bounty = &mut ctx.accounts.bounty;
 
-    if !(bounty.is_owner(&payer.key())) {
+    if !(bounty.is_owner(&payer.key()) || relayer.is_owner(&payer.key())) {
         return Err(BlizzardError::NotAuthToCompleteBounty.into());
     } else {
         // create receivers vec
@@ -106,8 +125,7 @@ pub fn handler(ctx: Context<CompleteBounty>) -> Result<()> {
         }
 
         msg!("Complete bounty");
-        let bounty_payout =
-            bounty.complete_bounty(solvers, &ctx.accounts.fee_collector, &payer.key())?;
+        let bounty_payout = bounty.complete_bounty(solvers, &ctx.accounts.fee_collector,&payer.key())?;
         let escrow = &ctx.accounts.escrow;
 
         msg!(

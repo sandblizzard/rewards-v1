@@ -10,6 +10,9 @@ relayer.json
 */**/*.pem
 */**/kubeconfig*
 
+# distribution directory
+*/**/dist/
+
 # env files
 .env.*
 .yarn
@@ -22,3 +25,7 @@ relayer.json
 !.yarn/sdks
 !.yarn/versions
 !.yarn/cache
+
+#solana recover files 
+recover*.json
+

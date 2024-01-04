@@ -13,6 +13,7 @@ pub struct DeactivateDomain<'info> {
         seeds = [
             BOUNTY_SEED.as_bytes(),
             domain.data.platform.as_bytes(),
+            domain.data.organization.as_bytes(),
             domain.data.team.as_bytes(),
             domain.data.domain_type.as_bytes(),
         ],

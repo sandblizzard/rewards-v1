@@ -5,8 +5,6 @@ services:
     build: 
       context: "."
       dockerfile: dockerfile.relayer
-    env_file:
-      - .env.local
     volumes: 
       - ./programs:/programs
   dapp:
@@ -15,7 +13,9 @@ services:
       context: "."
       dockerfile: dockerfile.dapp
       target: deploy-node
-    env_file:
-      - .env.local
     ports: 
       - 3000:3000 
+  solana:
+    image: werbitt/solana-test-validator
+    ports: 
+      - 8899:8899

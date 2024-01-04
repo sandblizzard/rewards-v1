@@ -1,6 +1,50 @@
 import * as spl from '@solana/spl-token';
 import type { Connection, PublicKey, Commitment } from '@solana/web3.js';
 import { TransactionInstruction } from '@solana/web3.js';
+import * as web3 from "@solana/web3.js"
+
+/**
+ * sendAndConfirmTransaction is a simple wrapper around web3's sendAndConfirmTransaction
+ * @param connection 
+ * @param transaction 
+ * @param latestBlockhash 
+ * @param signers 
+ * @returns 
+ */
+export const sendAndConfirmTransaction = async (
+  connection: web3.Connection,
+  transaction: web3.VersionedTransaction,
+
+  signers?: web3.Signer[],
+  latestBlockhash?: {
+    blockhash: string;
+    lastValidBlockHeight: number;
+  },
+
+) => {
+  try {
+    if (!latestBlockhash) {
+      latestBlockhash = await connection.getLatestBlockhash();
+    }
+    if (signers && signers.length !== 0) {
+      transaction.sign(signers);
+    }
+    const signature = await connection.sendTransaction(transaction, {
+      skipPreflight: false,
+    });
+    const confirmation = await connection.confirmTransaction({
+      signature: signature,
+      ...latestBlockhash
+    });
+    return {
+      confirmation,
+      signature
+    }
+  } catch (err) {
+    console.log("err", err)
+    throw err
+  }
+}
 
 export const getOrCreateAssociatedTokenAccountIx = async (
   connection: Connection,

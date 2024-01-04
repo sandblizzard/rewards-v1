@@ -10,8 +10,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, PartialEq)]
 pub enum BountyState {
-    Created,
-    Completed,
+    Created = 0,
+    Completed = 1,
 }
 
 #[account]
@@ -106,6 +106,7 @@ impl Bounty {
         &mut self,
         solvers: Vec<&Account<'info, TokenAccount>>,
         fee_collector: &Account<'info, TokenAccount>,
+        completer: &Pubkey,
     ) -> Result<Vec<(AccountInfo<'info>, u64)>> {
         self.state = BountyState::Completed;
 
@@ -118,6 +119,10 @@ impl Bounty {
             .map(|solver| (solver.to_account_info(), amount_per_solver))
             .collect::<Vec<(AccountInfo<'info>, u64)>>();
         bounty_payout.push((fee_collector.to_account_info(), fee));
+
+        // update state
+        self.completed_by = Some(*completer);
+        self.state = BountyState::Completed;
 
         Ok(bounty_payout)
     }

@@ -114,11 +114,9 @@ impl BountySdk {
         let protocol_pda = get_protocol_pda();
         let sand_token_account_pda = get_sand_token_pda(sand_token_mint);
         let accounts = bounty::accounts::Initialize {
-            creator: self.payer.pubkey(),
+            protocol_owner: self.payer.pubkey(),
             protocol: protocol_pda.0,
-            sand_token_mint: *sand_token_mint,
-            sand_token_account: sand_token_account_pda.0,
-            collection: *nft_collection,
+            sand_mint: *sand_token_mint,
             system_program: system_program::ID,
             token_program: token::ID,
         };
@@ -127,8 +125,8 @@ impl BountySdk {
 
         let ix = Instruction {
             program_id: bounty::id(),
-            accounts: accounts.to_account_metas(None),
-            data: data.data(),
+            accounts: accounts,
+            data: data.into(),
         };
 
         match self.program.request().instruction(ix).send() {

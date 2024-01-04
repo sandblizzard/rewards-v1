@@ -6,7 +6,11 @@ use std::mem::size_of;
 #[derive(Accounts)]
 #[instruction(relayer_address: Pubkey)]
 pub struct AddRelayer<'info> {
-    #[account(mut)]
+    #[account(
+        mut,
+        // only protocol owner is allowed to add relayers
+        constraint = signer.key() == protocol.owner
+    )]
     pub signer: Signer<'info>,
 
     #[account(
