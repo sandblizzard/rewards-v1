@@ -6,6 +6,10 @@ import * as bs58 from "bs58";
 
 
 async function main() {
+    // get the relayer from the args
+    const args = process.argv.slice(2)
+    if (args.length !== 1) throw error(400, 'Invalid number of arguments')
+    const relayerArg = args[0]
     // load wallet from env 
     const secretKey = process.env.WALLET_SECRET_KEY
     if (!secretKey) throw error(400, 'No wallet secret key found')
@@ -21,7 +25,7 @@ async function main() {
     console.log(`Latest blockhash: ${latestBlockhash.blockhash}`)
     // create initialize identity transaction
     const bountySdk = new bounty.BountySdk(wallet.publicKey, connection);
-    const relayer = new web3.PublicKey(wallet.publicKey)
+    const relayer = new web3.PublicKey(relayerArg)
     const addRelayer = await bountySdk.addRelayer(relayer)
     await sendAndConfirmTransaction(connection, await addRelayer.vtx, [wallet], latestBlockhash)
     console.log(`Relayer ${addRelayer.relayerPda.toBase58()} added for ${relayer.toString()}`)
