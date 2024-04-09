@@ -31,7 +31,7 @@ pub struct AddBountyDenomination<'info> {
         init,
         payer = creator,
         seeds = [
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             DENOMINATION_SEED.as_bytes(),
             mint.key().to_bytes().as_ref()
         ],
@@ -46,7 +46,7 @@ pub struct AddBountyDenomination<'info> {
         init,
         payer = creator,
         seeds = [
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             FEE_COLLECTOR_SEED.as_bytes(),
             mint.key().to_bytes().as_ref()
         ],

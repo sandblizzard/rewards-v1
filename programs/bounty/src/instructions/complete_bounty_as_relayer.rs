@@ -1,12 +1,10 @@
+use std::process;
+
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 
 use crate::{
-    state::bounty_state::BountyState,
-    state::Bounty,
-    state::Denomination,
-    state::{Protocol, Relayer},
-    utils::{BlizzardError, BOUNTY_SEED, DENOMINATION_SEED}, CompleteBounty,
+    get_solvers, state::{bounty_state::BountyState, Bounty, Denomination, Protocol, Relayer}, utils::{BlizzardError, BOUNTY_SEED, DENOMINATION_SEED}, CompleteBounty
 };
 
 
@@ -21,11 +19,18 @@ pub struct CompleteBountyAsRelayer<'info> {
 
     #[account(
         seeds= [
-            BOUNTY_SEED.as_bytes()
+            BOUNTY_SEED
         ],
         bump=protocol.bump,
     )]
     pub protocol: Box<Account<'info, Protocol>>,
+
+    #[account(
+        mut,
+        constraint = sand_mint.mint_authority.unwrap().eq(&protocol.key())
+    )]
+    pub sand_mint: Account<'info, Mint>,
+
 
     #[account(
         mut,
@@ -38,7 +43,7 @@ pub struct CompleteBountyAsRelayer<'info> {
     /// it needs to be checked against the fee collector and the mint
     #[account(
         seeds = [
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             DENOMINATION_SEED.as_bytes(),
             bounty.mint.key().to_bytes().as_ref()
         ],
@@ -58,7 +63,7 @@ pub struct CompleteBountyAsRelayer<'info> {
     #[account(
         mut,
         seeds = [
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             bounty.key().to_bytes().as_ref()
         ],
         bump = bounty.escrow_bump,
@@ -77,6 +82,9 @@ pub struct CompleteBountyAsRelayer<'info> {
     #[account(mut)]
     pub solver4: Option<Account<'info, TokenAccount>>,
 
+
+   
+
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
 
@@ -85,7 +93,7 @@ pub struct CompleteBountyAsRelayer<'info> {
     /// validate the seeds
     #[account(
         seeds=[
-            BOUNTY_SEED.as_bytes(), 
+            BOUNTY_SEED, 
             relayer.owner.key().to_bytes().as_ref()
         ],
         bump = relayer.bump,
@@ -101,57 +109,51 @@ pub fn handler(ctx: Context<CompleteBountyAsRelayer>) -> Result<()> {
     let relayer = &ctx.accounts.relayer;
     let payer = &ctx.accounts.payer;
     let bounty = &mut ctx.accounts.bounty;
-
+    let protocol = &ctx.accounts.protocol;
+    
     if !(bounty.is_owner(&payer.key()) || relayer.is_owner(&payer.key())) {
         return Err(BlizzardError::NotAuthToCompleteBounty.into());
     } else {
         // create receivers vec
-        msg!("Derref solvers");
-        let mut solvers = Vec::new();
-        let s1 = &ctx.accounts.solver1;
-        solvers.push(s1);
-        let s2 = &ctx.accounts.solver2;
-        let s3 = &ctx.accounts.solver3;
-        let s4 = &ctx.accounts.solver4;
+       // create receivers vec
+       msg!("Derref solvers");
+       let solver1 = &ctx.accounts.solver1;
+       let solver2 = &ctx.accounts.solver2;
+       let solver3 = &ctx.accounts.solver3;
+       let solver4 = &ctx.accounts.solver4;
+       let solvers = get_solvers(solver1, solver2, solver3, solver4);
 
-        if s2.is_some() {
-            solvers.push(s2.as_ref().unwrap())
-        }
-        if s3.is_some() {
-            solvers.push(s3.as_ref().unwrap())
-        }
-        if s4.is_some() {
-            solvers.push(s4.as_ref().unwrap())
-        }
+       msg!("Complete bounty");
+       let bounty_payout =
+           bounty.complete_bounty(solvers, &ctx.accounts.fee_collector, &payer.key())?;
+       let escrow = &ctx.accounts.escrow;
 
-        msg!("Complete bounty");
-        let bounty_payout = bounty.complete_bounty(solvers, &ctx.accounts.fee_collector,&payer.key())?;
-        let escrow = &ctx.accounts.escrow;
+       msg!(
+           "Transfer bounty: {:?}, escrow: {:?}, total amount {}, payouts {:?}",
+           bounty.escrow.to_string(),
+           escrow.key().to_string(),
+           bounty.bounty_amount,
+           bounty_payout.iter().map(|pay| pay.1).collect::<Vec<u64>>()
+       );
+   
+       // payout bounty
+       bounty_payout.iter().for_each(|(solver, amount)| {
+           anchor_spl::token::transfer(
+               CpiContext::new_with_signer(
+                   ctx.accounts.token_program.to_account_info(),
+                   anchor_spl::token::Transfer {
+                       from: escrow.to_account_info(),
+                       to: solver.clone(),
+                       authority: bounty.to_account_info(),
+                   },
+                   &[&bounty.signing_seeds()],
+               ),
+               *amount,
+           )
+           .unwrap();
+       });
 
-        msg!(
-            "Transfer bounty: {:?}, escrow: {:?}, total amount {}, payouts {:?}",
-            bounty.escrow.to_string(),
-            escrow.key().to_string(),
-            bounty.bounty_amount,
-            bounty_payout.iter().map(|pay| pay.1).collect::<Vec<u64>>()
-        );
-
-        // payout bounty
-        bounty_payout.iter().for_each(|(solver, amount)| {
-            anchor_spl::token::transfer(
-                CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
-                    anchor_spl::token::Transfer {
-                        from: escrow.to_account_info(),
-                        to: solver.clone(),
-                        authority: bounty.to_account_info(),
-                    },
-                    &[&bounty.signing_seeds()],
-                ),
-                *amount,
-            )
-            .unwrap()
-        });
+    
     }
     Ok(())
 }

@@ -15,7 +15,7 @@ pub struct AddRelayer<'info> {
 
     #[account(
         seeds = [
-            BOUNTY_SEED.as_bytes()
+            BOUNTY_SEED
         ],
         bump = protocol.bump
     )]
@@ -25,7 +25,7 @@ pub struct AddRelayer<'info> {
         init,
         payer = signer,
         seeds = [
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             relayer_address.to_bytes().as_ref(),
         ],
         space = 8 + size_of::<Relayer>(),

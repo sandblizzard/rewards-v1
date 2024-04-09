@@ -17,11 +17,11 @@ pub struct Protocol {
 
 impl Protocol {
     pub fn seeds(&self) -> [&[u8]; 2] {
-        [BOUNTY_SEED.as_bytes(), &self.bump_seed]
+        [BOUNTY_SEED, &self.bump_seed]
     }
 
     pub fn account_seed(&self) -> &[u8] {
-        BOUNTY_SEED.as_bytes()
+        BOUNTY_SEED
     }
 
     pub fn initialize(&mut self, bump: &u8, owner: &Pubkey, mint: &Pubkey) -> Result<()> {

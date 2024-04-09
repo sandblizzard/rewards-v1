@@ -75,7 +75,7 @@ pub fn get_sand_token_pda(sand_mint: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
             bounty::utils::BOUNTY_SEED.as_bytes(),
-            sand_mint.to_bytes().as_ref(),
+            bount::utils::MINT_SEED,
         ],
         &bounty::id(),
     )

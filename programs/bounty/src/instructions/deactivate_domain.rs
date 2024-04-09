@@ -11,7 +11,7 @@ pub struct DeactivateDomain<'info> {
     #[account(
         mut,
         seeds = [
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             domain.data.platform.as_bytes(),
             domain.data.organization.as_bytes(),
             domain.data.team.as_bytes(),

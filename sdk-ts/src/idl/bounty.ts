@@ -21,6 +21,11 @@ export type Bounty = {
           ]
         },
         {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "protocol",
           "isMut": true,
           "isSigner": false
@@ -35,6 +40,19 @@ export type Bounty = {
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "create treasury account to hold the protocol's funds"
+          ]
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rentSysvar",
           "isMut": false,
           "isSigner": false
         },
@@ -240,6 +258,11 @@ export type Bounty = {
           "isSigner": false
         },
         {
+          "name": "sandMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "feeCollector",
           "isMut": true,
           "isSigner": false
@@ -296,7 +319,10 @@ export type Bounty = {
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "sand mint receivers"
+          ]
         },
         {
           "name": "tokenProgram",
@@ -325,6 +351,11 @@ export type Bounty = {
         {
           "name": "protocol",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sandMint",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -903,6 +934,11 @@ export const IDL: Bounty = {
           ]
         },
         {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "protocol",
           "isMut": true,
           "isSigner": false
@@ -917,6 +953,19 @@ export const IDL: Bounty = {
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "create treasury account to hold the protocol's funds"
+          ]
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rentSysvar",
           "isMut": false,
           "isSigner": false
         },
@@ -1122,6 +1171,11 @@ export const IDL: Bounty = {
           "isSigner": false
         },
         {
+          "name": "sandMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "feeCollector",
           "isMut": true,
           "isSigner": false
@@ -1178,7 +1232,10 @@ export const IDL: Bounty = {
         {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false
+          "isSigner": false,
+          "docs": [
+            "sand mint receivers"
+          ]
         },
         {
           "name": "tokenProgram",
@@ -1207,6 +1264,11 @@ export const IDL: Bounty = {
         {
           "name": "protocol",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sandMint",
+          "isMut": true,
           "isSigner": false
         },
         {

@@ -23,3 +23,9 @@ wallet = "~/.config/solana/id.json"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 build_sdk = "cd sdk-ts && yarn build"
 test_alt = "rm -rf test-ledger && solana-test-validator --reset -q"
+
+
+[test.validator]
+[[test.genesis]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+program = "./tests/fixtures/metadata_program.bpf"

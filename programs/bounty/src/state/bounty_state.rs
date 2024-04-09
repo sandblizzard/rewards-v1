@@ -47,15 +47,11 @@ pub struct Bounty {
 impl Bounty {
     /// bounty seeds used to sign transactions
     pub fn signing_seeds(&self) -> [&[u8]; 3] {
-        [
-            BOUNTY_SEED.as_bytes(),
-            self.id.as_bytes(),
-            self.bump_array.as_ref(),
-        ]
+        [BOUNTY_SEED, self.id.as_bytes(), self.bump_array.as_ref()]
     }
 
     pub fn seeds(&self) -> [&[u8]; 2] {
-        [BOUNTY_SEED.as_bytes(), self.id.as_bytes()]
+        [BOUNTY_SEED, self.id.as_bytes()]
     }
 
     /// can_complete

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::token::{accessor::mint, mint_to, Mint, MintTo, Token, TokenAccount};
 
 use crate::{
     state::bounty_state::BountyState,
@@ -18,11 +18,17 @@ pub struct CompleteBounty<'info> {
 
     #[account(
         seeds= [
-            BOUNTY_SEED.as_bytes()
+            BOUNTY_SEED
         ],
         bump=protocol.bump,
     )]
     pub protocol: Box<Account<'info, Protocol>>,
+
+    #[account(
+        mut,
+        constraint = sand_mint.mint_authority.unwrap().eq(&protocol.key())
+    )]
+    pub sand_mint: Account<'info, Mint>,
 
     #[account(
         mut,
@@ -35,7 +41,7 @@ pub struct CompleteBounty<'info> {
     /// it needs to be checked against the fee collector and the mint
     #[account(
         seeds = [
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             DENOMINATION_SEED.as_bytes(),
             bounty.mint.key().to_bytes().as_ref()
         ],
@@ -55,7 +61,7 @@ pub struct CompleteBounty<'info> {
     #[account(
         mut,
         seeds = [
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             bounty.key().to_bytes().as_ref()
         ],
         bump = bounty.escrow_bump,
@@ -78,32 +84,42 @@ pub struct CompleteBounty<'info> {
     pub token_program: Program<'info, Token>,
 }
 
+pub fn get_solvers<'a, 'info>(
+    solver1: &'a Account<'info, TokenAccount>,
+    solver2: &'a Option<Account<'info, TokenAccount>>,
+    solver3: &'a Option<Account<'info, TokenAccount>>,
+    solver4: &'a Option<Account<'info, TokenAccount>>,
+) -> Vec<&'a Account<'info, TokenAccount>> {
+    let mut solvers = Vec::new();
+    solvers.push(solver1);
+    if solver2.is_some() {
+        solvers.push(solver2.as_ref().unwrap())
+    }
+    if solver3.is_some() {
+        solvers.push(solver3.as_ref().unwrap())
+    }
+    if solver4.is_some() {
+        solvers.push(solver4.as_ref().unwrap())
+    }
+    solvers
+}
+
 pub fn handler(ctx: Context<CompleteBounty>) -> Result<()> {
     msg!("Complete bounty");
     let payer = &ctx.accounts.payer;
     let bounty = &mut ctx.accounts.bounty;
+    let protocol = &ctx.accounts.protocol;
 
     if !(bounty.is_owner(&payer.key())) {
         return Err(BlizzardError::NotAuthToCompleteBounty.into());
     } else {
         // create receivers vec
         msg!("Derref solvers");
-        let mut solvers = Vec::new();
-        let s1 = &ctx.accounts.solver1;
-        solvers.push(s1);
-        let s2 = &ctx.accounts.solver2;
-        let s3 = &ctx.accounts.solver3;
-        let s4 = &ctx.accounts.solver4;
-
-        if s2.is_some() {
-            solvers.push(s2.as_ref().unwrap())
-        }
-        if s3.is_some() {
-            solvers.push(s3.as_ref().unwrap())
-        }
-        if s4.is_some() {
-            solvers.push(s4.as_ref().unwrap())
-        }
+        let solver1 = &ctx.accounts.solver1;
+        let solver2 = &ctx.accounts.solver2;
+        let solver3 = &ctx.accounts.solver3;
+        let solver4 = &ctx.accounts.solver4;
+        let solvers = get_solvers(solver1, solver2, solver3, solver4);
 
         msg!("Complete bounty");
         let bounty_payout =
@@ -132,7 +148,7 @@ pub fn handler(ctx: Context<CompleteBounty>) -> Result<()> {
                 ),
                 *amount,
             )
-            .unwrap()
+            .unwrap();
         });
     }
     Ok(())

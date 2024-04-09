@@ -2,10 +2,14 @@ import { BN, web3, Program, AnchorProvider } from "@coral-xyz/anchor";
 import { Bounty, IDL } from "./idl/bounty"
 import { getAssociatedTokenAddress, getMint } from '@solana/spl-token';
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
+import { getOrCreateAssociatedTokenAccountIx } from "./utils";
 
 export * as utils from './utils';
 export { Bounty }
 
+const METADATA_SEED = "metadata";
+
+const TOKEN_METADATA_PROGRAM_ID = new web3.PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
 export const BOUNTY_PROGRAM_ID = new web3.PublicKey("BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e");
 
 /**
@@ -22,7 +26,7 @@ const getProtocolPDA = () => {
 
 const getSandMint = () => {
     return web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("BOUNTY_SANDBLIZZARD"), Buffer.from("sand_mint")],
+        [Buffer.from("sand_mint")],
         BOUNTY_PROGRAM_ID
     )
 }
@@ -41,6 +45,18 @@ const getFeeCollectorPDA = (mint: web3.PublicKey) => {
         BOUNTY_PROGRAM_ID
     )
 }
+
+const getMetadataAddress = (mint: web3.PublicKey) => {
+    return web3.PublicKey.findProgramAddressSync(
+        [
+            Buffer.from(METADATA_SEED),
+            TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+            mint.toBuffer(),
+        ],
+        TOKEN_METADATA_PROGRAM_ID
+    );
+}
+
 
 /**
  * getBountyPDA 
@@ -157,10 +173,15 @@ export class BountySdk {
     initializeProtocol = async () => {
         const protocolPda = getProtocolPDA();
         const sandMint = getSandMint();
+        const metadataAddress = getMetadataAddress(sandMint[0]);
+
         const initializeProtocolIx = await this.program.methods.initialize().accounts({
             protocolOwner: this.signer,
+            metadata: metadataAddress[0],
             protocol: protocolPda[0],
             sandMint: sandMint[0],
+            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            rentSysvar: web3.SYSVAR_RENT_PUBKEY,
         }).instruction()
 
         return {
@@ -279,6 +300,12 @@ export class BountySdk {
             return address
         })))
 
+        const sandMint = getSandMint();
+        const fullSandMintWallets = await Promise.all([null, null, null, null].map(async (_solver, idx) => {
+            const address = solversWallets[idx] ? await getAssociatedTokenAddress(sandMint[0], solversWallets[idx]) : null
+            return address
+        }))
+
         const solverTokenAccounts = fullSolverWallets.reduce((acc, curr) => {
             const i = Object.keys(acc).length + 1;
             return {
@@ -287,34 +314,54 @@ export class BountySdk {
             }
         }, {})
 
+        const solverSandTokenAccounts = fullSandMintWallets.reduce((acc, curr) => {
+            const i = Object.keys(acc).length + 1;
+            return {
+                ...acc,
+                [`solver${i}Sand`]: curr
+            }
+        }, {})
+
+        console.log("solverTokenAccounts", solverTokenAccounts)
+        const sandTokenPDAIxs = (await this.getOrCreateAssociatedTokenAccountsIxs({
+            mint: sandMint[0],
+            payer: completer,
+            solverWallets: solversWallets
+        })).map((solver) => {
+            return solver.instruction as web3.TransactionInstruction
+        })
+        console.log("Number of sand token accounts", sandTokenPDAIxs.length)
 
         const protocolPda = getProtocolPDA();
         const feeCollector = getFeeCollectorPDA(mint);
         const bountyDenomination = getDenominationPDA(mint);
         const bountyPda = getBountyPDA(id);
         const escrowPDA = getEscrowPDA(bountyPda[0]);
+        const sandMintPDA = getSandMint();
 
         let completeBountyIx: web3.TransactionInstruction;
         if (relayer && (await this.accountExists(relayer))) {
             completeBountyIx = await this.program.methods.completeBountyAsRelayer().accounts({
                 payer: completer,
                 protocol: protocolPda[0],
+                sandMint: sandMintPDA[0],
                 feeCollector: feeCollector[0],
                 bountyDenomination: bountyDenomination[0],
                 bounty: bountyPda[0],
                 escrow: escrowPDA[0],
                 relayer: relayer,
-                ...solverTokenAccounts
+                ...solverTokenAccounts,
             }).instruction();
         } else {
             completeBountyIx = await this.program.methods.completeBounty().accounts({
                 payer: completer,
                 protocol: protocolPda[0],
+                sandMint: sandMintPDA[0],
                 feeCollector: feeCollector[0],
                 bountyDenomination: bountyDenomination[0],
                 bounty: bountyPda[0],
                 escrow: escrowPDA[0],
-                ...solverTokenAccounts
+                ...solverTokenAccounts,
             }).instruction();
         }
 
@@ -326,6 +373,21 @@ export class BountySdk {
         }
     }
 
+    // create instructions to create PDAs 
+    getOrCreateAssociatedTokenAccountsIxs = async (
+        {
+            mint,
+            payer,
+            solverWallets,
+
+        }: { mint: web3.PublicKey, payer: web3.PublicKey, solverWallets: web3.PublicKey[] }) => {
+        let solvers = (await Promise.all(solverWallets.map(async (solver) => {
+            return getOrCreateAssociatedTokenAccountIx(this.connection, payer, mint, solver)
+        }))).filter((solver) => {
+            return solver.instruction !== null
+        })
+        return solvers;
+    }
 
 
     addRelayer = async (relayerAddress: web3.PublicKey) => {
@@ -436,6 +498,8 @@ export class BountySdk {
             denominationPda: denominationPda[0],
         }
     }
+
+
 
 
 }

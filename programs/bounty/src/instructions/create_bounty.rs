@@ -26,7 +26,7 @@ pub struct CreateBounty<'info> {
         init,
         payer = creator,
         seeds = [
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             id.as_bytes(),
         ],
         bump,
@@ -58,7 +58,7 @@ pub struct CreateBounty<'info> {
         init,
         payer = creator,
         seeds = [
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             bounty.key().to_bytes().as_ref()
         ],
         bump,

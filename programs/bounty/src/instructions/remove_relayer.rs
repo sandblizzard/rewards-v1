@@ -9,7 +9,7 @@ pub struct RemoveRelayer<'info> {
 
     #[account(
         seeds = [
-            BOUNTY_SEED.as_bytes()
+            BOUNTY_SEED
         ],
         bump = protocol.bump,
         constraint = signer.key() == protocol.owner
@@ -18,7 +18,7 @@ pub struct RemoveRelayer<'info> {
 
     #[account(
         mut,
-        seeds=[BOUNTY_SEED.as_bytes(), relayer.owner.key().to_bytes().as_ref()],
+        seeds=[BOUNTY_SEED, relayer.owner.key().to_bytes().as_ref()],
         bump = relayer.bump,
         constraint = relayer.active
     )]

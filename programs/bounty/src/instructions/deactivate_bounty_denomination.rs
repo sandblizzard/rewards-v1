@@ -22,7 +22,7 @@ pub struct DeactivateBountyDenomination<'info> {
     #[account(
       mut,
       seeds = [
-        BOUNTY_SEED.as_bytes(),
+        BOUNTY_SEED,
         DENOMINATION_SEED.as_bytes(),
         mint.key().to_bytes().as_ref()
         ],

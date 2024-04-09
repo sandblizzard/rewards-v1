@@ -21,7 +21,7 @@ pub struct CreateDomain<'info> {
         init,
         payer=creator,
         seeds=[
-            BOUNTY_SEED.as_bytes(),
+            BOUNTY_SEED,
             platform.as_bytes(),
             organization.as_bytes(),
             team.as_bytes(),

@@ -15,4 +15,5 @@ Native token: A3LTRAn8fvZW5kuGRAXB7Xr1VGqVuCQUn1RxWSAtsJFH
 ## TODO:
 
 - [ ] Allow for Sand mining by solving bounties
+    - Either create SPL outside and transfer ownership or le
 - [ ] Make sure deployer is the only one that can initialize contract
