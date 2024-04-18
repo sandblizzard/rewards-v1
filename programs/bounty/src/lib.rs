@@ -20,6 +20,14 @@ pub mod bounty {
         initialize::handler(ctx)
     }
 
+    /// register solver
+    ///
+    /// Register solver for the first time in the protocol
+    /// This will create a new solver account and a token account
+    pub fn register_solver(ctx: Context<RegisterSolver>) -> Result<()> {
+        register_solver::handler(ctx)
+    }
+
     /// add bounty denomination
     /// it
     pub fn add_bounty_denomination(ctx: Context<AddBountyDenomination>) -> Result<()> {
@@ -44,7 +52,7 @@ pub mod bounty {
     ///
     /// Try to complete bounty
     pub fn complete_bounty<'info>(
-        ctx: Context<'_, '_, '_, 'info, CompleteBounty<'info>>,
+        ctx: Context<'_, '_, '_, 'info, CompleteBountyAsCreator<'info>>,
     ) -> Result<()> {
         complete_bounty::handler(ctx)
     }
@@ -79,5 +87,12 @@ pub mod bounty {
     /// deactivate domain
     pub fn deactivate_domain(ctx: Context<DeactivateDomain>) -> Result<()> {
         deactivate_domain::handler(ctx)
+    }
+
+    /// Claim rewards
+    ///
+    /// Claim rewards for the bounty
+    pub fn claim_rewards(ctx: Context<ClaimReward>) -> Result<()> {
+        claim::handler(ctx)
     }
 }

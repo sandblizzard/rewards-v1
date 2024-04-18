@@ -13,6 +13,7 @@ import * as web3 from '@solana/web3.js';
 import { assert, config, expect, use } from 'chai';
 import * as chaiAsPromised from "chai-as-promised"
 import { sendAndConfirmTransaction } from "../sdk-ts/src/utils";
+import { getSandMint, getSolverPDA } from "../sdk-ts/src";
 use(chaiAsPromised.default)
 
 /**
@@ -65,83 +66,96 @@ describe('bounty', () => {
 
   // Setup test environment
   before(async () => {
-    const latestBlockhash = await provider.connection.getLatestBlockhash();
+    try {
 
-    await topUpAccount(provider.connection, wallet);
-    await topUpAccount(provider.connection, userWallet);
-    console.log("Airdrop done...")
-
-
-    // bonk is one bounty reward tokens
-    bonkMint = await createMint(
-      provider.connection,
-      (wallet).payer,
-      wallet.publicKey,
-      wallet.publicKey,
-      6
-    );
-
-    // mint bonk to the creator
-    const protocolOwnerBonkTokenAccount = await createAssociatedTokenAccount(
-      provider.connection,
-      (wallet).payer,
-      bonkMint,
-      wallet.publicKey
-    );
-
-    const userBonkTokenAccount = await createAssociatedTokenAccount(
-      provider.connection,
-      (userWallet).payer,
-      bonkMint,
-      userWallet.publicKey
-    );
-    await spl.mintTo(
-      provider.connection,
-      (wallet).payer,
-      bonkMint,
-      protocolOwnerBonkTokenAccount,
-      wallet.publicKey,
-      1_000_000_000
-    );
-    console.log("Minted bonk to owner...")
+      await topUpAccount(provider.connection, wallet);
+      await topUpAccount(provider.connection, userWallet);
+      console.log("Airdrop done...")
 
 
-    await spl.transfer(
-      provider.connection,
-      (wallet).payer,
-      protocolOwnerBonkTokenAccount,
-      userBonkTokenAccount,
-      wallet.publicKey,
-      500_000_000
-    );
-    console.log("Minted bonk to user...")
+      // bonk is one bounty reward tokens
+      bonkMint = await createMint(
+        provider.connection,
+        (wallet).payer,
+        wallet.publicKey,
+        wallet.publicKey,
+        6
+      );
 
-    console.log("Initializes Protocol...")
-    const initializeProtocol = await bountySdk.initializeProtocol();
-    await sendAndConfirmTransaction(provider.connection, await initializeProtocol.vtx, [wallet.payer])
+      // mint bonk to the creator
+      const protocolOwnerBonkTokenAccount = await createAssociatedTokenAccount(
+        provider.connection,
+        (wallet).payer,
+        bonkMint,
+        wallet.publicKey
+      );
 
-    console.log("Initializes Fee Collector...")
-    const initDenomination = await bountySdk.addBountyDenomination(
-      {
-        mint: bonkMint,
-      }
-    );
-    await sendAndConfirmTransaction(provider.connection, await initDenomination.vtx, [wallet.payer])
+      const userBonkTokenAccount = await createAssociatedTokenAccount(
+        provider.connection,
+        (userWallet).payer,
+        bonkMint,
+        userWallet.publicKey
+      );
+      await spl.mintTo(
+        provider.connection,
+        (wallet).payer,
+        bonkMint,
+        protocolOwnerBonkTokenAccount,
+        wallet.publicKey,
+        1_000_000_000
+      );
+      console.log("Minted bonk to owner...")
 
-    // create domain 
-    console.log("Creates Domain...")
-    const createDomain = await bountySdk.createDomain(
-      {
-        platform,
-        organization,
-        team,
-        domainType: 'issues'
-      }
-    );
-    await sendAndConfirmTransaction(provider.connection, await createDomain.vtx, [wallet.payer])
 
-    console.log("Finished setting up the test environment..")
+      await spl.transfer(
+        provider.connection,
+        (wallet).payer,
+        protocolOwnerBonkTokenAccount,
+        userBonkTokenAccount,
+        wallet.publicKey,
+        500_000_000
+      );
+      console.log("Minted bonk to user...")
+
+      console.log("Initializes Protocol...")
+      const initializeProtocol = await bountySdk.initializeProtocol();
+      await sendAndConfirmTransaction(provider.connection, await initializeProtocol.vtx, [wallet.payer])
+
+      console.log("Initializes Fee Collector...")
+      const initDenomination = await bountySdk.addBountyDenomination(
+        {
+          mint: bonkMint,
+        }
+      );
+      await sendAndConfirmTransaction(provider.connection, await initDenomination.vtx, [wallet.payer])
+
+      // create domain 
+      console.log("Creates Domain...")
+      const createDomain = await bountySdk.createDomain(
+        {
+          platform,
+          organization,
+          team,
+          domainType: 'issues'
+        }
+      );
+      await sendAndConfirmTransaction(provider.connection, await createDomain.vtx, [wallet.payer])
+
+      // register solvers 
+      console.log("Registering solvers...")
+      const initializeSolver = await bountySdk.registerSolver(wallet.publicKey);
+      await sendAndConfirmTransaction(provider.connection, await initializeSolver.vtx, [wallet.payer])
+      const initializeSolver2 = await bountySdk.registerSolver(user.publicKey);
+      await sendAndConfirmTransaction(provider.connection, await initializeSolver2.vtx, [userWallet.payer])
+
+      console.log("Finished setting up the test environment..")
+    }
+    catch (e) {
+      console.log("error", e)
+      throw e
+    }
   });
+
 
   it('Create a bounty -> Should succeed', async () => {
     // create bounty 
@@ -198,7 +212,7 @@ describe('bounty', () => {
     expect(deactivatedRelayer.active, `relayer is not deactivated`).eq(false);
   });
 
-  it('Create bounty and try to complete it as a relayer -> Should Succeed', async () => {
+  it.only('Create bounty and try to complete it as a relayer -> Should Succeed', async () => {
     const bountyId = Math.floor(Math.random() * 1000000).toString();
     // add relayer - relayer should be  pk + BOUNTY_SANDBLIZZARD
     const relayerKeys = web3.Keypair.generate();
@@ -240,10 +254,27 @@ describe('bounty', () => {
     );
     await sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, [relayerWallet.payer])
     const bountyAccount = await program.account.bounty.fetch(
-      createBounty.bounty
+      createBounty.bounty,
+      'confirmed'
     );
+    console.log("Bounty completed by", JSON.stringify(bountyAccount))
     expect(bountyAccount.completedBy.toString()).to.equal(relayerWallet.publicKey.toString());
     expect(bountyAccount.state.completed).to.exist
+
+    // get sand token balance of user
+    const sandTokenAccount = await getAssociatedTokenAddress(
+      getSandMint()[0],
+      userWallet.publicKey,
+    );
+    const sandTokenBalance = await provider.connection.getTokenAccountBalance(sandTokenAccount);
+    expect(sandTokenBalance.value.amount).to.equal('0');
+
+    // check the claimable amount of the user
+    const claimableAmount = await getSolverPDA(userWallet.publicKey);
+    const claimableAmountInfo = await program.account.solver.fetch(claimableAmount[0]);
+    console.log("Claimable amount", claimableAmountInfo)
+
+
   });
 
   it('Create bounty and try to complete it as the creator -> Should Succeed', async () => {

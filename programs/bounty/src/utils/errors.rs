@@ -35,4 +35,7 @@ pub enum BlizzardError {
 
     #[msg("Domain is not active")]
     DomainNotActive,
+
+    #[msg("No claimable reward")]
+    NoClaimableReward,
 }

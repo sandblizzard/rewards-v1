@@ -65,6 +65,58 @@ export type Bounty = {
       "args": []
     },
     {
+      "name": "registerSolver",
+      "docs": [
+        "register solver",
+        "",
+        "Register solver for the first time in the protocol",
+        "This will create a new solver account and a token account"
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "solverAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sandMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solverTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "addBountyDenomination",
       "docs": [
         "add bounty denomination",
@@ -268,15 +320,6 @@ export type Bounty = {
           "isSigner": false
         },
         {
-          "name": "bountyDenomination",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "bounty denomination is the allowed denomination of a bounty",
-            "it needs to be checked against the fee collector and the mint"
-          ]
-        },
-        {
           "name": "bounty",
           "isMut": true,
           "isSigner": false,
@@ -289,6 +332,17 @@ export type Bounty = {
           "name": "escrow",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "solverTokenAccount1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solverTokenAccount2",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "solver1",
@@ -305,24 +359,9 @@ export type Bounty = {
           "isOptional": true
         },
         {
-          "name": "solver3",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "solver4",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "sand mint receivers"
-          ]
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
@@ -364,15 +403,6 @@ export type Bounty = {
           "isSigner": false
         },
         {
-          "name": "bountyDenomination",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "bounty denomination is the allowed denomination of a bounty",
-            "it needs to be checked against the fee collector and the mint"
-          ]
-        },
-        {
           "name": "bounty",
           "isMut": true,
           "isSigner": false,
@@ -387,6 +417,17 @@ export type Bounty = {
           "isSigner": false
         },
         {
+          "name": "solverTokenAccount1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solverTokenAccount2",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
           "name": "solver1",
           "isMut": true,
           "isSigner": false,
@@ -396,18 +437,6 @@ export type Bounty = {
         },
         {
           "name": "solver2",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "solver3",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "solver4",
           "isMut": true,
           "isSigner": false,
           "isOptional": true
@@ -555,6 +584,55 @@ export type Bounty = {
         },
         {
           "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claimRewards",
+      "docs": [
+        "Claim rewards",
+        "",
+        "Claim rewards for the bounty"
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "solver",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solverTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "token pda"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -725,6 +803,47 @@ export type Bounty = {
       }
     },
     {
+      "name": "protocolCollector",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "bumpSeed",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "sandMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "claimableSand",
+            "type": "u64"
+          },
+          {
+            "name": "claimableFee",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "protocol",
       "type": {
         "kind": "struct",
@@ -749,6 +868,10 @@ export type Bounty = {
           {
             "name": "sandMint",
             "type": "publicKey"
+          },
+          {
+            "name": "emission",
+            "type": "u64"
           }
         ]
       }
@@ -792,6 +915,51 @@ export type Bounty = {
             "type": {
               "vec": "publicKey"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "solver",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "bumpSeed",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "miningMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "claimableRewards",
+            "type": "u64"
+          },
+          {
+            "name": "totalRewards",
+            "type": "u64"
+          },
+          {
+            "name": "totalSolvedBounties",
+            "type": "u64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
           }
         ]
       }
@@ -847,6 +1015,20 @@ export type Bounty = {
           },
           {
             "name": "Completed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AnySolver",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "ProtocolCollector"
+          },
+          {
+            "name": "Solver"
           }
         ]
       }
@@ -907,6 +1089,11 @@ export type Bounty = {
       "code": 6010,
       "name": "DomainNotActive",
       "msg": "Domain is not active"
+    },
+    {
+      "code": 6011,
+      "name": "NoClaimableReward",
+      "msg": "No claimable reward"
     }
   ]
 };
@@ -978,6 +1165,58 @@ export const IDL: Bounty = {
       "args": []
     },
     {
+      "name": "registerSolver",
+      "docs": [
+        "register solver",
+        "",
+        "Register solver for the first time in the protocol",
+        "This will create a new solver account and a token account"
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "solverAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sandMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solverTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "addBountyDenomination",
       "docs": [
         "add bounty denomination",
@@ -1181,15 +1420,6 @@ export const IDL: Bounty = {
           "isSigner": false
         },
         {
-          "name": "bountyDenomination",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "bounty denomination is the allowed denomination of a bounty",
-            "it needs to be checked against the fee collector and the mint"
-          ]
-        },
-        {
           "name": "bounty",
           "isMut": true,
           "isSigner": false,
@@ -1202,6 +1432,17 @@ export const IDL: Bounty = {
           "name": "escrow",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "solverTokenAccount1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solverTokenAccount2",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
         },
         {
           "name": "solver1",
@@ -1218,24 +1459,9 @@ export const IDL: Bounty = {
           "isOptional": true
         },
         {
-          "name": "solver3",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "solver4",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "sand mint receivers"
-          ]
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
@@ -1277,15 +1503,6 @@ export const IDL: Bounty = {
           "isSigner": false
         },
         {
-          "name": "bountyDenomination",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "bounty denomination is the allowed denomination of a bounty",
-            "it needs to be checked against the fee collector and the mint"
-          ]
-        },
-        {
           "name": "bounty",
           "isMut": true,
           "isSigner": false,
@@ -1300,6 +1517,17 @@ export const IDL: Bounty = {
           "isSigner": false
         },
         {
+          "name": "solverTokenAccount1",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solverTokenAccount2",
+          "isMut": true,
+          "isSigner": false,
+          "isOptional": true
+        },
+        {
           "name": "solver1",
           "isMut": true,
           "isSigner": false,
@@ -1309,18 +1537,6 @@ export const IDL: Bounty = {
         },
         {
           "name": "solver2",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "solver3",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true
-        },
-        {
-          "name": "solver4",
           "isMut": true,
           "isSigner": false,
           "isOptional": true
@@ -1468,6 +1684,55 @@ export const IDL: Bounty = {
         },
         {
           "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claimRewards",
+      "docs": [
+        "Claim rewards",
+        "",
+        "Claim rewards for the bounty"
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "protocol",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "solver",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "solverTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "token pda"
+          ]
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -1638,6 +1903,47 @@ export const IDL: Bounty = {
       }
     },
     {
+      "name": "protocolCollector",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "bumpSeed",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "sandMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "claimableSand",
+            "type": "u64"
+          },
+          {
+            "name": "claimableFee",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "protocol",
       "type": {
         "kind": "struct",
@@ -1662,6 +1968,10 @@ export const IDL: Bounty = {
           {
             "name": "sandMint",
             "type": "publicKey"
+          },
+          {
+            "name": "emission",
+            "type": "u64"
           }
         ]
       }
@@ -1705,6 +2015,51 @@ export const IDL: Bounty = {
             "type": {
               "vec": "publicKey"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "solver",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "bumpSeed",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
+          },
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "miningMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "claimableRewards",
+            "type": "u64"
+          },
+          {
+            "name": "totalRewards",
+            "type": "u64"
+          },
+          {
+            "name": "totalSolvedBounties",
+            "type": "u64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
           }
         ]
       }
@@ -1760,6 +2115,20 @@ export const IDL: Bounty = {
           },
           {
             "name": "Completed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AnySolver",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "ProtocolCollector"
+          },
+          {
+            "name": "Solver"
           }
         ]
       }
@@ -1820,6 +2189,11 @@ export const IDL: Bounty = {
       "code": 6010,
       "name": "DomainNotActive",
       "msg": "Domain is not active"
+    },
+    {
+      "code": 6011,
+      "name": "NoClaimableReward",
+      "msg": "No claimable reward"
     }
   ]
 };

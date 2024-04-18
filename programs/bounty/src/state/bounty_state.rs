@@ -3,7 +3,10 @@ use std::ops::Div;
 use anchor_lang::prelude::*;
 use anchor_spl::token::TokenAccount;
 
-use crate::utils::{BlizzardError, BOUNTY_SEED, FEE_REC};
+use crate::{
+    utils::{BlizzardError, BOUNTY_SEED, FEE_REC},
+    AnySolver, TSolver,
+};
 
 use super::Relayer;
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -98,23 +101,24 @@ impl Bounty {
         Ok(())
     }
 
-    pub fn complete_bounty<'info>(
-        &mut self,
-        solvers: Vec<&Account<'info, TokenAccount>>,
-        fee_collector: &Account<'info, TokenAccount>,
+    pub fn calculate_mining_rewards<'info>(
+        &'info mut self,
+        solvers: &'info Vec<Box<dyn TSolver>>,
+        fee_collector: &'info Box<dyn TSolver>,
         completer: &Pubkey,
-    ) -> Result<Vec<(AccountInfo<'info>, u64)>> {
+    ) -> Result<Vec<(&Box<dyn TSolver>, u64)>> {
         self.state = BountyState::Completed;
 
         let total_amount = self.bounty_amount;
         let num_solvers = solvers.len();
         let fee = total_amount.div(FEE_REC);
         let amount_per_solver = (total_amount - fee).div(num_solvers as u64);
-        let mut bounty_payout = solvers
+
+        let mut bounty_payout: Vec<(&Box<dyn TSolver>, u64)> = solvers
             .iter()
-            .map(|solver| (solver.to_account_info(), amount_per_solver))
-            .collect::<Vec<(AccountInfo<'info>, u64)>>();
-        bounty_payout.push((fee_collector.to_account_info(), fee));
+            .map(|solver| (solver, amount_per_solver))
+            .collect();
+        bounty_payout.push((&fee_collector, amount_per_solver));
 
         // update state
         self.completed_by = Some(*completer);
@@ -122,6 +126,28 @@ impl Bounty {
 
         Ok(bounty_payout)
     }
+
+    pub fn complete_bounty<'info>(&mut self, completer: Pubkey) -> Result<()> {
+        self.completed_by = Some(completer);
+        self.state = BountyState::Completed;
+        Ok(())
+    }
+}
+pub fn calculate_bounty_payout<'a>(
+    total_amount: &u64,
+    solvers: &Vec<AccountInfo<'a>>,
+    fee_collector: &AccountInfo<'a>,
+) -> Result<Vec<(AccountInfo<'a>, u64)>> {
+    let num_solvers = solvers.len();
+    let fee = total_amount.div(FEE_REC);
+    let amount_per_solver = (total_amount - fee).div(num_solvers as u64);
+    let mut bounty_payout = solvers
+        .iter()
+        .map(|solver| (solver.clone(), amount_per_solver))
+        .collect::<Vec<(AccountInfo, u64)>>();
+    bounty_payout.push((fee_collector.clone(), fee));
+
+    Ok(bounty_payout)
 }
 
 #[cfg(test)]

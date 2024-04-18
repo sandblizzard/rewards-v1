@@ -46,6 +46,18 @@ const getFeeCollectorPDA = (mint: web3.PublicKey) => {
     )
 }
 
+const getSolverPDA = (solver: web3.PublicKey) => {
+    return web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("BOUNTY_SANDBLIZZARD"), solver.toBuffer()],
+        BOUNTY_PROGRAM_ID
+    )
+}
+
+const getSolverTokenAccount = (solver: web3.PublicKey, mint: web3.PublicKey) => {
+    return getAssociatedTokenAddress(mint, solver)
+}
+
+
 const getMetadataAddress = (mint: web3.PublicKey) => {
     return web3.PublicKey.findProgramAddressSync(
         [
@@ -56,6 +68,8 @@ const getMetadataAddress = (mint: web3.PublicKey) => {
         TOKEN_METADATA_PROGRAM_ID
     );
 }
+
+
 
 
 /**
@@ -114,7 +128,8 @@ export {
     getEscrowPDA,
     getRelayerPDA,
     getFeeCollectorPDA,
-    getSandMint
+    getSandMint,
+    getSolverPDA
 }
 /**
  * BountySdk provides methods to build
@@ -189,6 +204,45 @@ export class BountySdk {
             ix: initializeProtocolIx,
             protocolAccountPda: protocolPda[0],
             sandAccountMint: sandMint[0],
+        }
+    }
+
+    registerSolver = async (solver: web3.PublicKey) => {
+        const protocolPda = getProtocolPDA();
+        const sandMint = getSandMint();
+        const solverPda = getSolverPDA(solver);
+        const registerSolverIx = await this.program.methods.registerSolver().accounts({
+            signer: solver,
+            protocol: protocolPda[0],
+            solverAccount: solverPda[0],
+            sandMint: sandMint[0],
+            solverTokenAccount: await getSolverTokenAccount(solver, sandMint[0]),
+        }).instruction();
+
+        return {
+            vtx: this.createVersionedTransaction([registerSolverIx], solver),
+            ix: registerSolverIx,
+            protocolAccountPda: protocolPda[0],
+            solverPda: solverPda[0],
+        }
+    }
+
+    claimReward = async (solver: web3.PublicKey) => {
+        const protocolPda = getProtocolPDA();
+        const sandMint = getSandMint();
+        const solverPda = getSolverPDA(solver);
+        const claimRewardsIx = await this.program.methods.claimRewards().accounts({
+            protocol: protocolPda[0],
+            solver: solverPda[0],
+            solverTokenAccount: await getSolverTokenAccount(solver, sandMint[0]),
+            mint: sandMint[0],
+        }).instruction();
+
+        return {
+            vtx: this.createVersionedTransaction([claimRewardsIx], this.signer),
+            ix: claimRewardsIx,
+            protocolAccountPda: protocolPda[0],
+            solverPda: solverPda[0],
         }
     }
 
@@ -301,8 +355,8 @@ export class BountySdk {
         })))
 
         const sandMint = getSandMint();
-        const fullSandMintWallets = await Promise.all([null, null, null, null].map(async (_solver, idx) => {
-            const address = solversWallets[idx] ? await getAssociatedTokenAddress(sandMint[0], solversWallets[idx]) : null
+        const solverAccounts = await Promise.all([null, null, null, null].map(async (_solver, idx) => {
+            const address = solversWallets[idx] ? await getSolverPDA(solversWallets[idx])[0] : null
             return address
         }))
 
@@ -310,19 +364,19 @@ export class BountySdk {
             const i = Object.keys(acc).length + 1;
             return {
                 ...acc,
-                [`solver${i}`]: curr
+                [`solverTokenAccount${i}`]: curr
             }
         }, {})
 
-        const solverSandTokenAccounts = fullSandMintWallets.reduce((acc, curr) => {
+        const solvers = solverAccounts.reduce((acc, curr) => {
             const i = Object.keys(acc).length + 1;
             return {
                 ...acc,
-                [`solver${i}Sand`]: curr
+                [`solver${i}`]: curr
             }
         }, {})
+        console.log("Number of solvers", solvers)
 
-        console.log("solverTokenAccounts", solverTokenAccounts)
         const sandTokenPDAIxs = (await this.getOrCreateAssociatedTokenAccountsIxs({
             mint: sandMint[0],
             payer: completer,
@@ -346,11 +400,11 @@ export class BountySdk {
                 protocol: protocolPda[0],
                 sandMint: sandMintPDA[0],
                 feeCollector: feeCollector[0],
-                bountyDenomination: bountyDenomination[0],
                 bounty: bountyPda[0],
                 escrow: escrowPDA[0],
-                relayer: relayer,
                 ...solverTokenAccounts,
+                ...solvers,
+                relayer: relayer,
             }).instruction();
         } else {
             completeBountyIx = await this.program.methods.completeBounty().accounts({
@@ -358,10 +412,10 @@ export class BountySdk {
                 protocol: protocolPda[0],
                 sandMint: sandMintPDA[0],
                 feeCollector: feeCollector[0],
-                bountyDenomination: bountyDenomination[0],
                 bounty: bountyPda[0],
                 escrow: escrowPDA[0],
                 ...solverTokenAccounts,
+                ...solvers,
             }).instruction();
         }
 

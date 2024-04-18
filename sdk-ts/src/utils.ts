@@ -30,6 +30,7 @@ export const sendAndConfirmTransaction = async (
 
     const signature = await connection.sendTransaction(transaction, {
       skipPreflight: false,
+
     });
     if (!latestBlockhash) {
       latestBlockhash = await connection.getLatestBlockhash();
@@ -38,7 +39,8 @@ export const sendAndConfirmTransaction = async (
     const confirmation = await connection.confirmTransaction({
       signature: signature,
       ...latestBlockhash
-    });
+    },
+      'confirmed');
     return {
       confirmation,
       signature
