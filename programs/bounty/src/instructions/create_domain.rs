@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 use std::mem::size_of;
 
 #[derive(Accounts)]
-#[instruction( 
+#[instruction(
     domain_type: String,
     platform: String,
     organization: String,
@@ -51,7 +51,14 @@ pub fn handler(
 
     // initialize the domain
     domain_account
-        .initialize(&domain_type, &organization, &team, &platform, creator, domain_bump)
+        .initialize(
+            &domain_type,
+            &organization,
+            &team,
+            &platform,
+            creator,
+            domain_bump,
+        )
         .unwrap();
     Ok(())
 }

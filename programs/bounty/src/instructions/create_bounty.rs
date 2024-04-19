@@ -13,14 +13,13 @@ use std::mem::size_of;
 pub struct CreateBounty<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
-    
+
     #[account(
         //constraint = mint.key().to_string().eq(BONK_MINT),
         constraint = creator_account.mint.eq(&mint.key()),
         constraint = escrow.mint.eq(&mint.key())
     )]
     pub mint: Account<'info, Mint>,
-
 
     #[account(
         init,
@@ -44,15 +43,13 @@ pub struct CreateBounty<'info> {
     #[account(mut)]
     pub creator_account: Account<'info, TokenAccount>,
 
-
-    // todo: check seeds 
+    // todo: check seeds
     #[account(
         constraint = bounty_denomination.mint.eq(&mint.key()),
-        constraint = bounty_denomination.active 
+        constraint = bounty_denomination.active
     )]
     pub bounty_denomination: Box<Account<'info, Denomination>>,
 
-   
     /// Bounty escrow to transfer funds to
     #[account(
         init,
@@ -79,11 +76,7 @@ pub struct CreateBounty<'info> {
 /// * area: e.g. backend
 /// * sub_domain: e.g. Sandblizzard,Microsoft
 /// * id: e.g. 453423
-pub fn handler(
-    ctx: Context<CreateBounty>,
-    id: String,
-    bounty_amount: u64,
-) -> Result<()> {
+pub fn handler(ctx: Context<CreateBounty>, id: String, bounty_amount: u64) -> Result<()> {
     let creator = &ctx.accounts.creator;
     let creator_account = &ctx.accounts.creator_account;
     let domain = &ctx.accounts.domain;
@@ -94,7 +87,7 @@ pub fn handler(
         .bounty
         .create_bounty(
             ctx.bumps.get("bounty").unwrap(),
-            &id,     
+            &id,
             &creator.key(),
             &escrow.key(),
             &domain.key(),

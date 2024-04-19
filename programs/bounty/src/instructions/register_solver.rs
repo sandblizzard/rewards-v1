@@ -34,7 +34,7 @@ pub struct RegisterSolver<'info> {
     #[account(
         init,
         payer = signer,
-        associated_token::mint = sand_mint, 
+        associated_token::mint = sand_mint,
         associated_token::authority = signer
     )]
     pub solver_token_account: Account<'info, TokenAccount>,
