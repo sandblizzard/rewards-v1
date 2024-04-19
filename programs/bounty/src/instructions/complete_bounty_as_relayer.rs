@@ -1,25 +1,19 @@
-use std::{
-    borrow::{Borrow, BorrowMut},
-    cell::RefCell,
-    ops::Div,
-    rc::Rc,
-};
+
 
 use crate::state::protocol_collector::TSolver;
 
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    token::{mint_to, Mint, MintTo, Token, TokenAccount},
-    token_2022::spl_token_2022::instruction::close_account,
+    token::{Mint, Token, TokenAccount},
 };
-use mpl_token_metadata::instructions::SetCollectionSize;
-use winnow::combinator::fail;
+
+
 
 use crate::{
     bounty_state::calculate_bounty_payout,
     get_solver_account_info,
-    state::{bounty_state::BountyState, Bounty, Denomination, Protocol, Relayer},
-    utils::{BlizzardError, BOUNTY_SEED, DENOMINATION_SEED, FEE_REC},
+    state::{bounty_state::BountyState, Bounty, Protocol, Relayer},
+    utils::{BlizzardError, BOUNTY_SEED},
     Solver,
 };
 

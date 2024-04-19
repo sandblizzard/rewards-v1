@@ -1,13 +1,11 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{accessor::mint, mint_to, Mint, MintTo, Token, TokenAccount};
-use solana_program::native_token::Sol;
+use anchor_spl::token::{Mint, Token, TokenAccount};
+
 
 use crate::{
     bounty_state::calculate_bounty_payout,
-    complete_bounty, protocol_collector,
-    state::{bounty_state::BountyState, Bounty, Denomination, Protocol},
-    utils::{BlizzardError, BOUNTY_SEED},
-    Relayer, Solver, TSolver,
+    state::{bounty_state::BountyState, Bounty, Protocol},
+    utils::{BlizzardError, BOUNTY_SEED}, Solver, TSolver,
 };
 
 #[derive(Accounts)]

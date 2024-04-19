@@ -1,11 +1,10 @@
 use std::ops::Div;
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
+
 
 use crate::{
-    utils::{BlizzardError, BOUNTY_SEED, FEE_REC},
-    AnySolver, TSolver,
+    utils::{BlizzardError, BOUNTY_SEED, FEE_REC}, TSolver,
 };
 
 use super::Relayer;
@@ -173,7 +172,7 @@ mod tests {
             bounty_amount: 0,
             completed_by: None,
         };
-        assert_eq!(bounty.is_owner(&owner), true);
+        assert!(bounty.is_owner(&owner));
     }
 
     #[test]

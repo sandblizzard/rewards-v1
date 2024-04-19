@@ -3,11 +3,11 @@
 //!
 
 use crate::{
-    state::{Denomination, Protocol},
+    state::{Denomination},
     utils::*,
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
+use anchor_spl::token::{Mint};
 
 #[derive(Accounts)]
 pub struct DeactivateBountyDenomination<'info> {

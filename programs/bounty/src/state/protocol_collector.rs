@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::Solver;
+
 
 // Solver trait that needs to be implemented by the protocol
 pub trait TSolver {

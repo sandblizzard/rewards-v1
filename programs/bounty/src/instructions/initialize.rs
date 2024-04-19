@@ -1,9 +1,9 @@
 use crate::state::*;
 use crate::utils::*;
 use anchor_lang::prelude::*;
-use anchor_spl::token::mint_to;
+
 use anchor_spl::token::Mint;
-use anchor_spl::token::MintTo;
+
 use anchor_spl::token::Token;
 use std::mem::size_of;
 
