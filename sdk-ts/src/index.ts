@@ -377,17 +377,9 @@ export class BountySdk {
             }
         }, {})
 
-        const sandTokenPDAIxs = (await this.getOrCreateAssociatedTokenAccountsIxs({
-            mint: sandMint[0],
-            payer: completer,
-            solverWallets: solversWallets
-        })).map((solver) => {
-            return solver.instruction as web3.TransactionInstruction
-        })
 
         const protocolPda = getProtocolPDA();
         const feeCollector = getFeeCollectorPDA(mint);
-        const bountyDenomination = getDenominationPDA(mint);
         const bountyPda = getBountyPDA(id);
         const escrowPDA = getEscrowPDA(bountyPda[0]);
         const sandMintPDA = getSandMint();

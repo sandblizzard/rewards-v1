@@ -183,13 +183,13 @@ pub fn handler(ctx: Context<CompleteBountyAsCreator>) -> Result<()> {
             &ctx.accounts.solver_token_account_1,
             &ctx.accounts.solver_token_account_2,
         );
-        let boutny_payout_proto = calculate_bounty_payout(
+        let bounty_payout_proto = calculate_bounty_payout(
             &bounty.bounty_amount.clone(),
             &solver_token_accounts,
             &fee_collector.to_account_info(),
         )?;
 
-        boutny_payout_proto.iter().for_each(|(solver, amount)| {
+        bounty_payout_proto.iter().for_each(|(solver, amount)| {
             anchor_spl::token::transfer(
                 CpiContext::new_with_signer(
                     ctx.accounts.token_program.to_account_info(),
