@@ -30,18 +30,15 @@ pub struct ClaimReward<'info> {
     /// token pda
     #[account(
         mut,
-        token::mint = mint,
-        token::authority = solver,
+        constraint = solver_token_account.owner.eq(&signer.key()) @ BlizzardError::WrongSolverTokenAccountOwner,
     )]
     pub solver_token_account: Account<'info, TokenAccount>,
 
-    //
     #[account(
         mut,
-        constraint = mint.mint_authority.unwrap().eq(&protocol.key())
+        constraint = mint.mint_authority.unwrap().eq(&protocol.key()) @ BlizzardError::WrongProtocolMintAuthority,
     )]
     pub mint: Account<'info, Mint>,
-
     pub system_program: Program<'info, System>,
     pub token_program: Program<'info, Token>,
 }
@@ -61,11 +58,11 @@ pub fn handler(ctx: Context<ClaimReward>) -> Result<()> {
             MintTo {
                 mint: ctx.accounts.mint.to_account_info(),
                 to: ctx.accounts.solver_token_account.to_account_info(),
-                authority: ctx.accounts.signer.to_account_info(),
+                authority: ctx.accounts.protocol.to_account_info(),
             },
             &[&protocol.seeds()],
         ),
-        1,
+        claimable_rewards,
     )?;
 
     solver.claim_rewards()?;

@@ -3,6 +3,7 @@ use anchor_spl::token::{accessor::mint, mint_to, Mint, MintTo, Token, TokenAccou
 use solana_program::native_token::Sol;
 
 use crate::{
+    bounty_state::calculate_bounty_payout,
     complete_bounty, protocol_collector,
     state::{bounty_state::BountyState, Bounty, Denomination, Protocol},
     utils::{BlizzardError, BOUNTY_SEED},
@@ -132,31 +133,6 @@ pub struct CompleteBounty<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn get_solvers<'info>(
-    solver1: &Account<'info, Solver>,
-    solver2: Option<&Account<'info, Solver>>,
-) -> Vec<Box<dyn TSolver>> {
-    let mut solvers: Vec<Box<dyn TSolver>> = Vec::new();
-    solvers.push(Box::new(solver1.clone().into_inner()));
-    if solver2.is_some() {
-        solvers.push(Box::new(solver2.unwrap().clone().into_inner()))
-    }
-    solvers
-}
-
-pub fn get_solver_token_accounts(
-    solver_token_account_1: &TokenAccount,
-    solver_token_account_2: &Option<TokenAccount>,
-) -> Vec<TokenAccount> {
-    let mut solvers = Vec::new();
-
-    solvers.push(solver_token_account_1.clone());
-    // if solver_token_account_2.is_some() {
-    //     solvers.push(solver_token_account_2.unwrap().clone())
-    // }
-    solvers
-}
-
 pub fn get_solver_account_info<'a>(
     solver1: &Account<'a, TokenAccount>,
     solver2: &Option<Account<'a, TokenAccount>>,
@@ -192,67 +168,56 @@ impl<'info> CompleteBounty<'info> {
 
 pub fn handler(ctx: Context<CompleteBountyAsCreator>) -> Result<()> {
     msg!("Complete bounty");
-    let bounty = &mut ctx.accounts.bounty;
     let payer = &ctx.accounts.payer;
     let protocol = &ctx.accounts.protocol;
     let sand_mint = &ctx.accounts.sand_mint;
     let fee_collector = &ctx.accounts.fee_collector;
-    let escrow = &ctx.accounts.escrow;
-    let token_program = &ctx.accounts.token_program;
+
+    let bounty = &mut ctx.accounts.bounty;
     if !(bounty.is_owner(&payer.key())) {
         return Err(BlizzardError::NotAuthToCompleteBounty.into());
     } else {
-        // create receivers vec
         msg!("Derref solvers");
 
-        // let solver_token_account2 = match ctx.accounts.solver_token_account_2 {
-        //     Some(solver) => Some(solver.to_account_info()),
-        //     None => None,
-        // };
-        // let mut solvers = get_solvers(&ctx.accounts.solver1, ctx.accounts.solver2.as_ref());
-        // let solver_token_accounts = get_solver_account_info(
-        //     &ctx.accounts.solver_token_account_1.to_account_info(),
-        //     solver_token_account2.as_ref(),
-        // );
-        // msg!("Complete bounty");
-        // let bounty_payout = ctx.accounts.bounty.calculate_bounty_payout(
-        //     &solver_token_accounts,
-        //     &fee_collector,
-        //     &payer.key,
-        // )?;
-        // let escrow = &escrow;
+        let solver_token_accounts = get_solver_account_info(
+            &ctx.accounts.solver_token_account_1,
+            &ctx.accounts.solver_token_account_2,
+        );
+        let boutny_payout_proto = calculate_bounty_payout(
+            &bounty.bounty_amount.clone(),
+            &solver_token_accounts,
+            &fee_collector.to_account_info(),
+        )?;
 
-        // msg!(
-        //     "Transfer bounty: {:?}, escrow: {:?}, total amount {}, payouts {:?}",
-        //     ctx.accounts.bounty.escrow.to_string(),
-        //     escrow.key().to_string(),
-        //     ctx.accounts.bounty.bounty_amount,
-        //     bounty_payout.iter().map(|pay| pay.1).collect::<Vec<u64>>()
-        // );
+        boutny_payout_proto.iter().for_each(|(solver, amount)| {
+            anchor_spl::token::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.token_program.to_account_info(),
+                    anchor_spl::token::Transfer {
+                        from: ctx.accounts.escrow.to_account_info(),
+                        to: solver.clone(),
+                        authority: bounty.as_mut().clone().to_account_info(),
+                    },
+                    &[&bounty.as_mut().clone().signing_seeds()],
+                ),
+                *amount,
+            )
+            .unwrap()
+        });
 
         // // update claimable mining reward
-        // let mining_reward = protocol.calculate_mining_reward(solvers.len(), sand_mint.decimals);
-        // solvers
-        //     .iter_mut()
-        //     .for_each(|(solver)| solver.update_rewards(mining_reward).unwrap());
+        let mining_reward =
+            protocol.calculate_mining_reward(solver_token_accounts.len(), sand_mint.decimals);
+        ctx.accounts.solver1.update_rewards(mining_reward)?;
+        if ctx.accounts.solver2.is_some() {
+            ctx.accounts
+                .solver2
+                .as_mut()
+                .unwrap()
+                .update_rewards(mining_reward)?;
+        }
 
-        // // update claimable bounty reward in a given mint
-
-        // bounty_payout.iter().for_each(|(solver, amount)| {
-        //     anchor_spl::token::transfer(
-        //         CpiContext::new_with_signer(
-        //             token_program.to_account_info(),
-        //             anchor_spl::token::Transfer {
-        //                 from: escrow.to_account_info(),
-        //                 to: solver.clone(),
-        //                 authority: bounty.to_account_info(),
-        //             },
-        //             &[&bounty.signing_seeds()],
-        //         ),
-        //         *amount,
-        //     )
-        //     .unwrap()
-        // });
+        bounty.complete_bounty(ctx.accounts.payer.key())?;
     }
     Ok(())
 }

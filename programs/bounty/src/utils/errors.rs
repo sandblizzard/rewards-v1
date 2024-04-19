@@ -38,4 +38,10 @@ pub enum BlizzardError {
 
     #[msg("No claimable reward")]
     NoClaimableReward,
+
+    #[msg("Wrong protocol mint authority")]
+    WrongProtocolMintAuthority,
+
+    #[msg("Wrong solver token account owner")]
+    WrongSolverTokenAccountOwner,
 }

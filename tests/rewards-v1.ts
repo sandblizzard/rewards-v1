@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
 import { assert, config, expect, use } from 'chai';
 import * as chaiAsPromised from "chai-as-promised"
 import { sendAndConfirmTransaction } from "../sdk-ts/src/utils";
-import { getSandMint, getSolverPDA } from "../sdk-ts/src";
+import { getProtocolPDA, getSandMint, getSolverPDA } from "../sdk-ts/src";
 use(chaiAsPromised.default)
 
 /**
@@ -185,8 +185,6 @@ describe('bounty', () => {
 
   });
 
-
-
   it('Add and remove Relayer -> Should Succees', async () => {
     // add relayer - relayer should be  pk + BOUNTY_SANDBLIZZARD
     const relayerKeys = web3.Keypair.generate();
@@ -212,7 +210,7 @@ describe('bounty', () => {
     expect(deactivatedRelayer.active, `relayer is not deactivated`).eq(false);
   });
 
-  it.only('Create bounty and try to complete it as a relayer -> Should Succeed', async () => {
+  it('Create bounty and try to complete it as a relayer -> Should Succeed', async () => {
     const bountyId = Math.floor(Math.random() * 1000000).toString();
     // add relayer - relayer should be  pk + BOUNTY_SANDBLIZZARD
     const relayerKeys = web3.Keypair.generate();
@@ -262,8 +260,11 @@ describe('bounty', () => {
     expect(bountyAccount.state.completed).to.exist
 
     // get sand token balance of user
+    const sandMintPda = await getSandMint();
+    const sandMint = await spl.getMint(provider.connection, sandMintPda[0]);
+
     const sandTokenAccount = await getAssociatedTokenAddress(
-      getSandMint()[0],
+      sandMintPda[0],
       userWallet.publicKey,
     );
     const sandTokenBalance = await provider.connection.getTokenAccountBalance(sandTokenAccount);
@@ -272,7 +273,24 @@ describe('bounty', () => {
     // check the claimable amount of the user
     const claimableAmount = await getSolverPDA(userWallet.publicKey);
     const claimableAmountInfo = await program.account.solver.fetch(claimableAmount[0]);
-    console.log("Claimable amount", claimableAmountInfo)
+    const claimableAmountValue = claimableAmountInfo.claimableRewards.toString();
+    const protocolPda = await getProtocolPDA();
+    const protocolAccount = await program.account.protocol.fetch(protocolPda[0]);
+
+
+    // test the claimable amount being equal to the 10.pow(sandMint.decimals) * protocolAccount.emission
+    const tokenDecimals = new anchor.BN(10).pow(new anchor.BN(sandMint.decimals));
+    const expectedAmount = protocolAccount.emission.mul(tokenDecimals);
+    expect(claimableAmountValue).to.equal(expectedAmount.toString());
+
+    // try to claim the amount
+    const claimAmount = await bountySdk.claimReward(
+      userWallet.publicKey
+    );
+    await sendAndConfirmTransaction(provider.connection, await claimAmount.vtx, [userWallet.payer])
+    // refetch the sand token balance
+    const sandTokenBalanceAfter = await provider.connection.getTokenAccountBalance(sandTokenAccount);
+    expect(sandTokenBalanceAfter.value.amount).to.equal(expectedAmount.toString());
 
 
   });

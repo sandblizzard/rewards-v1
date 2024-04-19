@@ -1094,6 +1094,16 @@ export type Bounty = {
       "code": 6011,
       "name": "NoClaimableReward",
       "msg": "No claimable reward"
+    },
+    {
+      "code": 6012,
+      "name": "WrongProtocolMintAuthority",
+      "msg": "Wrong protocol mint authority"
+    },
+    {
+      "code": 6013,
+      "name": "WrongSolverTokenAccountOwner",
+      "msg": "Wrong solver token account owner"
     }
   ]
 };
@@ -2194,6 +2204,16 @@ export const IDL: Bounty = {
       "code": 6011,
       "name": "NoClaimableReward",
       "msg": "No claimable reward"
+    },
+    {
+      "code": 6012,
+      "name": "WrongProtocolMintAuthority",
+      "msg": "Wrong protocol mint authority"
+    },
+    {
+      "code": 6013,
+      "name": "WrongSolverTokenAccountOwner",
+      "msg": "Wrong solver token account owner"
     }
   ]
 };

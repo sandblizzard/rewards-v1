@@ -5,6 +5,8 @@ use std::{
     rc::Rc,
 };
 
+use crate::{state::protocol_collector::TSolver};
+
 use anchor_lang::prelude::*;
 use anchor_spl::{
     token::{mint_to, Mint, MintTo, Token, TokenAccount},
@@ -15,7 +17,7 @@ use winnow::combinator::fail;
 
 use crate::{
     bounty_state::calculate_bounty_payout,
-    get_solver_account_info, get_solver_token_accounts, get_solvers,
+    get_solver_account_info,
     state::{bounty_state::BountyState, Bounty, Denomination, Protocol, Relayer},
     utils::{BlizzardError, BOUNTY_SEED, DENOMINATION_SEED, FEE_REC}, Solver,
 };
@@ -111,10 +113,8 @@ pub fn handler(ctx: Context<CompleteBountyAsRelayer>) -> Result<()> {
         return Err(BlizzardError::NotAuthToCompleteBounty.into());
     }
 
-;
     msg!("Derref solvers");
-    
-    let mut solvers = get_solvers(&ctx.accounts.solver1, ctx.accounts.solver2.as_ref()); 
+  
     let solver_token_accounts = get_solver_account_info(&ctx.accounts.solver_token_account_1, &ctx.accounts.solver_token_account_2);
     let boutny_payout_proto = calculate_bounty_payout(&bounty.bounty_amount.clone(), &solver_token_accounts, &fee_collector.to_account_info())?;
    
@@ -137,9 +137,10 @@ pub fn handler(ctx: Context<CompleteBountyAsRelayer>) -> Result<()> {
 
     // // update claimable mining reward
     let mining_reward = protocol.calculate_mining_reward(solver_token_accounts.len(), sand_mint.decimals);
-    solvers
-        .iter_mut()
-        .for_each(|(solver)| solver.update_rewards(mining_reward).unwrap());
+    ctx.accounts.solver1.update_rewards(mining_reward)?;
+    if ctx.accounts.solver2.is_some() {
+        ctx.accounts.solver2.as_mut().unwrap().update_rewards(mining_reward)?;
+    }
 
     bounty.complete_bounty(ctx.accounts.payer.key())?;
 

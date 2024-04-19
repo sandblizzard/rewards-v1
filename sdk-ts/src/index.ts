@@ -232,6 +232,7 @@ export class BountySdk {
         const sandMint = getSandMint();
         const solverPda = getSolverPDA(solver);
         const claimRewardsIx = await this.program.methods.claimRewards().accounts({
+            signer: solver,
             protocol: protocolPda[0],
             solver: solverPda[0],
             solverTokenAccount: await getSolverTokenAccount(solver, sandMint[0]),
@@ -239,7 +240,7 @@ export class BountySdk {
         }).instruction();
 
         return {
-            vtx: this.createVersionedTransaction([claimRewardsIx], this.signer),
+            vtx: this.createVersionedTransaction([claimRewardsIx], solver),
             ix: claimRewardsIx,
             protocolAccountPda: protocolPda[0],
             solverPda: solverPda[0],
@@ -375,7 +376,6 @@ export class BountySdk {
                 [`solver${i}`]: curr
             }
         }, {})
-        console.log("Number of solvers", solvers)
 
         const sandTokenPDAIxs = (await this.getOrCreateAssociatedTokenAccountsIxs({
             mint: sandMint[0],
@@ -384,7 +384,6 @@ export class BountySdk {
         })).map((solver) => {
             return solver.instruction as web3.TransactionInstruction
         })
-        console.log("Number of sand token accounts", sandTokenPDAIxs.length)
 
         const protocolPda = getProtocolPDA();
         const feeCollector = getFeeCollectorPDA(mint);
