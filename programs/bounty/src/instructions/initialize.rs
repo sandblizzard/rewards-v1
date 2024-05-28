@@ -39,7 +39,6 @@ pub struct Initialize<'info> {
         payer=protocol_owner,
         mint::decimals=9,
         mint::authority=protocol,
-        mint::freeze_authority=protocol,
 
     )]
     pub sand_mint: Account<'info, Mint>,

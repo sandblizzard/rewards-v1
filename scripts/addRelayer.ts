@@ -12,6 +12,9 @@ async function main() {
 
     const wallet = web3.Keypair.fromSecretKey(bs58.decode(secretKey))
 
+
+    const relayer = new web3.PublicKey(process.argv[2]) ?? new web3.PublicKey(wallet.publicKey);
+
     // setup connection from env rpc url
     const rpcUrl = process.env.RPC_URL
     if (!rpcUrl) throw error(400, 'No rpc url found')
@@ -21,7 +24,6 @@ async function main() {
     console.log(`Latest blockhash: ${latestBlockhash.blockhash}`)
     // create initialize identity transaction
     const bountySdk = new bounty.BountySdk(wallet.publicKey, connection);
-    const relayer = new web3.PublicKey(wallet.publicKey)
     const addRelayer = await bountySdk.addRelayer(relayer)
     await sendAndConfirmTransaction(connection, await addRelayer.vtx, [wallet], latestBlockhash)
     console.log(`Relayer ${addRelayer.relayerPda.toBase58()} added for ${relayer.toString()}`)

@@ -7,13 +7,13 @@ skip-lint = false
 url = "https://api.apr.dev"
 
 [programs.devnet]
-bounty = "BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e"
+bounty = "5DncffMLMaNXq9rLHa3B6UJpuo6XQinrJ1C8sx9JZD9w"
 
 [programs.mainnet]
-bounty = "BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e"
+bounty = "5DncffMLMaNXq9rLHa3B6UJpuo6XQinrJ1C8sx9JZD9w"
 
 [programs.localnet]
-bounty = "BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e"
+bounty = "5DncffMLMaNXq9rLHa3B6UJpuo6XQinrJ1C8sx9JZD9w"
 
 [provider]
 cluster = "localnet"

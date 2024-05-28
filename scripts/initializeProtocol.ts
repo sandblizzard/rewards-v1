@@ -23,7 +23,7 @@ async function main() {
     const bountySdk = new bounty.BountySdk(wallet.publicKey, connection);
     const initializeBountyProtocol = await bountySdk.initializeProtocol()
     await sendAndConfirmTransaction(connection, await initializeBountyProtocol.vtx, [wallet], latestBlockhash)
-    console.log(`Identity program initialized at ${initializeBountyProtocol.protocolAccountPda.toBase58()}`)
+    console.log(`Bounty program initialized at ${initializeBountyProtocol.protocolAccountPda.toBase58()}`)
 }
 
 main().catch(err => {

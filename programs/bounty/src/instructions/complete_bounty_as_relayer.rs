@@ -1,13 +1,7 @@
-
-
 use crate::state::protocol_collector::TSolver;
 
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    token::{Mint, Token, TokenAccount},
-};
-
-
+use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::{
     bounty_state::calculate_bounty_payout,

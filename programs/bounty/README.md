@@ -1,9 +1,9 @@
 # Bounty program
 
-devnet address: BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e
+devnet address: 5DncffMLMaNXq9rLHa3B6UJpuo6XQinrJ1C8sx9JZD9w
 mainnet address: TBD
 
-BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e
+5DncffMLMaNXq9rLHa3B6UJpuo6XQinrJ1C8sx9JZD9w
 Native token: A3LTRAn8fvZW5kuGRAXB7Xr1VGqVuCQUn1RxWSAtsJFH
 
 ## Deploy
@@ -14,6 +14,6 @@ Native token: A3LTRAn8fvZW5kuGRAXB7Xr1VGqVuCQUn1RxWSAtsJFH
 
 ## TODO:
 
-- [ ] Allow for Sand mining by solving bounties
-    - Either create SPL outside and transfer ownership or le
-- [ ] Make sure deployer is the only one that can initialize contract
+- [x] Allow for Sand mining by solving bounties
+- [x] Make sure deployer is the only one that can initialize contract
+- [ ] Upgrade contract 

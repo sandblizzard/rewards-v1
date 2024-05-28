@@ -42,7 +42,7 @@
 		const subDomain = createBountyInput.subDomain;
 		const id = createBountyInput.id;
 		const amount = await convertToken(mint, new anchor.BN(createBountyInput.bountyAmount));
-
+		console.log('createBounty: programId ', $workSpace.program.programId);
 		const bountyPDA = bountySdk.pdas.getBountyPDA($workSpace.program, id);
 
 		const escrowPDA = findProgramAddressSync(

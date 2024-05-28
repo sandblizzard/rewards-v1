@@ -1,3 +1,6 @@
+rpc_url_devnet := env_var('RPC_URL_DEVNET')
+
+
 # Build the bounty sdk 
 build_sdk:
     @echo "Building Bounty SDK..."
@@ -21,7 +24,12 @@ test: build_sdk
 # Deploy project to devnet
 deploy_devnet:
     @echo "Deploying Bounty to devnet ..."
-    anchor deploy --provider.cluster devnet --provider.wallet ~/.config/solana/id.json
+    anchor deploy --provider.cluster {{rpc_url_devnet}} --provider.wallet ~/.config/solana/id.json
+
+upgrade_devnet:
+    @echo "Deploying Bounty to devnet ..."
+    anchor upgrade --provider.cluster {{rpc_url_devnet}} --provider.wallet ~/.config/solana/id.json --program-id 5DncffMLMaNXq9rLHa3B6UJpuo6XQinrJ1C8sx9JZD9w target/deploy/bounty.so
+
 
 # Deploy Bounty to a specific RPC_URL
 deploy RPC_URL:
@@ -29,10 +37,10 @@ deploy RPC_URL:
     anchor deploy --provider.cluster {{RPC_URL}} --provider.wallet ~/.config/solana/id.json
 
 # Recover fees in case deployment failed
-recover_deploy:
+recover_deploy_devnet:
     @echo "Recovering Bounty..."
-    solana-keygen recover -o recover.json
-    solana program close recover.json
+    solana-keygen recover -o recover.json --force
+    solana program close recover.json -u devnet
 
 # Grind for keypair starting with PREFIX
 grind_key PREFIX:

@@ -10,7 +10,7 @@ export { Bounty }
 const METADATA_SEED = "metadata";
 
 const TOKEN_METADATA_PROGRAM_ID = new web3.PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
-export const BOUNTY_PROGRAM_ID = new web3.PublicKey("BoUNtye7MsbG3rWSXxgXTyWt2Q7veUrKwWeDJo7BED3e");
+export const BOUNTY_PROGRAM_ID = new web3.PublicKey("5DncffMLMaNXq9rLHa3B6UJpuo6XQinrJ1C8sx9JZD9w");
 
 /**
  * getProtocolPDA 
@@ -220,11 +220,16 @@ export class BountySdk {
         }).instruction();
 
         return {
-            vtx: this.createVersionedTransaction([registerSolverIx], solver),
+            vtx: await this.createVersionedTransaction([registerSolverIx], solver),
             ix: registerSolverIx,
             protocolAccountPda: protocolPda[0],
             solverPda: solverPda[0],
         }
+    }
+
+    getSolverAccount = async (solver: web3.PublicKey) => {
+        const solverPda = getSolverPDA(solver);
+        return this.program.account.solver.fetch(solverPda[0]);
     }
 
     claimReward = async (solver: web3.PublicKey) => {
@@ -240,7 +245,7 @@ export class BountySdk {
         }).instruction();
 
         return {
-            vtx: this.createVersionedTransaction([claimRewardsIx], solver),
+            vtx: await this.createVersionedTransaction([claimRewardsIx], solver),
             ix: claimRewardsIx,
             protocolAccountPda: protocolPda[0],
             solverPda: solverPda[0],
@@ -256,7 +261,7 @@ export class BountySdk {
         }).instruction();
 
         return {
-            vtx: this.createVersionedTransaction([deactivateBountyDenominationIx]),
+            vtx: await this.createVersionedTransaction([deactivateBountyDenominationIx]),
             ix: deactivateBountyDenominationIx,
             protocolAccountPda: getProtocolPDA()[0],
             denominationPda: denominationPda[0],
@@ -317,7 +322,7 @@ export class BountySdk {
         transactionInstructions.push(createBountyIx)
 
         return {
-            vtx: this.createVersionedTransaction(transactionInstructions, bountyCreator),
+            vtx: await this.createVersionedTransaction(transactionInstructions, bountyCreator),
             ix: transactionInstructions,
             bounty: bountyPda[0],
         }
@@ -412,7 +417,7 @@ export class BountySdk {
 
 
         return {
-            vtx: this.createVersionedTransaction([completeBountyIx], completer),
+            vtx: await this.createVersionedTransaction([completeBountyIx], completer),
             ix: completeBountyIx,
             protocolAccountPda: getProtocolPDA()[0],
         }
@@ -445,7 +450,7 @@ export class BountySdk {
         }).instruction();
 
         return {
-            vtx: this.createVersionedTransaction([addRelayerIx], this.signer),
+            vtx: await this.createVersionedTransaction([addRelayerIx], this.signer),
             ix: addRelayerIx,
             protocolAccountPda: getProtocolPDA()[0],
             relayerPda: relayerPda[0],
@@ -463,7 +468,7 @@ export class BountySdk {
         }).instruction();
 
         return {
-            vtx: this.createVersionedTransaction([removeRelayerIx], this.signer),
+            vtx: await this.createVersionedTransaction([removeRelayerIx], this.signer),
             ix: removeRelayerIx,
             protocolAccountPda: getProtocolPDA()[0],
             relayerPda: relayerPda[0],
@@ -486,7 +491,7 @@ export class BountySdk {
         }).instruction();
 
         return {
-            vtx: this.createVersionedTransaction([createDomainIx], this.signer),
+            vtx: await this.createVersionedTransaction([createDomainIx], this.signer),
             ix: createDomainIx,
             domainPda: domainPda[0],
         }
@@ -508,7 +513,7 @@ export class BountySdk {
         }).instruction();
 
         return {
-            vtx: this.createVersionedTransaction([deactivateDomainIx], this.signer),
+            vtx: await this.createVersionedTransaction([deactivateDomainIx], this.signer),
             ix: deactivateDomainIx,
             domainPda: domainPda[0],
         }
@@ -537,7 +542,7 @@ export class BountySdk {
         }).instruction();
 
         return {
-            vtx: this.createVersionedTransaction([addBountyDenominationIx]),
+            vtx: await this.createVersionedTransaction([addBountyDenominationIx]),
             ix: addBountyDenominationIx,
             protocolAccountPda: getProtocolPDA()[0],
             denominationPda: denominationPda[0],
