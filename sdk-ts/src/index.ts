@@ -310,6 +310,13 @@ export class BountySdk {
             throw new Error(`Escrow account ${escrowPDA[0]} already exists`)
         }
         const creatorAccount = await getAssociatedTokenAddress(mint, bountyCreator)
+        // create ata if not exist 
+        if (!(await this.accountExists(creatorAccount))) {
+            const createCreatorAccountIx = await getOrCreateAssociatedTokenAccountIx(this.connection, bountyCreator, mint, bountyCreator);
+            if (createCreatorAccountIx.instruction) {
+                transactionInstructions.push(createCreatorAccountIx.instruction)
+            }
+        }
         const createBountyIx = await this.program.methods.createBounty(id, bountyAmount).accounts({
             creator: bountyCreator,
             mint,
