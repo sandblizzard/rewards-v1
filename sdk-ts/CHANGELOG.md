@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.17](https://github.com/sandblizzard/rewards-v1/compare/v0.0.16...v0.0.17) (2024-06-03)
+
+
+### Features
+
+* **program:** update contract address, remove freeze authority in order to list ([7eb2990](https://github.com/sandblizzard/rewards-v1/commit/7eb2990f2397316352d95939fe304198544774cb))
+* **SDK:** create ata if not exist ([c6b8cc4](https://github.com/sandblizzard/rewards-v1/commit/c6b8cc412ef3747c074013a9a3474168230969aa))
+
 ### [0.0.16](https://github.com/sandblizzard/rewards-v1/compare/v0.0.15...v0.0.16) (2024-05-28)
 
 ### [0.0.15](https://github.com/sandblizzard/rewards-v1/compare/v0.0.14...v0.0.15) (2024-05-27)
