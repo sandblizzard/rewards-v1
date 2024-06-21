@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.19](https://github.com/sandblizzard/rewards-v1/compare/v0.0.17...v0.0.19) (2024-06-21)
+
+
+### Bug Fixes
+
+* update program, change address ([7ad149f](https://github.com/sandblizzard/rewards-v1/commit/7ad149f8a2accf9dc74804d360d0db3bc49cfa18))
+
 ### [0.0.17](https://github.com/sandblizzard/rewards-v1/compare/v0.0.16...v0.0.17) (2024-06-03)
 
 
