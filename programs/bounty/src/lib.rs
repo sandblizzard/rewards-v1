@@ -5,7 +5,7 @@ pub mod utils;
 
 pub use instructions::*;
 pub use state::*;
-declare_id!("5DncffMLMaNXq9rLHa3B6UJpuo6XQinrJ1C8sx9JZD9w");
+declare_id!("5Hwbrh6QMrHvBNZfYXmsktWtfohcSSCMaC5Er9ErwNoQ");
 
 #[program]
 pub mod bounty {
@@ -44,7 +44,7 @@ pub mod bounty {
     /// create_bounty
     ///
     /// creates a bounty
-    pub fn create_bounty(ctx: Context<CreateBounty>, id: String, bounty_amount: u64) -> Result<()> {
+    pub fn create_bounty(ctx: Context<CreateBounty>, id: u64, bounty_amount: u64) -> Result<()> {
         create_bounty::handler(ctx, id, bounty_amount)
     }
 

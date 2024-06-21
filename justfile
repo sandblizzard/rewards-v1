@@ -28,7 +28,7 @@ deploy_devnet:
 
 upgrade_devnet:
     @echo "Deploying Bounty to devnet ..."
-    anchor upgrade --provider.cluster {{rpc_url_devnet}} --provider.wallet ~/.config/solana/id.json --program-id 5DncffMLMaNXq9rLHa3B6UJpuo6XQinrJ1C8sx9JZD9w target/deploy/bounty.so
+    anchor upgrade --provider.cluster {{rpc_url_devnet}} --provider.wallet ~/.config/solana/id.json --program-id 5Hwbrh6QMrHvBNZfYXmsktWtfohcSSCMaC5Er9ErwNoQ target/deploy/bounty.so
 
 
 # Deploy Bounty to a specific RPC_URL

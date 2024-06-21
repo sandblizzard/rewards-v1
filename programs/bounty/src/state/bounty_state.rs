@@ -2,9 +2,9 @@ use std::ops::Div;
 
 use anchor_lang::prelude::*;
 
-
 use crate::{
-    utils::{BlizzardError, BOUNTY_SEED, FEE_REC}, TSolver,
+    utils::{BlizzardError, BOUNTY_SEED, FEE_REC},
+    TSolver,
 };
 
 use super::Relayer;
@@ -19,41 +19,37 @@ pub enum BountyState {
 #[account]
 #[derive(Debug)]
 pub struct Bounty {
-    pub id: String,
+    /// Owner of bounty
+    pub owner: Pubkey,
+    pub mint: Pubkey,
+    pub bounty_amount: u64,
+
+    /// State - created, closed
+    pub state: BountyState,
 
     pub bump: u8,
     /// for the seeds
     pub bump_array: [u8; 1],
     pub escrow_bump: u8,
 
-    /// Owner of bounty
-    pub owner: Pubkey,
-    pub mint: Pubkey,
-
-    /// State - created, closed
-    pub state: BountyState,
-
     /// escrow of the bounty
     pub escrow: Pubkey,
 
     /// domain information
     pub domain: Pubkey,
-    /// domain as bytes
-    pub domain_bytes: Vec<u8>,
 
-    pub bounty_amount: u64,
-
+    pub id_bytes: [u8; 8],
     pub completed_by: Option<Pubkey>,
 }
 
 impl Bounty {
     /// bounty seeds used to sign transactions
     pub fn signing_seeds(&self) -> [&[u8]; 3] {
-        [BOUNTY_SEED, self.id.as_bytes(), self.bump_array.as_ref()]
+        [BOUNTY_SEED, &self.id_bytes, self.bump_array.as_ref()]
     }
 
     pub fn seeds(&self) -> [&[u8]; 2] {
-        [BOUNTY_SEED, self.id.as_bytes()]
+        [BOUNTY_SEED, &self.id_bytes]
     }
 
     /// can_complete
@@ -70,7 +66,7 @@ impl Bounty {
     pub fn create_bounty(
         &mut self,
         bump: &u8,
-        id: &str,
+        id: &u64,
         owner: &Pubkey,
         escrow: &Pubkey,
         domain: &Pubkey,
@@ -84,7 +80,6 @@ impl Bounty {
 
         // init DomainIdentificator
         self.domain = *domain;
-        self.domain_bytes = domain.to_bytes().to_vec();
 
         // set remaining fields
         self.bump = *bump;
@@ -93,7 +88,7 @@ impl Bounty {
         self.state = BountyState::Created;
         self.escrow = *escrow;
         self.mint = *mint;
-        self.id = id.to_string();
+        self.id_bytes = id.to_le_bytes();
         self.escrow_bump = *escrow_bump;
         self.bounty_amount = bounty_amount;
         self.completed_by = None;
@@ -163,8 +158,7 @@ mod tests {
             bump_array: [0; 1],
             escrow_bump: 0,
             domain: Pubkey::new_unique(),
-            domain_bytes: [0; 32].to_vec(),
-            id: "".to_string(),
+            id_bytes: [0; 8],
             owner,
             mint: Pubkey::new_unique(),
             state: BountyState::Created,

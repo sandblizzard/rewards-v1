@@ -57,7 +57,7 @@ describe('bounty', () => {
   const organization = 'sandblizzard';
   const team = 'rewards_v1';
   const platform = 'github';
-  const id = Math.floor(Math.random() * 1000000).toString();
+  const id = Math.floor(Math.random() * 1000000);
   const bountyAmount = new anchor.BN(1000000);
 
   // global variables to be init
@@ -177,7 +177,8 @@ describe('bounty', () => {
       let createdBounty = await program.account.bounty.fetch(
         createBounty.bounty
       );
-      expect(createdBounty.id).to.equal(id);
+
+      expect(Buffer.from(createdBounty.idBytes).readBigInt64LE()).to.equal(BigInt(id));
     } catch (e) {
       console.log("error", e)
       throw e
@@ -211,7 +212,7 @@ describe('bounty', () => {
   });
 
   it('Create bounty and try to complete it as a relayer -> Should Succeed', async () => {
-    const bountyId = Math.floor(Math.random() * 1000000).toString();
+    const bountyId = Math.floor(Math.random() * 1000000);
     // add relayer - relayer should be  pk + BOUNTY_SANDBLIZZARD
     const relayerKeys = web3.Keypair.generate();
     const relayerWallet = new anchor.Wallet(relayerKeys);
@@ -237,7 +238,7 @@ describe('bounty', () => {
     let createdBounty = await program.account.bounty.fetch(
       createBounty.bounty
     );
-    expect(createdBounty.id).to.equal(bountyId);
+    expect(Buffer.from(createdBounty.idBytes).readBigInt64LE()).to.equal(BigInt(bountyId));
 
     // try to complete bounty
     console.log("Completing bounty with id", bountyId, "...")
@@ -296,7 +297,7 @@ describe('bounty', () => {
   });
 
   it('Create bounty and try to complete it as the creator -> Should Succeed', async () => {
-    const id = Math.floor(Math.random() * 1000000).toString();
+    const id = Math.floor(Math.random() * 1000000);
     // allow main wallet to create bounty
     const createBounty = await bountySdk.createBounty({
       id,
@@ -311,7 +312,7 @@ describe('bounty', () => {
     let createdBounty = await program.account.bounty.fetch(
       createBounty.bounty
     );
-    expect(createdBounty.id).to.equal(id);
+    expect(Buffer.from(createdBounty.idBytes).readBigInt64LE()).to.equal(BigInt(id));
     expect(createdBounty.state.created).to.exist
 
     // try to complete bounty as anyone
@@ -333,7 +334,7 @@ describe('bounty', () => {
   });
 
   it('Create bounty and try to complete it non creator -> Should Fail', async () => {
-    const id = Math.floor(Math.random() * 1000000).toString();
+    const id = Math.floor(Math.random() * 1000000);
     // allow main wallet to create bounty
     const createBounty = await bountySdk.createBounty({
       id,
@@ -347,7 +348,7 @@ describe('bounty', () => {
     let createdBounty = await program.account.bounty.fetch(
       createBounty.bounty
     );
-    expect(createdBounty.id).to.equal(id);
+    expect(Buffer.from(createdBounty.idBytes).readBigInt64LE()).to.equal(BigInt(id));
 
     // try to complete bounty as anyone
     const completeBounty = await bountySdk.completeBounty(
@@ -363,7 +364,7 @@ describe('bounty', () => {
   });
 
   it('Create bounty and complete it with no solver -> Should Succeed', async () => {
-    const id = Math.floor(Math.random() * 1000000).toString();
+    const id = Math.floor(Math.random() * 1000000);
     // allow main wallet to create bounty
     const createBounty = await bountySdk.createBounty({
       id,
@@ -377,7 +378,7 @@ describe('bounty', () => {
     let createdBounty = await program.account.bounty.fetch(
       createBounty.bounty
     );
-    expect(createdBounty.id).to.equal(id);
+    expect(Buffer.from(createdBounty.idBytes).readBigInt64LE()).to.equal(BigInt(id));
 
     // try to complete bounty as anyone
     const completeBounty = await bountySdk.completeBounty(
@@ -398,7 +399,7 @@ describe('bounty', () => {
   })
 
   it('Create bounty and try to complete it with a relayer that is not active -> Should Fail', async () => {
-    const id = Math.floor(Math.random() * 1000000).toString();
+    const id = Math.floor(Math.random() * 1000000);
     // allow main wallet to create bounty
     const createBounty = await bountySdk.createBounty({
       id,
@@ -413,7 +414,7 @@ describe('bounty', () => {
     let createdBounty = await program.account.bounty.fetch(
       createBounty.bounty
     );
-    expect(createdBounty.id).to.equal(id);
+    expect(Buffer.from(createdBounty.idBytes).readBigInt64LE()).to.equal(BigInt(id));
 
     // add relayer - relayer should be  pk + BOUNTY_SANDBLIZZARD
     const relayerKeys = web3.Keypair.generate();
@@ -479,7 +480,7 @@ describe('bounty', () => {
   });
 
   it("try to create a bounty with a domain that doesn't exist -> should succeed", async () => {
-    const id = Math.floor(Math.random() * 1000000).toString();
+    const id = Math.floor(Math.random() * 1000000);
     const organization = 'sandblizzard_test_doesnt_exist';
     const createBounty = await bountySdk.createBounty({
       id,
@@ -493,7 +494,7 @@ describe('bounty', () => {
   });
 
   it('try to create a bounty with a domain that is not active -> should fail', async () => {
-    const id = Math.floor(Math.random() * 1000000).toString();
+    const id = Math.floor(Math.random() * 1000000);
     const organization = 'sandblizzard_test_inactive';
     // create domain
     const createDomain = await bountySdk.createDomain(
@@ -528,5 +529,12 @@ describe('bounty', () => {
     );
     await expect(sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [wallet.payer])).to.be.rejectedWith(Error)
   })
+
+  it('try to get all bounties from one user -> should succeed', async () => {
+    const bounties = await bountySdk.getAllBountiesByUser(
+      wallet.publicKey
+    );
+    expect(bounties.length).to.equal(5);
+  });
 
 });

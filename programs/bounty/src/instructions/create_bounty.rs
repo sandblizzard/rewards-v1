@@ -9,7 +9,7 @@ use std::mem::size_of;
 /// If comes from a users <-> nft then the creator needs to be the signer not the
 /// owner of the NFT
 #[derive(Accounts)]
-#[instruction( id: String)]
+#[instruction( id: u64)]
 pub struct CreateBounty<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
@@ -26,7 +26,7 @@ pub struct CreateBounty<'info> {
         payer = creator,
         seeds = [
             BOUNTY_SEED,
-            id.as_bytes(),
+            id.to_le_bytes().as_ref(),
         ],
         bump,
         space=8 + size_of::<Bounty>()
@@ -76,7 +76,7 @@ pub struct CreateBounty<'info> {
 /// * area: e.g. backend
 /// * sub_domain: e.g. Sandblizzard,Microsoft
 /// * id: e.g. 453423
-pub fn handler(ctx: Context<CreateBounty>, id: String, bounty_amount: u64) -> Result<()> {
+pub fn handler(ctx: Context<CreateBounty>, id: u64, bounty_amount: u64) -> Result<()> {
     let creator = &ctx.accounts.creator;
     let creator_account = &ctx.accounts.creator_account;
     let domain = &ctx.accounts.domain;

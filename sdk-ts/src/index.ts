@@ -10,7 +10,7 @@ export { Bounty }
 const METADATA_SEED = "metadata";
 
 const TOKEN_METADATA_PROGRAM_ID = new web3.PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
-export const BOUNTY_PROGRAM_ID = new web3.PublicKey("5DncffMLMaNXq9rLHa3B6UJpuo6XQinrJ1C8sx9JZD9w");
+export const BOUNTY_PROGRAM_ID = new web3.PublicKey("5Hwbrh6QMrHvBNZfYXmsktWtfohcSSCMaC5Er9ErwNoQ");
 
 /**
  * getProtocolPDA 
@@ -78,9 +78,9 @@ const getMetadataAddress = (mint: web3.PublicKey) => {
  *              e.g. for github issues it will be issueId
  * @returns 
  */
-const getBountyPDA = (id: string) => {
+const getBountyPDA = (id: number) => {
     return web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("BOUNTY_SANDBLIZZARD"), Buffer.from(id)],
+        [Buffer.from("BOUNTY_SANDBLIZZARD"), new BN(id).toBuffer('le', 8)],
         BOUNTY_PROGRAM_ID
     )
 }
@@ -281,7 +281,7 @@ export class BountySdk {
         organization,
         team,
         domainType
-    }: { id: string, bountyAmount: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string }) => {
+    }: { id: number, bountyAmount: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string }) => {
         const denominationPda = getDenominationPDA(mint);
         const transactionInstructions: web3.TransactionInstruction[] = [];
         if (!(await this.accountExists(denominationPda[0]))) {
@@ -317,7 +317,7 @@ export class BountySdk {
                 transactionInstructions.push(createCreatorAccountIx.instruction)
             }
         }
-        const createBountyIx = await this.program.methods.createBounty(id, bountyAmount).accounts({
+        const createBountyIx = await this.program.methods.createBounty(new BN(id), bountyAmount).accounts({
             creator: bountyCreator,
             mint,
             bounty: bountyPda[0],
@@ -352,7 +352,7 @@ export class BountySdk {
             completer,
             solversWallets
         }:
-            { id: string, relayer?: web3.PublicKey, mint: web3.PublicKey, completer: web3.PublicKey, solversWallets: web3.PublicKey[] }) => {
+            { id: number, relayer?: web3.PublicKey, mint: web3.PublicKey, completer: web3.PublicKey, solversWallets: web3.PublicKey[] }) => {
 
         // validate the solvers 
         if (solversWallets.length > 4) {
@@ -554,6 +554,23 @@ export class BountySdk {
             protocolAccountPda: getProtocolPDA()[0],
             denominationPda: denominationPda[0],
         }
+    }
+
+    getAllBounties = async () => {
+        return this.program.account.bounty.all();
+    }
+
+    getAllBountiesByUser = async (address: web3.PublicKey) => {
+        const memcmpFilters = [
+            {
+                memcmp: {
+                    offset: 8,
+                    bytes: address.toBase58()
+                }
+            }
+        ]
+
+        return await this.program.account.bounty.all(memcmpFilters)
     }
 
 

@@ -280,7 +280,7 @@ export type Bounty = {
       "args": [
         {
           "name": "id",
-          "type": "string"
+          "type": "u64"
         },
         {
           "name": "bountyAmount",
@@ -647,8 +647,28 @@ export type Bounty = {
         "kind": "struct",
         "fields": [
           {
-            "name": "id",
-            "type": "string"
+            "name": "owner",
+            "docs": [
+              "Owner of bounty"
+            ],
+            "type": "publicKey"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "bountyAmount",
+            "type": "u64"
+          },
+          {
+            "name": "state",
+            "docs": [
+              "State - created, closed"
+            ],
+            "type": {
+              "defined": "BountyState"
+            }
           },
           {
             "name": "bump",
@@ -671,26 +691,6 @@ export type Bounty = {
             "type": "u8"
           },
           {
-            "name": "owner",
-            "docs": [
-              "Owner of bounty"
-            ],
-            "type": "publicKey"
-          },
-          {
-            "name": "mint",
-            "type": "publicKey"
-          },
-          {
-            "name": "state",
-            "docs": [
-              "State - created, closed"
-            ],
-            "type": {
-              "defined": "BountyState"
-            }
-          },
-          {
             "name": "escrow",
             "docs": [
               "escrow of the bounty"
@@ -705,15 +705,13 @@ export type Bounty = {
             "type": "publicKey"
           },
           {
-            "name": "domainBytes",
-            "docs": [
-              "domain as bytes"
-            ],
-            "type": "bytes"
-          },
-          {
-            "name": "bountyAmount",
-            "type": "u64"
+            "name": "idBytes",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
           },
           {
             "name": "completedBy",
@@ -1390,7 +1388,7 @@ export const IDL: Bounty = {
       "args": [
         {
           "name": "id",
-          "type": "string"
+          "type": "u64"
         },
         {
           "name": "bountyAmount",
@@ -1757,8 +1755,28 @@ export const IDL: Bounty = {
         "kind": "struct",
         "fields": [
           {
-            "name": "id",
-            "type": "string"
+            "name": "owner",
+            "docs": [
+              "Owner of bounty"
+            ],
+            "type": "publicKey"
+          },
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "bountyAmount",
+            "type": "u64"
+          },
+          {
+            "name": "state",
+            "docs": [
+              "State - created, closed"
+            ],
+            "type": {
+              "defined": "BountyState"
+            }
           },
           {
             "name": "bump",
@@ -1781,26 +1799,6 @@ export const IDL: Bounty = {
             "type": "u8"
           },
           {
-            "name": "owner",
-            "docs": [
-              "Owner of bounty"
-            ],
-            "type": "publicKey"
-          },
-          {
-            "name": "mint",
-            "type": "publicKey"
-          },
-          {
-            "name": "state",
-            "docs": [
-              "State - created, closed"
-            ],
-            "type": {
-              "defined": "BountyState"
-            }
-          },
-          {
             "name": "escrow",
             "docs": [
               "escrow of the bounty"
@@ -1815,15 +1813,13 @@ export const IDL: Bounty = {
             "type": "publicKey"
           },
           {
-            "name": "domainBytes",
-            "docs": [
-              "domain as bytes"
-            ],
-            "type": "bytes"
-          },
-          {
-            "name": "bountyAmount",
-            "type": "u64"
+            "name": "idBytes",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
           },
           {
             "name": "completedBy",
