@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.20](https://github.com/sandblizzard/rewards-v1/compare/v0.0.19...v0.0.20) (2024-06-25)
+
 ### [0.0.19](https://github.com/sandblizzard/rewards-v1/compare/v0.0.17...v0.0.19) (2024-06-21)
 
 
