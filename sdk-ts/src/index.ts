@@ -573,6 +573,10 @@ export class BountySdk {
         return await this.program.account.bounty.all(memcmpFilters)
     }
 
+    getDomain = async ({ address }: { address: web3.PublicKey }) => {
+        return this.program.account.domain.fetch(address)
+    }
+
 
 
 
