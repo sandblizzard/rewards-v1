@@ -578,6 +578,25 @@ export class BountySdk {
     }
 
 
-
-
+    // get all solvers for a given bounty
+    getAllSolvers = async ({
+        minTotalReward,
+        isActive
+    }: {
+        minTotalReward?: BN
+        isActive?: boolean
+    }) => {
+        const solvers = await this.program.account.solver.all();
+        return solvers.filter((solver) => {
+            const filters = []
+            if (minTotalReward) {
+                filters.push(solver.account.totalRewards.gte(minTotalReward))
+            }
+            if (isActive) {
+                filters.push(solver.account.active)
+            }
+            return filters.every((filter) => filter)
+        }
+        )
+    }
 }
