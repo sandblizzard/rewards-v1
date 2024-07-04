@@ -13,7 +13,7 @@ async function main() {
     const wallet = web3.Keypair.fromSecretKey(bs58.decode(secretKey))
 
 
-    const relayer = new web3.PublicKey(process.argv[2]) ?? new web3.PublicKey(wallet.publicKey);
+    const relayer = process.argv[2] ? new web3.PublicKey(process.argv[2]) : new web3.PublicKey(wallet.publicKey);
 
     // setup connection from env rpc url
     const rpcUrl = process.env.RPC_URL

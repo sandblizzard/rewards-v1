@@ -78,9 +78,9 @@ const getMetadataAddress = (mint: web3.PublicKey) => {
  *              e.g. for github issues it will be issueId
  * @returns 
  */
-const getBountyPDA = (id: number) => {
+const getBountyPDA = (id: BN) => {
     return web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("BOUNTY_SANDBLIZZARD"), new BN(id).toBuffer('le', 8)],
+        [Buffer.from("BOUNTY_SANDBLIZZARD"), id.toBuffer('le', 8)],
         BOUNTY_PROGRAM_ID
     )
 }
@@ -287,7 +287,7 @@ export class BountySdk {
         solution,
         bountyId,
         solver
-    }: { solution: string, bountyId: number, solver: web3.PublicKey }) => {
+    }: { solution: string, bountyId: BN, solver: web3.PublicKey }) => {
         const bountyPda = getBountyPDA(bountyId);
         const bountySolutionPDA = getBountySolutionPDA(solver, bountyPda[0]);
         const bounty = await this.program.account.bounty.fetch(bountyPda[0]);
@@ -318,7 +318,7 @@ export class BountySdk {
         }
     }
 
-    getUserSolution = async (solver: web3.PublicKey, bountyId: number) => {
+    getUserSolution = async (solver: web3.PublicKey, bountyId: BN) => {
         const bountyPda = getBountyPDA(bountyId);
         const bountySolutionPDA = getBountySolutionPDA(solver, bountyPda[0]);
         return this.program.account.bountySolution.fetch(bountySolutionPDA[0]);
@@ -330,7 +330,7 @@ export class BountySdk {
         amount,
         mint,
         payer
-    }: { bountyId: number, amount: BN, mint: web3.PublicKey, payer: web3.PublicKey }) => {
+    }: { bountyId: BN, amount: BN, mint: web3.PublicKey, payer: web3.PublicKey }) => {
         const bountyPda = getBountyPDA(bountyId);
         const escrowPDA = getEscrowPDA(bountyPda[0]);
         const donateToBountyIx = await this.program.methods.donateToBounty(amount).accounts({
@@ -347,6 +347,47 @@ export class BountySdk {
         }
     }
 
+    createBountyWithInitialDonation = async ({
+        id,
+        externalId,
+        title,
+        description,
+        ends_at,
+        bountyCreator,
+        mint,
+        platform,
+        organization,
+        team,
+        domainType,
+        amount
+    }: { id: BN, externalId?: string, title?: string, description?: string, ends_at?: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string, amount: BN }) => {
+        const createBountyResult = await this.createBounty({
+            id,
+            externalId,
+            title,
+            description,
+            ends_at,
+            bountyCreator,
+            mint,
+            platform,
+            organization,
+            team,
+            domainType
+        })
+        const donateToBounty = await this.donateToBounty({
+            bountyId: id,
+            amount,
+            mint,
+            payer: bountyCreator
+        })
+        const transactionInstructions = [...createBountyResult.ix, donateToBounty.ix]
+        return {
+            vtx: await this.createVersionedTransaction(transactionInstructions, bountyCreator),
+            ix: transactionInstructions,
+            escrow: donateToBounty.escrowPda
+        }
+    }
+
     createBounty = async ({
         id,
         externalId,
@@ -359,7 +400,7 @@ export class BountySdk {
         organization,
         team,
         domainType
-    }: { id: number, externalId?: string, title?: string, description?: string, ends_at?: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string }) => {
+    }: { id: BN, externalId?: string, title?: string, description?: string, ends_at?: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string }) => {
 
         if (!externalId) {
             externalId = id.toString()
@@ -445,7 +486,7 @@ export class BountySdk {
             completer,
             solversWallets
         }:
-            { id: number, relayer?: web3.PublicKey, mint: web3.PublicKey, completer: web3.PublicKey, solversWallets: web3.PublicKey[] }) => {
+            { id: BN, relayer?: web3.PublicKey, mint: web3.PublicKey, completer: web3.PublicKey, solversWallets: web3.PublicKey[] }) => {
 
         // validate the solvers 
         if (solversWallets.length > 4) {
