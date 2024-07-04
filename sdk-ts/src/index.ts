@@ -10,7 +10,7 @@ export { Bounty }
 const METADATA_SEED = "metadata";
 
 const TOKEN_METADATA_PROGRAM_ID = new web3.PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
-export const BOUNTY_PROGRAM_ID = new web3.PublicKey("5Hwbrh6QMrHvBNZfYXmsktWtfohcSSCMaC5Er9ErwNoQ");
+export const BOUNTY_PROGRAM_ID = new web3.PublicKey("AwB63JJU3RSdC4YSNryZvotA3GXyVrYEXnWY3CQ8Fxoq");
 
 /**
  * getProtocolPDA 
