@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.23](https://github.com/sandblizzard/rewards-v1/compare/v0.0.22...v0.0.23) (2024-07-04)
+
+
+### Features
+
+* **bounty:** update program to be able to create bounties and submit solutions ([05d4247](https://github.com/sandblizzard/rewards-v1/commit/05d4247451b18b2754368c87b3690ab980b44b1f))
+
 ### [0.0.22](https://github.com/sandblizzard/rewards-v1/compare/v0.0.21...v0.0.22) (2024-07-04)
 
 ### [0.0.21](https://github.com/sandblizzard/rewards-v1/compare/v0.0.20...v0.0.21) (2024-06-28)
