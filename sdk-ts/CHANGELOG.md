@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.24](https://github.com/sandblizzard/rewards-v1/compare/v0.0.23...v0.0.24) (2024-07-04)
+
+
+### Bug Fixes
+
+* **sdk:** update bounty program Id ([3035b60](https://github.com/sandblizzard/rewards-v1/commit/3035b607a0216dfd66005b7a7232abc070a84fdf))
+
 ### [0.0.23](https://github.com/sandblizzard/rewards-v1/compare/v0.0.22...v0.0.23) (2024-07-04)
 
 
