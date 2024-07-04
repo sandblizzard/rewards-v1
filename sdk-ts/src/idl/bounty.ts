@@ -283,8 +283,116 @@ export type Bounty = {
           "type": "u64"
         },
         {
-          "name": "bountyAmount",
+          "name": "externalId",
+          "type": "string"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "endsAt",
+          "type": {
+            "option": "i64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "donateToBounty",
+      "docs": [
+        "donate_to_bounty"
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bounty",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "donaterTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Account to credit the user"
+          ]
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Bounty escrow to transfer funds to"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "proposeBountySolution",
+      "docs": [
+        "propose_bounty_solution"
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bounty",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bountySolution",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "solution",
+          "type": "string"
         }
       ]
     },
@@ -642,6 +750,47 @@ export type Bounty = {
   ],
   "accounts": [
     {
+      "name": "bountySolution",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "bumpArray",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
+          },
+          {
+            "name": "bounty",
+            "type": "publicKey"
+          },
+          {
+            "name": "solver",
+            "type": "publicKey"
+          },
+          {
+            "name": "solution",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "updatedAt",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "bounty",
       "type": {
         "kind": "struct",
@@ -656,10 +805,6 @@ export type Bounty = {
           {
             "name": "mint",
             "type": "publicKey"
-          },
-          {
-            "name": "bountyAmount",
-            "type": "u64"
           },
           {
             "name": "state",
@@ -715,8 +860,67 @@ export type Bounty = {
           },
           {
             "name": "completedBy",
+            "docs": [
+              "WHo completed the bounty"
+            ],
             "type": {
               "option": "publicKey"
+            }
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "updatedAt",
+            "type": "i64"
+          },
+          {
+            "name": "endsAt",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "externalId",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "donaters",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "donateAmount",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "solvers",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "solverSolutions",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "solvedBy",
+            "type": {
+              "vec": "publicKey"
             }
           }
         ]
@@ -1040,66 +1244,71 @@ export type Bounty = {
     },
     {
       "code": 6001,
+      "name": "BountyIsCompleted",
+      "msg": "bounty is completed"
+    },
+    {
+      "code": 6002,
       "name": "NotAuthToCompleteBounty",
       "msg": "signer missing auth to complete bounty"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "NotAuthToReleaseEscrow",
       "msg": "signer missing auth to release escrow"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "MissingReceiverTokenAccounts",
       "msg": "at least one receiver needs to be specified"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "WrongFeeCollectorMint",
       "msg": "wrong mint for fee collector"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "WrongProtocolFeeCollector",
       "msg": "fee collector does not match protocol fee collector"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "WrongDenominationFeeCollector",
       "msg": "invalid denomination fee collector"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "WrongDenominationMint",
       "msg": "invalid denomination mint"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "AccountIsNotSigner",
       "msg": "Account is not signer"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "AccountNotActive",
       "msg": "Account is not active"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "DomainNotActive",
       "msg": "Domain is not active"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "NoClaimableReward",
       "msg": "No claimable reward"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "WrongProtocolMintAuthority",
       "msg": "Wrong protocol mint authority"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "WrongSolverTokenAccountOwner",
       "msg": "Wrong solver token account owner"
     }
@@ -1391,8 +1600,116 @@ export const IDL: Bounty = {
           "type": "u64"
         },
         {
-          "name": "bountyAmount",
+          "name": "externalId",
+          "type": "string"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "endsAt",
+          "type": {
+            "option": "i64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "donateToBounty",
+      "docs": [
+        "donate_to_bounty"
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bounty",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "donaterTokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Account to credit the user"
+          ]
+        },
+        {
+          "name": "escrow",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Bounty escrow to transfer funds to"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
           "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "proposeBountySolution",
+      "docs": [
+        "propose_bounty_solution"
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bounty",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bountySolution",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "solution",
+          "type": "string"
         }
       ]
     },
@@ -1750,6 +2067,47 @@ export const IDL: Bounty = {
   ],
   "accounts": [
     {
+      "name": "bountySolution",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "bumpArray",
+            "type": {
+              "array": [
+                "u8",
+                1
+              ]
+            }
+          },
+          {
+            "name": "bounty",
+            "type": "publicKey"
+          },
+          {
+            "name": "solver",
+            "type": "publicKey"
+          },
+          {
+            "name": "solution",
+            "type": "string"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "updatedAt",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "bounty",
       "type": {
         "kind": "struct",
@@ -1764,10 +2122,6 @@ export const IDL: Bounty = {
           {
             "name": "mint",
             "type": "publicKey"
-          },
-          {
-            "name": "bountyAmount",
-            "type": "u64"
           },
           {
             "name": "state",
@@ -1823,8 +2177,67 @@ export const IDL: Bounty = {
           },
           {
             "name": "completedBy",
+            "docs": [
+              "WHo completed the bounty"
+            ],
             "type": {
               "option": "publicKey"
+            }
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "updatedAt",
+            "type": "i64"
+          },
+          {
+            "name": "endsAt",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "externalId",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "donaters",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "donateAmount",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "solvers",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "solverSolutions",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "solvedBy",
+            "type": {
+              "vec": "publicKey"
             }
           }
         ]
@@ -2148,66 +2561,71 @@ export const IDL: Bounty = {
     },
     {
       "code": 6001,
+      "name": "BountyIsCompleted",
+      "msg": "bounty is completed"
+    },
+    {
+      "code": 6002,
       "name": "NotAuthToCompleteBounty",
       "msg": "signer missing auth to complete bounty"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "NotAuthToReleaseEscrow",
       "msg": "signer missing auth to release escrow"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "MissingReceiverTokenAccounts",
       "msg": "at least one receiver needs to be specified"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "WrongFeeCollectorMint",
       "msg": "wrong mint for fee collector"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "WrongProtocolFeeCollector",
       "msg": "fee collector does not match protocol fee collector"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "WrongDenominationFeeCollector",
       "msg": "invalid denomination fee collector"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "WrongDenominationMint",
       "msg": "invalid denomination mint"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "AccountIsNotSigner",
       "msg": "Account is not signer"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "AccountNotActive",
       "msg": "Account is not active"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "DomainNotActive",
       "msg": "Domain is not active"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "NoClaimableReward",
       "msg": "No claimable reward"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "WrongProtocolMintAuthority",
       "msg": "Wrong protocol mint authority"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "WrongSolverTokenAccountOwner",
       "msg": "Wrong solver token account owner"
     }

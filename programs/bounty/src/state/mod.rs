@@ -1,3 +1,4 @@
+pub mod bounty_solution;
 pub mod bounty_state;
 pub mod denomination;
 pub mod domain;
@@ -7,6 +8,7 @@ pub mod protocol_collector;
 pub mod relayer;
 pub mod solver;
 
+pub use bounty_solution::*;
 pub use bounty_state::Bounty;
 pub use denomination::*;
 pub use domain::*;

@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 
 use crate::{
     utils::{BlizzardError, BOUNTY_SEED, FEE_REC},
-    TSolver,
+    Solver, TSolver,
 };
 
 use super::Relayer;
@@ -22,8 +22,6 @@ pub struct Bounty {
     /// Owner of bounty
     pub owner: Pubkey,
     pub mint: Pubkey,
-    pub bounty_amount: u64,
-
     /// State - created, closed
     pub state: BountyState,
 
@@ -39,7 +37,33 @@ pub struct Bounty {
     pub domain: Pubkey,
 
     pub id_bytes: [u8; 8],
+
+    /// WHo completed the bounty
     pub completed_by: Option<Pubkey>,
+
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub ends_at: Option<i64>,
+
+    // external id of the bounty. Could be bounty ID
+    // In the case of github issues this would be the issue id
+    pub external_id: String,
+
+    // title of the bounty
+    pub title: String,
+
+    // description of the bounty
+    pub description: String,
+
+    // pubkeys that contributed to the bounty
+    pub donaters: Vec<Pubkey>,
+    pub donate_amount: Vec<u64>,
+
+    // pubkeys that solved the bounty
+    pub solvers: Vec<Pubkey>,
+    pub solver_solutions: Vec<Pubkey>,
+
+    pub solved_by: Vec<Pubkey>,
 }
 
 impl Bounty {
@@ -66,32 +90,76 @@ impl Bounty {
     pub fn create_bounty(
         &mut self,
         bump: &u8,
+        title: &str,
+        description: &str,
         id: &u64,
+        external_id: &str,
         owner: &Pubkey,
         escrow: &Pubkey,
         domain: &Pubkey,
-        bounty_amount: u64,
         mint: &Pubkey,
         escrow_bump: &u8,
+        ends_at: Option<i64>,
     ) -> Result<()> {
         if self.state == BountyState::Completed {
             return Err(BlizzardError::CanNotReinitBounty.into());
         }
+        self.owner = *owner;
+        self.mint = *mint;
+
+        self.bump = *bump;
+        self.bump_array = [*bump; 1];
+
+        self.escrow = *escrow;
+        self.escrow_bump = *escrow_bump;
 
         // init DomainIdentificator
         self.domain = *domain;
 
-        // set remaining fields
-        self.bump = *bump;
-        self.bump_array = [*bump; 1];
-        self.owner = *owner;
+        self.id_bytes = id.to_le_bytes();
+        self.external_id = external_id.to_string();
+
+        self.created_at = Clock::get()?.unix_timestamp;
+        self.updated_at = Clock::get()?.unix_timestamp;
+        // ends in three days
+        self.ends_at = ends_at;
         self.state = BountyState::Created;
         self.escrow = *escrow;
-        self.mint = *mint;
-        self.id_bytes = id.to_le_bytes();
+
         self.escrow_bump = *escrow_bump;
-        self.bounty_amount = bounty_amount;
-        self.completed_by = None;
+
+        self.title = title.to_string();
+        self.description = description.to_string();
+
+        self.donaters = vec![];
+        self.donate_amount = vec![];
+
+        self.solvers = vec![];
+        self.solver_solutions = vec![];
+
+        self.solved_by = vec![];
+        Ok(())
+    }
+
+    /// donate_to_bounty
+    pub fn donate_to_bounty(&mut self, donater: &Pubkey, amount: u64) -> Result<()> {
+        if self.state == BountyState::Completed {
+            return Err(BlizzardError::BountyIsCompleted.into());
+        }
+        // concatenate the
+
+        self.donaters.push(*donater);
+        self.donate_amount.push(amount);
+        Ok(())
+    }
+
+    /// Propose solution to bounty
+    pub fn propose_solution(&mut self, solver: &Pubkey, solution: &Pubkey) -> Result<()> {
+        if self.state == BountyState::Completed {
+            return Err(BlizzardError::BountyIsCompleted.into());
+        }
+        self.solvers.push(*solver);
+        self.solver_solutions.push(*solution);
         Ok(())
     }
 
@@ -103,7 +171,7 @@ impl Bounty {
     ) -> Result<Vec<(&Box<dyn TSolver>, u64)>> {
         self.state = BountyState::Completed;
 
-        let total_amount = self.bounty_amount;
+        let total_amount = self.donate_amount.iter().sum::<u64>();
         let num_solvers = solvers.len();
         let fee = total_amount.div(FEE_REC);
         let amount_per_solver = (total_amount - fee).div(num_solvers as u64);
@@ -115,14 +183,19 @@ impl Bounty {
         bounty_payout.push((&fee_collector, amount_per_solver));
 
         // update state
-        self.completed_by = Some(*completer);
+        self.solved_by = vec![*completer];
         self.state = BountyState::Completed;
 
         Ok(bounty_payout)
     }
 
-    pub fn complete_bounty<'info>(&mut self, completer: Pubkey) -> Result<()> {
+    pub fn complete_bounty<'info>(
+        &mut self,
+        completer: Pubkey,
+        solvers: Vec<Box<dyn TSolver>>,
+    ) -> Result<()> {
         self.completed_by = Some(completer);
+        self.solved_by = solvers.iter().map(|s| s.get_owner()).collect();
         self.state = BountyState::Completed;
         Ok(())
     }
@@ -163,8 +236,18 @@ mod tests {
             mint: Pubkey::new_unique(),
             state: BountyState::Created,
             escrow: Pubkey::new_unique(),
-            bounty_amount: 0,
+            created_at: 0,
+            updated_at: 0,
+            ends_at: Some(0),
+            external_id: "0".to_string(),
+            title: "title".to_string(),
+            description: "description".to_string(),
+            donaters: vec![],
+            donate_amount: vec![],
+            solvers: vec![],
+            solver_solutions: vec![],
             completed_by: None,
+            solved_by: vec![],
         };
         assert!(bounty.is_owner(&owner));
     }

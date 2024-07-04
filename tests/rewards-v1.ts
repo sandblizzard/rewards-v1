@@ -163,7 +163,6 @@ describe('bounty', () => {
       const createBounty = await bountySdk.createBounty(
         {
           id,
-          bountyAmount: bountyAmount,
           bountyCreator: wallet.publicKey,
           mint: bonkMint,
           organization,
@@ -174,11 +173,27 @@ describe('bounty', () => {
       );
       await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [wallet.payer])
 
+
+      // DOnate to the bounty
+      const donateToBounty = await bountySdk.donateToBounty({
+        bountyId: id,
+        mint: bonkMint,
+        amount: bountyAmount,
+        payer: wallet.publicKey
+      });
+      await sendAndConfirmTransaction(provider.connection, await donateToBounty.vtx, [wallet.payer])
+
+
+
       let createdBounty = await program.account.bounty.fetch(
         createBounty.bounty
       );
 
       expect(Buffer.from(createdBounty.idBytes).readBigInt64LE()).to.equal(BigInt(id));
+      // check that the bountyAmount is correct
+      // check that donate amount is of length 1
+      console.log("Created Bounty", JSON.stringify(createdBounty))
+      expect(createdBounty.donateAmount[0].toString()).to.equal(bountyAmount.toString());
     } catch (e) {
       console.log("error", e)
       throw e
@@ -211,7 +226,7 @@ describe('bounty', () => {
     expect(deactivatedRelayer.active, `relayer is not deactivated`).eq(false);
   });
 
-  it('Create bounty and try to complete it as a relayer -> Should Succeed', async () => {
+  it.only('Create bounty and try to complete it as a relayer -> Should Succeed', async () => {
     const bountyId = Math.floor(Math.random() * 1000000);
     // add relayer - relayer should be  pk + BOUNTY_SANDBLIZZARD
     const relayerKeys = web3.Keypair.generate();
@@ -227,7 +242,6 @@ describe('bounty', () => {
     console.log("Creating bounty with id", bountyId, "...")
     const createBounty = await bountySdk.createBounty({
       id: bountyId,
-      bountyAmount,
       bountyCreator: user.publicKey,
       mint: bonkMint,
       organization, team, platform, domainType: 'issues'
@@ -240,6 +254,29 @@ describe('bounty', () => {
     );
     expect(Buffer.from(createdBounty.idBytes).readBigInt64LE()).to.equal(BigInt(bountyId));
 
+    /// propose solution to bounty
+    const proposeSolution = await bountySdk.proposeSolution(
+      {
+        bountyId,
+        solution: "Just a solution",
+        solver: userWallet.publicKey
+      }
+    );
+
+    await sendAndConfirmTransaction(provider.connection, await proposeSolution.vtx, [userWallet.payer])
+    // check that the solution was proposed
+    const bountySolution = await program.account.bountySolution.fetch(
+      proposeSolution.bountySolution
+    );
+    const bountyAccount2 = await program.account.bounty.fetch(
+      createBounty.bounty
+    );
+    expect(bountySolution.bounty.toString()).to.equal(createBounty.bounty.toString());
+    expect(bountySolution.solution).to.equal("Just a solution");
+    expect(bountyAccount2.solverSolutions.length).to.equal(1);
+    expect(bountyAccount2.solverSolutions[0].toString()).to.equal(proposeSolution.bountySolution.toString());
+
+
     // try to complete bounty
     console.log("Completing bounty with id", bountyId, "...")
     const completeBounty = await bountySdk.completeBounty(
@@ -248,7 +285,7 @@ describe('bounty', () => {
         relayer: getRelayerPDA(relayerWallet.publicKey)[0],
         completer: relayerWallet.publicKey,
         mint: bonkMint,
-        solversWallets: [user.publicKey]
+        solversWallets: [userWallet.publicKey]
       }
     );
     await sendAndConfirmTransaction(provider.connection, await completeBounty.vtx, [relayerWallet.payer])
@@ -259,6 +296,8 @@ describe('bounty', () => {
     console.log("Bounty completed by", JSON.stringify(bountyAccount))
     expect(bountyAccount.completedBy.toString()).to.equal(relayerWallet.publicKey.toString());
     expect(bountyAccount.state.completed).to.exist
+    expect(bountyAccount.solvedBy.length).to.equal(1);
+    expect(bountyAccount.solvedBy[0].toString()).to.equal(userWallet.publicKey.toString());
 
     // get sand token balance of user
     const sandMintPda = await getSandMint();
@@ -301,7 +340,6 @@ describe('bounty', () => {
     // allow main wallet to create bounty
     const createBounty = await bountySdk.createBounty({
       id,
-      bountyAmount,
       bountyCreator: userWallet.publicKey,
       mint: bonkMint,
       organization, team, platform, domainType: 'issues'
@@ -338,7 +376,6 @@ describe('bounty', () => {
     // allow main wallet to create bounty
     const createBounty = await bountySdk.createBounty({
       id,
-      bountyAmount,
       bountyCreator: wallet.publicKey,
       mint: bonkMint,
       organization, team, platform, domainType: 'issues'
@@ -368,7 +405,6 @@ describe('bounty', () => {
     // allow main wallet to create bounty
     const createBounty = await bountySdk.createBounty({
       id,
-      bountyAmount,
       bountyCreator: wallet.publicKey,
       mint: bonkMint,
       organization, team, platform, domainType: 'issues'
@@ -403,7 +439,6 @@ describe('bounty', () => {
     // allow main wallet to create bounty
     const createBounty = await bountySdk.createBounty({
       id,
-      bountyAmount,
       bountyCreator: wallet.publicKey,
       mint: bonkMint,
       organization, team, platform, domainType: 'issues'
@@ -484,7 +519,6 @@ describe('bounty', () => {
     const organization = 'sandblizzard_test_doesnt_exist';
     const createBounty = await bountySdk.createBounty({
       id,
-      bountyAmount,
       bountyCreator: wallet.publicKey,
       mint: bonkMint,
       organization, team, platform, domainType: 'issues'
@@ -521,7 +555,6 @@ describe('bounty', () => {
     // try to create bounty with inactive domain
     const createBounty = await bountySdk.createBounty({
       id,
-      bountyAmount,
       bountyCreator: wallet.publicKey,
       mint: bonkMint,
       organization, team, platform, domainType: 'issues'

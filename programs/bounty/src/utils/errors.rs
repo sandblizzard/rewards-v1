@@ -6,6 +6,9 @@ pub enum BlizzardError {
     #[msg("bounty can not be reinitialized")]
     CanNotReinitBounty,
 
+    #[msg("bounty is completed")]
+    BountyIsCompleted,
+
     #[msg("signer missing auth to complete bounty")]
     NotAuthToCompleteBounty,
 

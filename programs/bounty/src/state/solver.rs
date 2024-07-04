@@ -34,6 +34,10 @@ impl TSolver for Solver {
         self.total_solved_bounties += 1;
         Ok(())
     }
+
+    fn get_owner(&self) -> Pubkey {
+        self.owner
+    }
 }
 
 impl Solver {

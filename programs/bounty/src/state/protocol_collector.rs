@@ -1,11 +1,10 @@
 use anchor_lang::prelude::*;
 
-
-
 // Solver trait that needs to be implemented by the protocol
 pub trait TSolver {
     fn claim_rewards(&mut self) -> Result<()>;
     fn update_rewards(&mut self, rewards: u64) -> Result<()>;
+    fn get_owner(&self) -> Pubkey;
 }
 
 #[account]
@@ -41,5 +40,9 @@ impl TSolver for ProtocolCollector {
     fn update_rewards(&mut self, rewards: u64) -> Result<()> {
         self.claimable_sand += rewards;
         Ok(())
+    }
+
+    fn get_owner(&self) -> Pubkey {
+        self.owner
     }
 }

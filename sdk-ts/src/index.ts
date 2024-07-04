@@ -120,6 +120,17 @@ const getRelayerPDA = (relayer: web3.PublicKey) => {
     )
 }
 
+const getBountySolutionPDA = (signer: web3.PublicKey, bounty: web3.PublicKey) => {
+    return web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("BOUNTY_SANDBLIZZARD"),
+        bounty.toBuffer(),
+        signer.toBuffer(),
+        ],
+        BOUNTY_PROGRAM_ID
+    )
+}
+
+
 export {
     getProtocolPDA,
     getDenominationPDA,
@@ -272,16 +283,98 @@ export class BountySdk {
         return this.program.provider.connection.getAccountInfo(account);
     }
 
+    proposeSolution = async ({
+        solution,
+        bountyId,
+        solver
+    }: { solution: string, bountyId: number, solver: web3.PublicKey }) => {
+        const bountyPda = getBountyPDA(bountyId);
+        const bountySolutionPDA = getBountySolutionPDA(solver, bountyPda[0]);
+        const bounty = await this.program.account.bounty.fetch(bountyPda[0]);
+        const bountyMint = bounty.mint;
+
+        // create instructions in case a token account needs to be created
+        const instructions: web3.TransactionInstruction[] = []
+        // check if token account of solver exists
+        const solverTokenAccount = await getSolverTokenAccount(solver, bountyMint);
+        const solverTokenAccountExists = await this.accountExists(solverTokenAccount);
+        if (!solverTokenAccountExists) {
+            const createSolverTokenAccountIx = await getOrCreateAssociatedTokenAccountIx(this.connection, solver, bountyMint, solver);
+            if (createSolverTokenAccountIx.instruction) {
+                instructions.push(createSolverTokenAccountIx.instruction)
+            }
+        }
+        const proposeBountySolutionIx = await this.program.methods.proposeBountySolution(solution).accounts({
+            signer: solver,
+            bounty: bountyPda[0],
+            bountySolution: bountySolutionPDA[0],
+        }).instruction();
+        instructions.push(proposeBountySolutionIx)
+
+        return {
+            vtx: await this.createVersionedTransaction(instructions, solver),
+            ix: proposeBountySolutionIx,
+            bountySolution: bountySolutionPDA[0],
+        }
+    }
+
+    getUserSolution = async (solver: web3.PublicKey, bountyId: number) => {
+        const bountyPda = getBountyPDA(bountyId);
+        const bountySolutionPDA = getBountySolutionPDA(solver, bountyPda[0]);
+        return this.program.account.bountySolution.fetch(bountySolutionPDA[0]);
+    }
+
+
+    donateToBounty = async ({
+        bountyId,
+        amount,
+        mint,
+        payer
+    }: { bountyId: number, amount: BN, mint: web3.PublicKey, payer: web3.PublicKey }) => {
+        const bountyPda = getBountyPDA(bountyId);
+        const escrowPDA = getEscrowPDA(bountyPda[0]);
+        const donateToBountyIx = await this.program.methods.donateToBounty(amount).accounts({
+            payer,
+            bounty: bountyPda[0],
+            donaterTokenAccount: await getAssociatedTokenAddress(mint, payer),
+            escrow: escrowPDA[0],
+        }).instruction();
+
+        return {
+            vtx: await this.createVersionedTransaction([donateToBountyIx], payer),
+            ix: donateToBountyIx,
+            escrowPda: escrowPDA[0],
+        }
+    }
+
     createBounty = async ({
         id,
-        bountyAmount,
+        externalId,
+        title,
+        description,
+        ends_at,
         bountyCreator,
         mint,
         platform,
         organization,
         team,
         domainType
-    }: { id: number, bountyAmount: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string }) => {
+    }: { id: number, externalId?: string, title?: string, description?: string, ends_at?: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string }) => {
+
+        if (!externalId) {
+            externalId = id.toString()
+        }
+        if (!title) {
+            title = `Bounty ${id}`
+        }
+        if (!description) {
+            description = `Bounty ${id}`
+        }
+        if (!ends_at) {
+            // get datetime in a year 
+            ends_at = new BN(Math.floor(Date.now() / 1000) + 31556952)
+        }
+
         const denominationPda = getDenominationPDA(mint);
         const transactionInstructions: web3.TransactionInstruction[] = [];
         if (!(await this.accountExists(denominationPda[0]))) {
@@ -317,7 +410,7 @@ export class BountySdk {
                 transactionInstructions.push(createCreatorAccountIx.instruction)
             }
         }
-        const createBountyIx = await this.program.methods.createBounty(new BN(id), bountyAmount).accounts({
+        const createBountyIx = await this.program.methods.createBounty(new BN(id), externalId, title, description, ends_at).accounts({
             creator: bountyCreator,
             mint,
             bounty: bountyPda[0],

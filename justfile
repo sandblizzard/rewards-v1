@@ -39,7 +39,7 @@ deploy RPC_URL:
 # Recover fees in case deployment failed
 recover_deploy_devnet:
     @echo "Recovering Bounty..."
-    solana-keygen recover -o recover.json --force
+    solana-keygen recover -o recover.json --force 
     solana program close recover.json -u devnet
 
 # Grind for keypair starting with PREFIX

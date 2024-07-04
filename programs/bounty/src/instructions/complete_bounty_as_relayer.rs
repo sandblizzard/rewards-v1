@@ -85,6 +85,27 @@ pub struct CompleteBountyAsRelayer<'info> {
     pub relayer: Box<Account<'info, Relayer>>,
 }
 
+impl<'info> CompleteBountyAsRelayer<'info> {
+    pub fn get_solver_token_accounts(&mut self) -> Vec<&Account<'info, TokenAccount>> {
+        let mut solvers = Vec::new();
+
+        solvers.push(&self.solver_token_account_1);
+        if self.solver_token_account_2.is_some() {
+            solvers.push(self.solver_token_account_2.as_ref().unwrap())
+        }
+        solvers
+    }
+
+    pub fn get_solvers(&self) -> Vec<Box<dyn TSolver>> {
+        let mut solvers: Vec<Box<dyn TSolver>> = Vec::new();
+        solvers.push(Box::new(self.solver1.clone().into_inner()));
+        if self.solver2.is_some() {
+            solvers.push(Box::new(self.solver2.clone().unwrap().into_inner()))
+        }
+        solvers
+    }
+}
+
 pub fn handler(ctx: Context<CompleteBountyAsRelayer>) -> Result<()> {
     msg!("Complete bounty as relayer");
     let payer = &ctx.accounts.payer;
@@ -93,6 +114,7 @@ pub fn handler(ctx: Context<CompleteBountyAsRelayer>) -> Result<()> {
     let fee_collector = &ctx.accounts.fee_collector;
 
     let relayer = &ctx.accounts.relayer;
+    let solvers = ctx.accounts.get_solvers();
     let bounty = &mut ctx.accounts.bounty;
     if !(bounty.is_owner(&payer.key()) || relayer.is_owner(&payer.key())) {
         return Err(BlizzardError::NotAuthToCompleteBounty.into());
@@ -104,8 +126,9 @@ pub fn handler(ctx: Context<CompleteBountyAsRelayer>) -> Result<()> {
         &ctx.accounts.solver_token_account_1,
         &ctx.accounts.solver_token_account_2,
     );
+    let total_bounty_amount = bounty.donate_amount.iter().sum::<u64>();
     let bounty_payout_proto = calculate_bounty_payout(
-        &bounty.bounty_amount.clone(),
+        &total_bounty_amount,
         &solver_token_accounts,
         &fee_collector.to_account_info(),
     )?;
@@ -138,7 +161,7 @@ pub fn handler(ctx: Context<CompleteBountyAsRelayer>) -> Result<()> {
             .update_rewards(mining_reward)?;
     }
 
-    bounty.complete_bounty(ctx.accounts.payer.key())?;
+    bounty.complete_bounty(ctx.accounts.payer.key(), solvers)?;
 
     Ok(())
 }

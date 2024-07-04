@@ -76,40 +76,48 @@ pub struct CreateBounty<'info> {
 /// * area: e.g. backend
 /// * sub_domain: e.g. Sandblizzard,Microsoft
 /// * id: e.g. 453423
-pub fn handler(ctx: Context<CreateBounty>, id: u64, bounty_amount: u64) -> Result<()> {
+pub fn handler(
+    ctx: Context<CreateBounty>,
+    id: u64,
+    external_id: String,
+    title: String,
+    description: String,
+    ends_at: Option<i64>,
+) -> Result<()> {
     let creator = &ctx.accounts.creator;
-    let creator_account = &ctx.accounts.creator_account;
     let domain = &ctx.accounts.domain;
     let escrow: &Account<'_, TokenAccount> = &ctx.accounts.escrow;
-    let token_program = &ctx.accounts.token_program;
     // initialize the bounty
     ctx.accounts
         .bounty
         .create_bounty(
             ctx.bumps.get("bounty").unwrap(),
+            &title,
+            &description,
             &id,
+            &external_id,
             &creator.key(),
             &escrow.key(),
             &domain.key(),
-            bounty_amount,
             &ctx.accounts.mint.key(),
             ctx.bumps.get("escrow").unwrap(),
+            ends_at,
         )
         .unwrap();
 
     // transfer the bounty amount to the escrow
-    transfer(
-        CpiContext::new(
-            token_program.to_account_info(),
-            Transfer {
-                from: creator_account.to_account_info(),
-                to: escrow.to_account_info(),
-                authority: creator.to_account_info(),
-            },
-        ),
-        bounty_amount,
-    )
-    .unwrap();
+    // transfer(
+    //     CpiContext::new(
+    //         token_program.to_account_info(),
+    //         Transfer {
+    //             from: creator_account.to_account_info(),
+    //             to: escrow.to_account_info(),
+    //             authority: creator.to_account_info(),
+    //         },
+    //     ),
+    //     bounty_amount,
+    // )
+    // .unwrap();
 
     Ok(())
 }
