@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.26](https://github.com/sandblizzard/rewards-v1/compare/v0.0.25...v0.0.26) (2024-07-04)
+
+
+### Bug Fixes
+
+* **sdk:** add bountyId as BN ([340ae3e](https://github.com/sandblizzard/rewards-v1/commit/340ae3e8efb243dbe0676844d9080ea92561d163))
+
 ### [0.0.25](https://github.com/sandblizzard/rewards-v1/compare/v0.0.24...v0.0.25) (2024-07-04)
 
 ### [0.0.24](https://github.com/sandblizzard/rewards-v1/compare/v0.0.23...v0.0.24) (2024-07-04)
