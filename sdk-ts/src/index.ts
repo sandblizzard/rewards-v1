@@ -343,7 +343,7 @@ export class BountySdk {
         return {
             vtx: await this.createVersionedTransaction([donateToBountyIx], payer),
             ix: donateToBountyIx,
-            escrowPda: escrowPDA[0],
+            bounty: bountyPda[0],
         }
     }
 
@@ -384,7 +384,7 @@ export class BountySdk {
         return {
             vtx: await this.createVersionedTransaction(transactionInstructions, bountyCreator),
             ix: transactionInstructions,
-            escrow: donateToBounty.escrowPda
+            bounty: createBountyResult.bounty,
         }
     }
 
@@ -711,6 +711,10 @@ export class BountySdk {
         return this.program.account.domain.fetch(address)
     }
 
+    getBountyById = async ({ id }: { id: BN }) => {
+        const bountyPda = getBountyPDA(id);
+        return this.program.account.bounty.fetch(bountyPda[0])
+    }
 
     // get all solvers for a given bounty
     getAllSolvers = async ({
