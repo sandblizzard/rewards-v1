@@ -737,4 +737,9 @@ export class BountySdk {
         }
         )
     }
+
+    getSolution = async ({ solutionPk }: { solutionPk: web3.PublicKey }) => {
+        return this.program.account.bountySolution.fetch(solutionPk)
+    }
+
 }

@@ -146,7 +146,11 @@ impl Bounty {
         if self.state == BountyState::Completed {
             return Err(BlizzardError::BountyIsCompleted.into());
         }
-        // concatenate the
+        // if donater is in list, just uprate amount
+        if let Some(index) = self.donaters.iter().position(|x| x == donater) {
+            self.donate_amount[index] += amount;
+            return Ok(());
+        }
 
         self.donaters.push(*donater);
         self.donate_amount.push(amount);
