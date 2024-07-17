@@ -1,10 +1,4 @@
-/**
- * Program IDL in camelCase format in order to be used in JS/TS.
- *
- * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/bounty.json`.
- */
-export type Bounty = {
+{
   "address": "AwB63JJU3RSdC4YSNryZvotA3GXyVrYEXnWY3CQ8Fxoq",
   "metadata": {
     "name": "bounty",
@@ -14,7 +8,7 @@ export type Bounty = {
   },
   "instructions": [
     {
-      "name": "addBountyDenomination",
+      "name": "add_bounty_denomination",
       "docs": [
         "add bounty denomination",
         "it"
@@ -132,7 +126,7 @@ export type Bounty = {
           }
         },
         {
-          "name": "feeCollector",
+          "name": "fee_collector",
           "docs": [
             "Fee collector is owned by the protocol and",
             "collects fees from the bounty"
@@ -190,18 +184,18 @@ export type Bounty = {
           }
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "addRelayer",
+      "name": "add_relayer",
       "discriminator": [
         184,
         240,
@@ -280,25 +274,25 @@ export type Bounty = {
               },
               {
                 "kind": "arg",
-                "path": "relayerAddress"
+                "path": "relayer_address"
               }
             ]
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "relayerAddress",
+          "name": "relayer_address",
           "type": "pubkey"
         }
       ]
     },
     {
-      "name": "claimRewards",
+      "name": "claim_rewards",
       "docs": [
         "Claim rewards",
         "",
@@ -383,13 +377,13 @@ export type Bounty = {
               {
                 "kind": "account",
                 "path": "solver.owner",
-                "account": "solver"
+                "account": "Solver"
               }
             ]
           }
         },
         {
-          "name": "solverTokenAccount",
+          "name": "solver_token_account",
           "docs": [
             "token pda"
           ],
@@ -400,20 +394,20 @@ export type Bounty = {
           "writable": true
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": []
     },
     {
-      "name": "completeBounty",
+      "name": "complete_bounty",
       "docs": [
-        "completeBounty",
+        "complete_bounty",
         "",
         "Try to complete bounty"
       ],
@@ -468,11 +462,11 @@ export type Bounty = {
           }
         },
         {
-          "name": "sandMint",
+          "name": "sand_mint",
           "writable": true
         },
         {
-          "name": "feeCollector",
+          "name": "fee_collector",
           "writable": true
         },
         {
@@ -520,11 +514,11 @@ export type Bounty = {
           }
         },
         {
-          "name": "solverTokenAccount1",
+          "name": "solver_token_account_1",
           "writable": true
         },
         {
-          "name": "solverTokenAccount2",
+          "name": "solver_token_account_2",
           "writable": true,
           "optional": true
         },
@@ -541,20 +535,20 @@ export type Bounty = {
           "optional": true
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": []
     },
     {
-      "name": "completeBountyAsRelayer",
+      "name": "complete_bounty_as_relayer",
       "docs": [
-        "completeBounty",
+        "complete_bounty",
         "",
         "Try to complete bounty"
       ],
@@ -609,11 +603,11 @@ export type Bounty = {
           }
         },
         {
-          "name": "sandMint",
+          "name": "sand_mint",
           "writable": true
         },
         {
-          "name": "feeCollector",
+          "name": "fee_collector",
           "writable": true
         },
         {
@@ -661,11 +655,11 @@ export type Bounty = {
           }
         },
         {
-          "name": "solverTokenAccount1",
+          "name": "solver_token_account_1",
           "writable": true
         },
         {
-          "name": "solverTokenAccount2",
+          "name": "solver_token_account_2",
           "writable": true,
           "optional": true
         },
@@ -682,11 +676,11 @@ export type Bounty = {
           "optional": true
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
@@ -724,7 +718,7 @@ export type Bounty = {
               {
                 "kind": "account",
                 "path": "relayer.owner",
-                "account": "relayer"
+                "account": "Relayer"
               }
             ]
           }
@@ -733,9 +727,9 @@ export type Bounty = {
       "args": []
     },
     {
-      "name": "createBounty",
+      "name": "create_bounty",
       "docs": [
-        "createBounty",
+        "create_bounty",
         "",
         "creates a bounty"
       ],
@@ -828,35 +822,35 @@ export type Bounty = {
               {
                 "kind": "account",
                 "path": "domain.data.platform",
-                "account": "domain"
+                "account": "Domain"
               },
               {
                 "kind": "account",
                 "path": "domain.data.organization",
-                "account": "domain"
+                "account": "Domain"
               },
               {
                 "kind": "account",
                 "path": "domain.data.team",
-                "account": "domain"
+                "account": "Domain"
               },
               {
                 "kind": "account",
                 "path": "domain.data.domain_type",
-                "account": "domain"
+                "account": "Domain"
               }
             ]
           }
         },
         {
-          "name": "creatorAccount",
+          "name": "creator_account",
           "docs": [
             "Account to credit the user"
           ],
           "writable": true
         },
         {
-          "name": "bountyDenomination",
+          "name": "bounty_denomination",
           "pda": {
             "seeds": [
               {
@@ -903,7 +897,7 @@ export type Bounty = {
               {
                 "kind": "account",
                 "path": "bounty_denomination.mint",
-                "account": "denomination"
+                "account": "Denomination"
               }
             ]
           }
@@ -948,11 +942,11 @@ export type Bounty = {
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
@@ -966,7 +960,7 @@ export type Bounty = {
           "type": "u64"
         },
         {
-          "name": "externalId",
+          "name": "external_id",
           "type": "string"
         },
         {
@@ -978,7 +972,7 @@ export type Bounty = {
           "type": "string"
         },
         {
-          "name": "endsAt",
+          "name": "ends_at",
           "type": {
             "option": "i64"
           }
@@ -986,7 +980,7 @@ export type Bounty = {
       ]
     },
     {
-      "name": "createDomain",
+      "name": "create_domain",
       "docs": [
         "create domain"
       ],
@@ -1081,19 +1075,19 @@ export type Bounty = {
               },
               {
                 "kind": "arg",
-                "path": "domainType"
+                "path": "domain_type"
               }
             ]
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "domainType",
+          "name": "domain_type",
           "type": "string"
         },
         {
@@ -1111,7 +1105,7 @@ export type Bounty = {
       ]
     },
     {
-      "name": "deactivateBountyDenomination",
+      "name": "deactivate_bounty_denomination",
       "docs": [
         "deactivate bounty denomination"
       ],
@@ -1194,14 +1188,14 @@ export type Bounty = {
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "deactivateDomain",
+      "name": "deactivate_domain",
       "docs": [
         "deactivate domain"
       ],
@@ -1252,37 +1246,37 @@ export type Bounty = {
               {
                 "kind": "account",
                 "path": "domain.data.platform",
-                "account": "domain"
+                "account": "Domain"
               },
               {
                 "kind": "account",
                 "path": "domain.data.organization",
-                "account": "domain"
+                "account": "Domain"
               },
               {
                 "kind": "account",
                 "path": "domain.data.team",
-                "account": "domain"
+                "account": "Domain"
               },
               {
                 "kind": "account",
                 "path": "domain.data.domain_type",
-                "account": "domain"
+                "account": "Domain"
               }
             ]
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "donateToBounty",
+      "name": "donate_to_bounty",
       "docs": [
-        "donateToBounty"
+        "donate_to_bounty"
       ],
       "discriminator": [
         112,
@@ -1332,13 +1326,13 @@ export type Bounty = {
               {
                 "kind": "account",
                 "path": "bounty.id_bytes",
-                "account": "bounty"
+                "account": "Bounty"
               }
             ]
           }
         },
         {
-          "name": "donaterTokenAccount",
+          "name": "donater_token_account",
           "docs": [
             "Account to credit the user"
           ],
@@ -1384,11 +1378,11 @@ export type Bounty = {
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
@@ -1423,7 +1417,7 @@ export type Bounty = {
       ],
       "accounts": [
         {
-          "name": "protocolOwner",
+          "name": "protocol_owner",
           "docs": [
             "creator is the owner of the protocol",
             "should become a smart wallet over time"
@@ -1468,7 +1462,7 @@ export type Bounty = {
           }
         },
         {
-          "name": "sandMint",
+          "name": "sand_mint",
           "docs": [
             "mint to be used to distribute rewards"
           ],
@@ -1493,31 +1487,31 @@ export type Bounty = {
           }
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "docs": [
             "create treasury account to hold the protocol's funds"
           ],
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "tokenMetadataProgram",
+          "name": "token_metadata_program",
           "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
         },
         {
-          "name": "rentSysvar",
+          "name": "rent_sysvar",
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "proposeBountySolution",
+      "name": "propose_bounty_solution",
       "docs": [
-        "proposeBountySolution"
+        "propose_bounty_solution"
       ],
       "discriminator": [
         44,
@@ -1567,13 +1561,13 @@ export type Bounty = {
               {
                 "kind": "account",
                 "path": "bounty.id_bytes",
-                "account": "bounty"
+                "account": "Bounty"
               }
             ]
           }
         },
         {
-          "name": "bountySolution",
+          "name": "bounty_solution",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1613,7 +1607,7 @@ export type Bounty = {
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
@@ -1629,7 +1623,7 @@ export type Bounty = {
       ]
     },
     {
-      "name": "registerSolver",
+      "name": "register_solver",
       "docs": [
         "register solver",
         "",
@@ -1656,7 +1650,7 @@ export type Bounty = {
           "name": "protocol"
         },
         {
-          "name": "solverAccount",
+          "name": "solver_account",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1692,11 +1686,11 @@ export type Bounty = {
           }
         },
         {
-          "name": "sandMint",
+          "name": "sand_mint",
           "writable": true
         },
         {
-          "name": "solverTokenAccount",
+          "name": "solver_token_account",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1743,7 +1737,7 @@ export type Bounty = {
               },
               {
                 "kind": "account",
-                "path": "sandMint"
+                "path": "sand_mint"
               }
             ],
             "program": {
@@ -1786,22 +1780,22 @@ export type Bounty = {
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "tokenProgram",
+          "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         }
       ],
       "args": []
     },
     {
-      "name": "removeRelayer",
+      "name": "remove_relayer",
       "discriminator": [
         154,
         149,
@@ -1881,13 +1875,13 @@ export type Bounty = {
               {
                 "kind": "account",
                 "path": "relayer.owner",
-                "account": "relayer"
+                "account": "Relayer"
               }
             ]
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -1896,7 +1890,7 @@ export type Bounty = {
   ],
   "accounts": [
     {
-      "name": "bounty",
+      "name": "Bounty",
       "discriminator": [
         237,
         16,
@@ -1909,7 +1903,7 @@ export type Bounty = {
       ]
     },
     {
-      "name": "bountySolution",
+      "name": "BountySolution",
       "discriminator": [
         126,
         42,
@@ -1922,7 +1916,7 @@ export type Bounty = {
       ]
     },
     {
-      "name": "denomination",
+      "name": "Denomination",
       "discriminator": [
         255,
         95,
@@ -1935,7 +1929,7 @@ export type Bounty = {
       ]
     },
     {
-      "name": "domain",
+      "name": "Domain",
       "discriminator": [
         167,
         191,
@@ -1948,7 +1942,7 @@ export type Bounty = {
       ]
     },
     {
-      "name": "protocol",
+      "name": "Protocol",
       "discriminator": [
         45,
         39,
@@ -1961,7 +1955,7 @@ export type Bounty = {
       ]
     },
     {
-      "name": "relayer",
+      "name": "Relayer",
       "discriminator": [
         168,
         116,
@@ -1974,7 +1968,7 @@ export type Bounty = {
       ]
     },
     {
-      "name": "solver",
+      "name": "Solver",
       "discriminator": [
         174,
         70,
@@ -1990,83 +1984,83 @@ export type Bounty = {
   "errors": [
     {
       "code": 6000,
-      "name": "canNotReinitBounty",
+      "name": "CanNotReinitBounty",
       "msg": "bounty can not be reinitialized"
     },
     {
       "code": 6001,
-      "name": "bountyIsCompleted",
+      "name": "BountyIsCompleted",
       "msg": "bounty is completed"
     },
     {
       "code": 6002,
-      "name": "notAuthToCompleteBounty",
+      "name": "NotAuthToCompleteBounty",
       "msg": "signer missing auth to complete bounty"
     },
     {
       "code": 6003,
-      "name": "notAuthToReleaseEscrow",
+      "name": "NotAuthToReleaseEscrow",
       "msg": "signer missing auth to release escrow"
     },
     {
       "code": 6004,
-      "name": "missingReceiverTokenAccounts",
+      "name": "MissingReceiverTokenAccounts",
       "msg": "at least one receiver needs to be specified"
     },
     {
       "code": 6005,
-      "name": "wrongFeeCollectorMint",
+      "name": "WrongFeeCollectorMint",
       "msg": "wrong mint for fee collector"
     },
     {
       "code": 6006,
-      "name": "wrongProtocolFeeCollector",
+      "name": "WrongProtocolFeeCollector",
       "msg": "fee collector does not match protocol fee collector"
     },
     {
       "code": 6007,
-      "name": "wrongDenominationFeeCollector",
+      "name": "WrongDenominationFeeCollector",
       "msg": "invalid denomination fee collector"
     },
     {
       "code": 6008,
-      "name": "wrongDenominationMint",
+      "name": "WrongDenominationMint",
       "msg": "invalid denomination mint"
     },
     {
       "code": 6009,
-      "name": "accountIsNotSigner",
+      "name": "AccountIsNotSigner",
       "msg": "Account is not signer"
     },
     {
       "code": 6010,
-      "name": "accountNotActive",
+      "name": "AccountNotActive",
       "msg": "Account is not active"
     },
     {
       "code": 6011,
-      "name": "domainNotActive",
+      "name": "DomainNotActive",
       "msg": "Domain is not active"
     },
     {
       "code": 6012,
-      "name": "noClaimableReward",
+      "name": "NoClaimableReward",
       "msg": "No claimable reward"
     },
     {
       "code": 6013,
-      "name": "wrongProtocolMintAuthority",
+      "name": "WrongProtocolMintAuthority",
       "msg": "Wrong protocol mint authority"
     },
     {
       "code": 6014,
-      "name": "wrongSolverTokenAccountOwner",
+      "name": "WrongSolverTokenAccountOwner",
       "msg": "Wrong solver token account owner"
     }
   ],
   "types": [
     {
-      "name": "bounty",
+      "name": "Bounty",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2088,7 +2082,7 @@ export type Bounty = {
             ],
             "type": {
               "defined": {
-                "name": "bountyState"
+                "name": "BountyState"
               }
             }
           },
@@ -2097,7 +2091,7 @@ export type Bounty = {
             "type": "u8"
           },
           {
-            "name": "bumpArray",
+            "name": "bump_array",
             "docs": [
               "for the seeds"
             ],
@@ -2109,7 +2103,7 @@ export type Bounty = {
             }
           },
           {
-            "name": "escrowBump",
+            "name": "escrow_bump",
             "type": "u8"
           },
           {
@@ -2127,7 +2121,7 @@ export type Bounty = {
             "type": "pubkey"
           },
           {
-            "name": "idBytes",
+            "name": "id_bytes",
             "type": {
               "array": [
                 "u8",
@@ -2136,7 +2130,7 @@ export type Bounty = {
             }
           },
           {
-            "name": "completedBy",
+            "name": "completed_by",
             "docs": [
               "WHo completed the bounty"
             ],
@@ -2145,21 +2139,21 @@ export type Bounty = {
             }
           },
           {
-            "name": "createdAt",
+            "name": "created_at",
             "type": "i64"
           },
           {
-            "name": "updatedAt",
+            "name": "updated_at",
             "type": "i64"
           },
           {
-            "name": "endsAt",
+            "name": "ends_at",
             "type": {
               "option": "i64"
             }
           },
           {
-            "name": "externalId",
+            "name": "external_id",
             "type": "string"
           },
           {
@@ -2177,7 +2171,7 @@ export type Bounty = {
             }
           },
           {
-            "name": "donateAmount",
+            "name": "donate_amount",
             "type": {
               "vec": "u64"
             }
@@ -2189,13 +2183,13 @@ export type Bounty = {
             }
           },
           {
-            "name": "solverSolutions",
+            "name": "solver_solutions",
             "type": {
               "vec": "pubkey"
             }
           },
           {
-            "name": "solvedBy",
+            "name": "solved_by",
             "type": {
               "vec": "pubkey"
             }
@@ -2204,7 +2198,7 @@ export type Bounty = {
       }
     },
     {
-      "name": "bountySolution",
+      "name": "BountySolution",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2213,7 +2207,7 @@ export type Bounty = {
             "type": "u64"
           },
           {
-            "name": "bumpArray",
+            "name": "bump_array",
             "type": {
               "array": [
                 "u8",
@@ -2234,32 +2228,32 @@ export type Bounty = {
             "type": "string"
           },
           {
-            "name": "createdAt",
+            "name": "created_at",
             "type": "i64"
           },
           {
-            "name": "updatedAt",
+            "name": "updated_at",
             "type": "i64"
           }
         ]
       }
     },
     {
-      "name": "bountyState",
+      "name": "BountyState",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "created"
+            "name": "Created"
           },
           {
-            "name": "completed"
+            "name": "Completed"
           }
         ]
       }
     },
     {
-      "name": "denomination",
+      "name": "Denomination",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2268,7 +2262,7 @@ export type Bounty = {
             "type": "u8"
           },
           {
-            "name": "bumpArray",
+            "name": "bump_array",
             "type": {
               "array": [
                 "u8",
@@ -2285,14 +2279,14 @@ export type Bounty = {
             "type": "bool"
           },
           {
-            "name": "feeCollector",
+            "name": "fee_collector",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "domain",
+      "name": "Domain",
       "docs": [
         "Domain is the domain to be indexed",
         "ex: if the domain is github/sandblizzard/rewards_v1 then",
@@ -2331,7 +2325,7 @@ export type Bounty = {
             ],
             "type": {
               "defined": {
-                "name": "domainData"
+                "name": "DomainData"
               }
             }
           }
@@ -2339,7 +2333,7 @@ export type Bounty = {
       }
     },
     {
-      "name": "domainData",
+      "name": "DomainData",
       "docs": [
         "DomainIdentifier"
       ],
@@ -2371,14 +2365,14 @@ export type Bounty = {
             "type": "string"
           },
           {
-            "name": "domainType",
+            "name": "domain_type",
             "type": "string"
           }
         ]
       }
     },
     {
-      "name": "protocol",
+      "name": "Protocol",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2387,7 +2381,7 @@ export type Bounty = {
             "type": "u8"
           },
           {
-            "name": "bumpSeed",
+            "name": "bump_seed",
             "type": {
               "array": [
                 "u8",
@@ -2400,7 +2394,7 @@ export type Bounty = {
             "type": "pubkey"
           },
           {
-            "name": "sandMint",
+            "name": "sand_mint",
             "type": "pubkey"
           },
           {
@@ -2411,7 +2405,7 @@ export type Bounty = {
       }
     },
     {
-      "name": "relayer",
+      "name": "Relayer",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2420,7 +2414,7 @@ export type Bounty = {
             "type": "u8"
           },
           {
-            "name": "bumpSeed",
+            "name": "bump_seed",
             "type": {
               "array": [
                 "u8",
@@ -2440,7 +2434,7 @@ export type Bounty = {
       }
     },
     {
-      "name": "solver",
+      "name": "Solver",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2449,7 +2443,7 @@ export type Bounty = {
             "type": "u8"
           },
           {
-            "name": "bumpSeed",
+            "name": "bump_seed",
             "type": {
               "array": [
                 "u8",
@@ -2462,19 +2456,19 @@ export type Bounty = {
             "type": "pubkey"
           },
           {
-            "name": "miningMint",
+            "name": "mining_mint",
             "type": "pubkey"
           },
           {
-            "name": "claimableRewards",
+            "name": "claimable_rewards",
             "type": "u64"
           },
           {
-            "name": "totalRewards",
+            "name": "total_rewards",
             "type": "u64"
           },
           {
-            "name": "totalSolvedBounties",
+            "name": "total_solved_bounties",
             "type": "u64"
           },
           {
@@ -2485,4 +2479,4 @@ export type Bounty = {
       }
     }
   ]
-};
+}

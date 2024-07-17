@@ -35,6 +35,14 @@ pub struct CreateBounty<'info> {
 
     /// domain to attach the bounty to
     #[account(
+        seeds=[
+            BOUNTY_SEED,
+            domain.data.platform.as_bytes(),
+            domain.data.organization.as_bytes(),
+            domain.data.team.as_bytes(),
+            domain.data.domain_type.as_bytes(),
+        ],
+        bump=domain.bump,
         constraint = domain.active @BlizzardError::DomainNotActive,
     )]
     pub domain: Box<Account<'info, Domain>>,
@@ -45,6 +53,12 @@ pub struct CreateBounty<'info> {
 
     // todo: check seeds
     #[account(
+        seeds = [
+            BOUNTY_SEED,
+            DENOMINATION_SEED,
+            bounty_denomination.mint.to_bytes().as_ref()
+        ],
+        bump=bounty_denomination.bump,
         constraint = bounty_denomination.mint.eq(&mint.key()),
         constraint = bounty_denomination.active
     )]
@@ -91,7 +105,7 @@ pub fn handler(
     ctx.accounts
         .bounty
         .create_bounty(
-            ctx.bumps.get("bounty").unwrap(),
+            &ctx.bumps.bounty,
             &title,
             &description,
             &id,
@@ -100,7 +114,7 @@ pub fn handler(
             &escrow.key(),
             &domain.key(),
             &ctx.accounts.mint.key(),
-            ctx.bumps.get("escrow").unwrap(),
+            &ctx.bumps.escrow,
             ends_at,
         )
         .unwrap();

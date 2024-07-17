@@ -27,6 +27,7 @@ The repo contains
 
 - [x] Move "create bounty" dapp to new dapp
 - [ ] Make sure relayer works as expected
+- [ ] bounty issue id should be recorded and created
 
 ### Backlog
 

@@ -1,8 +1,5 @@
 {
     "extends": "./tsconfig.base.json",
-    "include": [
-        "src"
-    ],
     "compilerOptions": {
         "outDir": "dist/cjs",
         "target": "ES2016",

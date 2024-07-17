@@ -1,6 +1,7 @@
 use std::ops::Div;
 
 use anchor_lang::prelude::*;
+use borsh::BorshDeserialize;
 
 use crate::{
     utils::{BlizzardError, BOUNTY_SEED, FEE_REC},
@@ -8,16 +9,14 @@ use crate::{
 };
 
 use super::Relayer;
-use borsh::{BorshDeserialize, BorshSerialize};
 
-#[derive(BorshSerialize, BorshDeserialize, Clone, Debug, PartialEq)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug, PartialEq)]
 pub enum BountyState {
     Created = 0,
     Completed = 1,
 }
 
 #[account]
-#[derive(Debug)]
 pub struct Bounty {
     /// Owner of bounty
     pub owner: Pubkey,

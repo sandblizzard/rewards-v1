@@ -18,7 +18,9 @@ pub struct AddBountyDenomination<'info> {
 
     /// protocol config
     #[account(
-        seeds = [protocol.account_seed()],
+        seeds = [
+            BOUNTY_SEED,
+        ],
         bump = protocol.bump
     )]
     pub protocol: Account<'info, Protocol>,
@@ -32,7 +34,7 @@ pub struct AddBountyDenomination<'info> {
         payer = creator,
         seeds = [
             BOUNTY_SEED,
-            DENOMINATION_SEED.as_bytes(),
+            DENOMINATION_SEED,
             mint.key().to_bytes().as_ref()
         ],
         bump,
@@ -64,7 +66,7 @@ pub fn handler(ctx: Context<AddBountyDenomination>) -> Result<()> {
     let denomination = &mut ctx.accounts.denomination;
     let mint = &mut ctx.accounts.mint;
     let fee_collector = &mut ctx.accounts.fee_collector;
-    let denomination_bump = ctx.bumps.get("denomination").unwrap();
+    let denomination_bump = &ctx.bumps.denomination;
     // Initialize denomination
     denomination.initialize(denomination_bump, &mint.key(), &fee_collector.key())?;
 

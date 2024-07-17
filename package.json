@@ -11,7 +11,7 @@
     "add-relayer": "ts-node ./scripts/addRelayer.ts"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.27.0",
+    "@coral-xyz/anchor": "^0.30.1",
     "@solana/spl-token": "^0.3.7"
   },
   "devDependencies": {

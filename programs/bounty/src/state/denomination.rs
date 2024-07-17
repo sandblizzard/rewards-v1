@@ -22,7 +22,7 @@ impl Denomination {
     pub fn seeds(&self) -> [&[u8]; 3] {
         [
             BOUNTY_SEED,
-            DENOMINATION_SEED.as_bytes(),
+            DENOMINATION_SEED,
             //&self.mint_bytes,
             self.bump_array.as_ref(),
         ]

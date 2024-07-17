@@ -63,7 +63,7 @@ pub fn handler(ctx: Context<Initialize>) -> Result<()> {
     let protocol = &mut ctx.accounts.protocol;
     let sand_mint = &ctx.accounts.sand_mint;
 
-    let protocol_bump = ctx.bumps.get("protocol").unwrap();
+    let protocol_bump = &ctx.bumps.protocol;
 
     mpl_token_metadata::instructions::CreateMetadataAccountV3Cpi {
         __program: &ctx.accounts.token_metadata_program,
@@ -93,7 +93,7 @@ pub fn handler(ctx: Context<Initialize>) -> Result<()> {
     // Initialize collection
     protocol
         .initialize(
-            ctx.bumps.get("protocol").unwrap(),
+            &ctx.bumps.protocol,
             &ctx.accounts.protocol_owner.key(),
             &mut ctx.accounts.sand_mint.key(),
         )

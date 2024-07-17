@@ -1,5 +1,6 @@
-import { BN, web3, Program, AnchorProvider } from "@coral-xyz/anchor";
-import { Bounty, IDL } from "./idl/bounty"
+import { BN, web3, Program, AnchorProvider, Idl } from "@coral-xyz/anchor";
+import { Bounty } from "./idl/bounty"
+import idl from "./idl/bounty.json"
 import { getAssociatedTokenAddress, getMint } from '@solana/spl-token';
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 import { getOrCreateAssociatedTokenAccountIx } from "./utils";
@@ -173,7 +174,9 @@ export class BountySdk {
             preflightCommitment: "recent",
             commitment: "confirmed",
         })
-        return new Program<Bounty>(IDL, BOUNTY_PROGRAM_ID, provider);
+
+        // @ts-ignore
+        return new Program<Bounty>(idl, provider);
     }
 
     /**
@@ -204,10 +207,10 @@ export class BountySdk {
         const initializeProtocolIx = await this.program.methods.initialize().accounts({
             protocolOwner: this.signer,
             metadata: metadataAddress[0],
-            protocol: protocolPda[0],
-            sandMint: sandMint[0],
-            tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
-            rentSysvar: web3.SYSVAR_RENT_PUBKEY,
+            //protocol: protocolPda[0],
+            //sandMint: sandMint[0],
+            //tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+            //rentSysvar: web3.SYSVAR_RENT_PUBKEY,
         }).instruction()
 
         return {
@@ -225,9 +228,9 @@ export class BountySdk {
         const registerSolverIx = await this.program.methods.registerSolver().accounts({
             signer: solver,
             protocol: protocolPda[0],
-            solverAccount: solverPda[0],
+            //solverAccount: solverPda[0],
             sandMint: sandMint[0],
-            solverTokenAccount: await getSolverTokenAccount(solver, sandMint[0]),
+            //solverTokenAccount: await getSolverTokenAccount(solver, sandMint[0]),
         }).instruction();
 
         return {
@@ -249,8 +252,8 @@ export class BountySdk {
         const solverPda = getSolverPDA(solver);
         const claimRewardsIx = await this.program.methods.claimRewards().accounts({
             signer: solver,
-            protocol: protocolPda[0],
-            solver: solverPda[0],
+            //protocol: protocolPda[0],
+            //solver: solverPda[0],
             solverTokenAccount: await getSolverTokenAccount(solver, sandMint[0]),
             mint: sandMint[0],
         }).instruction();
@@ -268,7 +271,7 @@ export class BountySdk {
         const denominationPda = getDenominationPDA(mint);
         const deactivateBountyDenominationIx = await this.program.methods.deactivateBountyDenomination().accounts({
             mint,
-            denomination: denominationPda[0],
+            //denomination: denominationPda[0],
         }).instruction();
 
         return {
@@ -279,8 +282,13 @@ export class BountySdk {
         }
     }
 
-    private accountExists(account: web3.PublicKey) {
-        return this.program.provider.connection.getAccountInfo(account);
+    private async accountExists(account: web3.PublicKey) {
+        try {
+            return await this.program.provider.connection.getAccountInfo(account);
+        } catch (err) {
+            console.log(`AccountExist: ${account.toString()} does not exist`)
+            return false
+        }
     }
 
     proposeSolution = async ({
@@ -306,8 +314,8 @@ export class BountySdk {
         }
         const proposeBountySolutionIx = await this.program.methods.proposeBountySolution(solution).accounts({
             signer: solver,
-            bounty: bountyPda[0],
-            bountySolution: bountySolutionPDA[0],
+            //bounty: bountyPda[0],
+            // bountySolution: bountySolutionPDA[0],
         }).instruction();
         instructions.push(proposeBountySolutionIx)
 
@@ -335,9 +343,9 @@ export class BountySdk {
         const escrowPDA = getEscrowPDA(bountyPda[0]);
         const donateToBountyIx = await this.program.methods.donateToBounty(amount).accounts({
             payer,
-            bounty: bountyPda[0],
+            //bounty: bountyPda[0],
             donaterTokenAccount: await getAssociatedTokenAddress(mint, payer),
-            escrow: escrowPDA[0],
+            //escrow: escrowPDA[0],
         }).instruction();
 
         return {
@@ -401,7 +409,7 @@ export class BountySdk {
         team,
         domainType
     }: { id: BN, externalId?: string, title?: string, description?: string, ends_at?: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string }) => {
-
+        console.log("mint", mint)
         if (!externalId) {
             externalId = id.toString()
         }
@@ -418,13 +426,16 @@ export class BountySdk {
 
         const denominationPda = getDenominationPDA(mint);
         const transactionInstructions: web3.TransactionInstruction[] = [];
+        console.log("denominationPda", denominationPda)
         if (!(await this.accountExists(denominationPda[0]))) {
             // create denomination 
             const createDenominationIx = (await this.addBountyDenomination({ mint })).ix;
             transactionInstructions.push(createDenominationIx)
         }
         const domainPda = getDomainPDA({ platform, organization, team, domainType });
+        console.log("domainPda", domainPda)
         if (!(await this.accountExists(domainPda[0]))) {
+            console.log("creating domain")
             // create domain
             const createDomainIx = (await this.createDomain({
                 platform,
@@ -446,6 +457,7 @@ export class BountySdk {
         const creatorAccount = await getAssociatedTokenAddress(mint, bountyCreator)
         // create ata if not exist 
         if (!(await this.accountExists(creatorAccount))) {
+            console.log("creating creator account")
             const createCreatorAccountIx = await getOrCreateAssociatedTokenAccountIx(this.connection, bountyCreator, mint, bountyCreator);
             if (createCreatorAccountIx.instruction) {
                 transactionInstructions.push(createCreatorAccountIx.instruction)
@@ -454,11 +466,7 @@ export class BountySdk {
         const createBountyIx = await this.program.methods.createBounty(new BN(id), externalId, title, description, ends_at).accounts({
             creator: bountyCreator,
             mint,
-            bounty: bountyPda[0],
-            domain: domainPda[0],
             creatorAccount,
-            bountyDenomination: denominationPda[0],
-            escrow: escrowPDA[0],
         }).instruction();
         transactionInstructions.push(createBountyIx)
 
@@ -534,26 +542,27 @@ export class BountySdk {
         if (relayer && (await this.accountExists(relayer))) {
             completeBountyIx = await this.program.methods.completeBountyAsRelayer().accounts({
                 payer: completer,
-                protocol: protocolPda[0],
+                //protocol: protocolPda[0],
                 sandMint: sandMintPDA[0],
                 feeCollector: feeCollector[0],
                 bounty: bountyPda[0],
-                escrow: escrowPDA[0],
+                //escrow: escrowPDA[0],
                 ...solverTokenAccounts,
                 ...solvers,
-                relayer: relayer,
-            }).instruction();
+                //relayer: relayer,
+            } as any).instruction();
         } else {
             completeBountyIx = await this.program.methods.completeBounty().accounts({
                 payer: completer,
-                protocol: protocolPda[0],
+                //protocol: protocolPda[0],
                 sandMint: sandMintPDA[0],
                 feeCollector: feeCollector[0],
                 bounty: bountyPda[0],
-                escrow: escrowPDA[0],
+                //escrow: escrowPDA[0],
                 ...solverTokenAccounts,
                 ...solvers,
-            }).instruction();
+
+            } as any).instruction();
         }
 
 
@@ -586,8 +595,8 @@ export class BountySdk {
         const relayerPda = getRelayerPDA(relayerAddress);
         const addRelayerIx = await this.program.methods.addRelayer(relayerAddress).accounts({
             signer: this.signer,
-            protocol: protocolPda[0],
-            relayer: relayerPda[0],
+            //protocol: protocolPda[0],
+            //relayer: relayerPda[0],
         }).instruction();
 
         return {
@@ -604,8 +613,8 @@ export class BountySdk {
         const relayerPda = getRelayerPDA(relayerAddress);
         const removeRelayerIx = await this.program.methods.removeRelayer().accounts({
             signer: this.signer,
-            protocol: protocolPda[0],
-            relayer: relayerPda[0],
+            //protocol: protocolPda[0],
+            //relayer: relayerPda[0],
         }).instruction();
 
         return {
@@ -627,8 +636,6 @@ export class BountySdk {
         const protocolPda = getProtocolPDA();
         const createDomainIx = await this.program.methods.createDomain(domainType, platform, organization, team).accounts({
             creator: this.signer,
-            protocol: protocolPda[0],
-            domain: domainPda[0],
         }).instruction();
 
         return {
@@ -650,7 +657,7 @@ export class BountySdk {
         const domainPda = getDomainPDA({ platform, organization, team, domainType });
         const deactivateDomainIx = await this.program.methods.deactivateDomain().accounts({
             signer: this.signer,
-            domain: domainPda[0],
+            //domain: domainPda[0],
         }).instruction();
 
         return {
@@ -664,6 +671,7 @@ export class BountySdk {
     addBountyDenomination = async ({ mint }: { mint: web3.PublicKey }) => {
         const denominationPda = getDenominationPDA(mint);
         const protocolPda = getProtocolPDA();
+
         if (!(await this.accountExists(protocolPda[0]))) {
             throw new Error(`Protocol account ${protocolPda[0]} does not exist`)
         }
@@ -674,12 +682,11 @@ export class BountySdk {
         if (!(await getMint(this.connection, mint))) {
             throw new Error(`Mint ${mint} does not exist`)
         }
+
+        // @ts-nocheck
         const addBountyDenominationIx = await this.program.methods.addBountyDenomination().accounts({
             creator: this.signer,
-            protocol: protocolPda[0],
             mint,
-            denomination: denominationPda[0],
-            feeCollector: getFeeCollectorPDA(mint)[0],
         }).instruction();
 
         return {

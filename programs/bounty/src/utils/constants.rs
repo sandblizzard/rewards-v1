@@ -1,7 +1,7 @@
 pub const BOUNTY_SEED: &[u8] = b"BOUNTY_SANDBLIZZARD";
 pub const TREASURY_SEED: &[u8] = b"TREASURY";
 pub const FEE_COLLECTOR_SEED: &str = "FEE_COLLECTOR";
-pub const DENOMINATION_SEED: &str = "DENOMINATION";
+pub const DENOMINATION_SEED: &[u8] = b"DENOMINATION";
 pub const MINT_SEED: &[u8] = b"sand_mint";
 // FIXME: devnet feature
 pub const BONK_MINT: &str = "bonkKjzREa7pVBRD6nFPAKRaHhS7XpDhhgZCZdGNkuU";

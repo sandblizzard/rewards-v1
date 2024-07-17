@@ -44,7 +44,8 @@ pub struct ProposeBountySolution<'info> {
 /// Donate to a bounty
 pub fn handler(ctx: Context<ProposeBountySolution>, solution: String) -> Result<()> {
     let bounty_solution = &mut ctx.accounts.bounty_solution;
-    let bounty_solution_bump = ctx.bumps.get("bounty_solution").unwrap();
+    let bounty_solution_bump = &ctx.bumps.bounty_solution;
+
     let id = (ctx.accounts.bounty.solver_solutions.len() as u64) + 1;
     bounty_solution
         .initialize(

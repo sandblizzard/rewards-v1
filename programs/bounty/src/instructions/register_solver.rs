@@ -51,7 +51,7 @@ pub fn handler(ctx: Context<RegisterSolver>) -> Result<()> {
 
     solver.initialize(
         &ctx.accounts.signer.key(),
-        ctx.bumps.get("solver_account").unwrap(),
+        &ctx.bumps.solver_account,
         ctx.accounts.sand_mint.key(),
     )?;
     Ok(())

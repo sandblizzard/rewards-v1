@@ -2,12 +2,9 @@
 //! supported tokes to denominate
 //!
 
-use crate::{
-    state::{Denomination},
-    utils::*,
-};
+use crate::{state::Denomination, utils::*};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint};
+use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
 pub struct DeactivateBountyDenomination<'info> {
@@ -23,7 +20,7 @@ pub struct DeactivateBountyDenomination<'info> {
       mut,
       seeds = [
         BOUNTY_SEED,
-        DENOMINATION_SEED.as_bytes(),
+        DENOMINATION_SEED,
         mint.key().to_bytes().as_ref()
         ],
         bump = denomination.bump,

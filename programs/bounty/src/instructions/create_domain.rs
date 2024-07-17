@@ -14,7 +14,11 @@ pub struct CreateDomain<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds=[BOUNTY_SEED],
+        bump = protocol.bump,
+    )]
     pub protocol: Account<'info, Protocol>,
 
     #[account(
@@ -47,7 +51,7 @@ pub fn handler(
 ) -> Result<()> {
     let domain_account = &mut ctx.accounts.domain;
     let creator = &ctx.accounts.creator.key();
-    let domain_bump = ctx.bumps.get("domain").unwrap();
+    let domain_bump = &ctx.bumps.domain;
 
     // initialize the domain
     domain_account

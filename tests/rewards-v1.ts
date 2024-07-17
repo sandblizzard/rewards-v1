@@ -14,7 +14,7 @@ import { assert, config, expect, use } from 'chai';
 import * as chaiAsPromised from "chai-as-promised"
 import { sendAndConfirmTransaction } from "../sdk-ts/src/utils";
 import { getProtocolPDA, getSandMint, getSolverPDA } from "../sdk-ts/src";
-use(chaiAsPromised.default)
+import { BN } from "bn.js";
 
 /**
  * topUpAccount is a helper function to top up an account with SOL
@@ -42,28 +42,29 @@ describe('bounty', () => {
   const provider = anchor.AnchorProvider.env();
   const keypair = web3.Keypair.generate();
   const user = web3.Keypair.generate();
-
+  console.log("provider")
   const wallet = new anchor.Wallet(keypair);
   const userWallet = new anchor.Wallet(user);
-
+  console.log("provider")
   anchor.setProvider(provider);
+  console.log("provider")
   const program = anchor.workspace.Bounty as anchor.Program<Bounty>;
+  console.log("provider")
   const bountySdk = new BountySdk(
     wallet.publicKey,
     provider.connection
   );
-
+  console.log("provider")
   // set global variables
   const organization = 'sandblizzard';
   const team = 'rewards_v1';
   const platform = 'github';
   const id = Math.floor(Math.random() * 1000000);
   const bountyAmount = new anchor.BN(1000000);
-
+  console.log("provider")
   // global variables to be init
   let bonkMint: anchor.web3.PublicKey;
-  let creatorBonkTokenAccount: anchor.web3.PublicKey;
-
+  console.log("provider")
   // Setup test environment
   before(async () => {
     try {
@@ -121,12 +122,16 @@ describe('bounty', () => {
       const initializeProtocol = await bountySdk.initializeProtocol();
       await sendAndConfirmTransaction(provider.connection, await initializeProtocol.vtx, [wallet.payer])
 
-      console.log("Initializes Fee Collector...")
+      /// initialize fee collector 
+
+
+      console.log("Add bounty denomination...")
       const initDenomination = await bountySdk.addBountyDenomination(
         {
           mint: bonkMint,
         }
       );
+      console.log("Initializes Denomination...")
       await sendAndConfirmTransaction(provider.connection, await initDenomination.vtx, [wallet.payer])
 
       // create domain 
@@ -157,12 +162,13 @@ describe('bounty', () => {
   });
 
 
-  it('Create a bounty -> Should succeed', async () => {
+  it.only('Create a bounty -> Should succeed', async () => {
     // create bounty 
+    console.log("create a bounty")
     try {
       const createBounty = await bountySdk.createBounty(
         {
-          id,
+          id: new BN(id),
           bountyCreator: wallet.publicKey,
           mint: bonkMint,
           organization,
@@ -176,7 +182,7 @@ describe('bounty', () => {
 
       // DOnate to the bounty
       const donateToBounty = await bountySdk.donateToBounty({
-        bountyId: id,
+        bountyId: new BN(id),
         mint: bonkMint,
         amount: bountyAmount,
         payer: wallet.publicKey
@@ -226,7 +232,7 @@ describe('bounty', () => {
     expect(deactivatedRelayer.active, `relayer is not deactivated`).eq(false);
   });
 
-  it.only('Create bounty and try to complete it as a relayer -> Should Succeed', async () => {
+  it('Create bounty and try to complete it as a relayer -> Should Succeed', async () => {
     const bountyId = Math.floor(Math.random() * 1000000);
     // add relayer - relayer should be  pk + BOUNTY_SANDBLIZZARD
     const relayerKeys = web3.Keypair.generate();
@@ -257,7 +263,7 @@ describe('bounty', () => {
     /// propose solution to bounty
     const proposeSolution = await bountySdk.proposeSolution(
       {
-        bountyId,
+        bountyId: new BN(bountyId),
         solution: "Just a solution",
         solver: userWallet.publicKey
       }
@@ -281,7 +287,7 @@ describe('bounty', () => {
     console.log("Completing bounty with id", bountyId, "...")
     const completeBounty = await bountySdk.completeBounty(
       {
-        id: bountyId,
+        id: new BN(bountyId),
         relayer: getRelayerPDA(relayerWallet.publicKey)[0],
         completer: relayerWallet.publicKey,
         mint: bonkMint,
@@ -339,7 +345,7 @@ describe('bounty', () => {
     const id = Math.floor(Math.random() * 1000000);
     // allow main wallet to create bounty
     const createBounty = await bountySdk.createBounty({
-      id,
+      id: new BN(id),
       bountyCreator: userWallet.publicKey,
       mint: bonkMint,
       organization, team, platform, domainType: 'issues'
