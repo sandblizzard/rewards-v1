@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.29](https://github.com/sandblizzard/rewards-v1/compare/v0.0.28...v0.0.29) (2024-08-13)
+
+
+### Features
+
+* **program:** update program and test. Still fails ([2122789](https://github.com/sandblizzard/rewards-v1/commit/2122789bc7cc2b6cccc4399ad787f719cf8cf964))
+
+
+### Bug Fixes
+
+* update donated amount rather than concatenate the lsit ([d82546c](https://github.com/sandblizzard/rewards-v1/commit/d82546c20ad5bde72c3dc2050ae2154a81657c78))
+
 ### [0.0.28](https://github.com/sandblizzard/rewards-v1/compare/v0.0.27...v0.0.28) (2024-07-10)
 
 
