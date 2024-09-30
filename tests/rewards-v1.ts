@@ -141,7 +141,8 @@ describe('bounty', () => {
           platform,
           organization,
           team,
-          domainType: 'issues'
+          domainType: 'issues',
+          installationId: 0
         }
       );
       await sendAndConfirmTransaction(provider.connection, await createDomain.vtx, [wallet.payer])
@@ -177,9 +178,11 @@ describe('bounty', () => {
           domainType: 'issues'
         }
       );
+      console.log("Send transaction")
       await sendAndConfirmTransaction(provider.connection, await createBounty.vtx, [wallet.payer])
 
 
+      console.log("DOnate")
       // DOnate to the bounty
       const donateToBounty = await bountySdk.donateToBounty({
         bountyId: new BN(id),
@@ -187,10 +190,12 @@ describe('bounty', () => {
         amount: bountyAmount,
         payer: wallet.publicKey
       });
+      console.log("Donate send transaction")
       await sendAndConfirmTransaction(provider.connection, await donateToBounty.vtx, [wallet.payer])
 
 
 
+      console.log("Get created bounty")
       let createdBounty = await program.account.bounty.fetch(
         createBounty.bounty
       );

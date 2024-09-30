@@ -48,6 +48,7 @@ pub fn handler(
     platform: String,
     organization: String,
     team: String,
+    installationId: u32,
 ) -> Result<()> {
     let domain_account = &mut ctx.accounts.domain;
     let creator = &ctx.accounts.creator.key();
@@ -62,6 +63,7 @@ pub fn handler(
             &platform,
             creator,
             domain_bump,
+            installationId,
         )
         .unwrap();
     Ok(())

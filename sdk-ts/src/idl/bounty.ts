@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/bounty.json`.
  */
 export type Bounty = {
-  "address": "AwB63JJU3RSdC4YSNryZvotA3GXyVrYEXnWY3CQ8Fxoq",
+  "address": "HYtMRnS1UxUTJtvisReiwGEYPSV5LCtQPrsVnXCVJUyi",
   "metadata": {
     "name": "bounty",
     "version": "0.1.0",
@@ -1107,6 +1107,10 @@ export type Bounty = {
         {
           "name": "team",
           "type": "string"
+        },
+        {
+          "name": "installationId",
+          "type": "u32"
         }
       ]
     },
@@ -2323,6 +2327,10 @@ export type Bounty = {
               "it's the user who manage the domain"
             ],
             "type": "pubkey"
+          },
+          {
+            "name": "installationId",
+            "type": "u32"
           },
           {
             "name": "data",

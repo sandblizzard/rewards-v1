@@ -101,6 +101,7 @@ pub fn handler(
     let creator = &ctx.accounts.creator;
     let domain = &ctx.accounts.domain;
     let escrow: &Account<'_, TokenAccount> = &ctx.accounts.escrow;
+
     // initialize the bounty
     ctx.accounts
         .bounty

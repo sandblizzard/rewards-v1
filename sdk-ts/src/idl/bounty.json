@@ -1,5 +1,5 @@
 {
-  "address": "AwB63JJU3RSdC4YSNryZvotA3GXyVrYEXnWY3CQ8Fxoq",
+  "address": "HYtMRnS1UxUTJtvisReiwGEYPSV5LCtQPrsVnXCVJUyi",
   "metadata": {
     "name": "bounty",
     "version": "0.1.0",
@@ -1101,6 +1101,10 @@
         {
           "name": "team",
           "type": "string"
+        },
+        {
+          "name": "installation_id",
+          "type": "u32"
         }
       ]
     },
@@ -2317,6 +2321,10 @@
               "it's the user who manage the domain"
             ],
             "type": "pubkey"
+          },
+          {
+            "name": "installation_id",
+            "type": "u32"
           },
           {
             "name": "data",

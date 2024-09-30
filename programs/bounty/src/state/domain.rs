@@ -20,6 +20,8 @@ pub struct Domain {
     /// it's the user who manage the domain
     pub owner: Pubkey,
 
+    pub installation_id: u32,
+
     /// FIXME: Rename
     pub data: DomainData,
 }
@@ -33,6 +35,7 @@ impl Domain {
         platform: &str,
         owner: &Pubkey,
         bump: &u8,
+        installation_id: u32,
     ) -> Result<()> {
         self.data.domain_type = domain_type.to_string();
         self.data.organization = organization.to_string();
@@ -42,6 +45,7 @@ impl Domain {
         self.active = true;
         self.data.team = team.to_string();
         self.bump = *bump;
+        self.installation_id = installation_id;
         Ok(())
     }
 

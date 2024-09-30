@@ -5,7 +5,7 @@ pub mod utils;
 
 pub use instructions::*;
 pub use state::*;
-declare_id!("AwB63JJU3RSdC4YSNryZvotA3GXyVrYEXnWY3CQ8Fxoq");
+declare_id!("HYtMRnS1UxUTJtvisReiwGEYPSV5LCtQPrsVnXCVJUyi");
 
 #[program]
 pub mod bounty {
@@ -100,8 +100,16 @@ pub mod bounty {
         platform: String,
         organization: String,
         team: String,
+        installation_id: u32,
     ) -> Result<()> {
-        create_domain::handler(ctx, domain_type, platform, organization, team)
+        create_domain::handler(
+            ctx,
+            domain_type,
+            platform,
+            organization,
+            team,
+            installation_id,
+        )
     }
 
     /// deactivate domain

@@ -1,9 +1,10 @@
 import { BN, web3, Program, AnchorProvider, Idl } from "@coral-xyz/anchor";
 import { Bounty } from "./idl/bounty"
 import idl from "./idl/bounty.json"
-import { getAssociatedTokenAddress, getMint } from '@solana/spl-token';
+import { getAssociatedTokenAddress, getMint, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet.js";
 import { getOrCreateAssociatedTokenAccountIx } from "./utils";
+import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 
 export * as utils from './utils';
 export { Bounty }
@@ -11,7 +12,7 @@ export { Bounty }
 const METADATA_SEED = "metadata";
 
 const TOKEN_METADATA_PROGRAM_ID = new web3.PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
-export const BOUNTY_PROGRAM_ID = new web3.PublicKey("AwB63JJU3RSdC4YSNryZvotA3GXyVrYEXnWY3CQ8Fxoq");
+export const BOUNTY_PROGRAM_ID = new web3.PublicKey("HYtMRnS1UxUTJtvisReiwGEYPSV5LCtQPrsVnXCVJUyi");
 
 /**
  * getProtocolPDA 
@@ -250,6 +251,7 @@ export class BountySdk {
         const protocolPda = getProtocolPDA();
         const sandMint = getSandMint();
         const solverPda = getSolverPDA(solver);
+
         const claimRewardsIx = await this.program.methods.claimRewards().accounts({
             signer: solver,
             //protocol: protocolPda[0],
@@ -341,11 +343,14 @@ export class BountySdk {
     }: { bountyId: BN, amount: BN, mint: web3.PublicKey, payer: web3.PublicKey }) => {
         const bountyPda = getBountyPDA(bountyId);
         const escrowPDA = getEscrowPDA(bountyPda[0]);
-        const donateToBountyIx = await this.program.methods.donateToBounty(amount).accounts({
+        const donateToBountyIx = await this.program.methods.donateToBounty(amount).accountsStrict({
             payer,
-            //bounty: bountyPda[0],
+            bounty: bountyPda[0],
             donaterTokenAccount: await getAssociatedTokenAddress(mint, payer),
-            //escrow: escrowPDA[0],
+            escrow: escrowPDA[0],
+            systemProgram: SYSTEM_PROGRAM_ID,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            rent: web3.SYSVAR_RENT_PUBKEY
         }).instruction();
 
         return {
@@ -367,8 +372,9 @@ export class BountySdk {
         organization,
         team,
         domainType,
+        installationId,
         amount
-    }: { id: BN, externalId?: string, title?: string, description?: string, ends_at?: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string, amount: BN }) => {
+    }: { id: BN, externalId?: string, title?: string, description?: string, ends_at?: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string, installationId: number, amount: BN }) => {
         const createBountyResult = await this.createBounty({
             id,
             externalId,
@@ -380,7 +386,8 @@ export class BountySdk {
             platform,
             organization,
             team,
-            domainType
+            domainType,
+            installationId
         })
         const donateToBounty = await this.donateToBounty({
             bountyId: id,
@@ -407,8 +414,9 @@ export class BountySdk {
         platform,
         organization,
         team,
-        domainType
-    }: { id: BN, externalId?: string, title?: string, description?: string, ends_at?: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string }) => {
+        domainType,
+        installationId
+    }: { id: BN, externalId?: string, title?: string, description?: string, ends_at?: BN, bountyCreator: web3.PublicKey, mint: web3.PublicKey, platform: string, organization: string, team: string, domainType: string, installationId: number }) => {
         console.log("mint", mint)
         if (!externalId) {
             externalId = id.toString()
@@ -441,7 +449,8 @@ export class BountySdk {
                 platform,
                 organization,
                 team,
-                domainType
+                domainType,
+                installationId
             })).ix;
             transactionInstructions.push(createDomainIx)
         }
@@ -463,13 +472,23 @@ export class BountySdk {
                 transactionInstructions.push(createCreatorAccountIx.instruction)
             }
         }
-        const createBountyIx = await this.program.methods.createBounty(new BN(id), externalId, title, description, ends_at).accounts({
+
+        console.log("creating...")
+        const createBountyIx = await this.program.methods.createBounty(new BN(id), externalId, title, description, ends_at).accountsStrict({
             creator: bountyCreator,
             mint,
+            bounty: bountyPda[0],
+            domain: domainPda[0],
             creatorAccount,
+            bountyDenomination: denominationPda[0],
+            escrow: escrowPDA[0],
+            systemProgram: SYSTEM_PROGRAM_ID,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            rent: web3.SYSVAR_RENT_PUBKEY
         }).instruction();
         transactionInstructions.push(createBountyIx)
 
+        console.log("create versioned transaction")
         return {
             vtx: await this.createVersionedTransaction(transactionInstructions, bountyCreator),
             ix: transactionInstructions,
@@ -630,11 +649,11 @@ export class BountySdk {
         platform,
         organization,
         team,
-        domainType
-    }: { platform: string, organization: string, team: string, domainType: string }) => {
+        domainType,
+        installationId
+    }: { platform: string, organization: string, team: string, domainType: string, installationId: number }) => {
         const domainPda = getDomainPDA({ platform, organization, team, domainType });
-        const protocolPda = getProtocolPDA();
-        const createDomainIx = await this.program.methods.createDomain(domainType, platform, organization, team).accounts({
+        const createDomainIx = await this.program.methods.createDomain(domainType, platform, organization, team, installationId).accounts({
             creator: this.signer,
         }).instruction();
 
